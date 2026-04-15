@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Croix-Rouge de Belgique - Fiches Patients</title>
+<meta name="description" content="Application de gestion de fiches patients pour la Croix-Rouge de Belgique">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root {
+  --bg: #ffffff; --bg2: #f5f5f5; --bg3: #e8e8e8;
+  --text: #1a1a1a; --text2: #555555; --text3: #888888;
+  --primary: #e30613; --primary-hover: #c00510;
+  --border: #d0d0d0; --shadow: rgba(0,0,0,0.1);
+  --success: #28a745; --warning: #ffc107; --danger: #dc3545;
+  --card: #ffffff; --input-bg: #ffffff;
+  --radius: 8px;
+}
+.dark {
+  --bg: #121212; --bg2: #1e1e1e; --bg3: #2d2d2d;
+  --text: #e0e0e0; --text2: #aaaaaa; --text3: #777777;
+  --primary: #ff4757; --primary-hover: #ff6b81;
+  --border: #444444; --shadow: rgba(0,0,0,0.4);
+  --success: #34d058; --warning: #f0ad4e; --danger: #ff6b6b;
+  --card: #1e1e1e; --input-bg: #2d2d2d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg); color: var(--text);
+  transition: background 0.3s, color 0.3s;
+  min-height: 100vh;
+}
+.container { max-width: 900px; margin: 0 auto; padding: 16px; }
+.container.tablet { max-width: 750px; }
+.container.phone { max-width: 480px; font-size: 14px; }
+
+/* Header */
+.header {
+  background: var(--primary); color: #fff; padding: 12px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 8px; position: sticky; top: 0; z-index: 100;
+}
+.header h1 { font-size: 1.1em; }
+.header-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.header-btns button, .header-btns select {
+  background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+  padding: 6px 12px; border-radius: var(--radius); cursor: pointer; font-size: 0.85em;
+}
+.header-btns button:hover, .header-btns select:hover { background: rgba(255,255,255,0.35); }
+.header-btns select option { color: #000; }
+
+/* Status bar */
+.status-bar {
+  background: var(--bg2); padding: 8px 16px; text-align: center;
+  font-size: 0.85em; color: var(--text2); border-bottom: 1px solid var(--border);
+}
+.status-online { color: var(--success); font-weight: bold; }
+.status-offline { color: var(--danger); font-weight: bold; }
+
+/* Auth forms */
+.auth-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); z-index: 200; display: flex;
+  align-items: center; justify-content: center; padding: 16px;
+}
+.auth-box {
+  background: var(--card); border-radius: var(--radius); padding: 30px;
+  width: 100%; max-width: 420px; box-shadow: 0 8px 32px var(--shadow);
+}
+.auth-box h2 { margin-bottom: 20px; color: var(--primary); text-align: center; }
+.auth-box .form-group { margin-bottom: 14px; }
+.auth-box label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9em; }
+.auth-box input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--input-bg); color: var(--text); font-size: 1em;
+}
+.auth-box .btn-primary {
+  width: 100%; padding: 12px; background: var(--primary); color: #fff;
+  border: none; border-radius: var(--radius); font-size: 1em; cursor: pointer;
+  font-weight: 600; margin-top: 8px;
+}
+.auth-box .btn-primary:hover { background: var(--primary-hover); }
+.auth-box .auth-links { text-align: center; margin-top: 14px; font-size: 0.9em; }
+.auth-box .auth-links a { color: var(--primary); cursor: pointer; text-decoration: underline; }
+.captcha-box {
+  background: var(--bg2); padding: 12px; border-radius: var(--radius);
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.captcha-box .captcha-q { font-weight: bold; font-size: 1.1em; }
+.captcha-box input { width: 80px; text-align: center; }
+
+/* Sections */
+.section {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 16px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.section-title {
+  background: var(--primary); color: #fff; padding: 10px 16px;
+  font-weight: 700; font-size: 1em; border-radius: var(--radius) var(--radius) 0 0;
+  cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+}
+.section-title::after { content: '▼'; font-size: 0.7em; transition: transform 0.2s; }
+.section-title.collapsed::after { transform: rotate(-90deg); }
+.section-body { padding: 16px; }
+.section-body.hidden { display: none; }
+
+/* Form elements */
+.form-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; align-items: flex-end; }
+.form-group { flex: 1; min-width: 180px; }
+.form-group.small { min-width: 100px; flex: 0.5; }
+.form-group label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.85em; color: var(--text2); }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--input-bg); color: var(--text); font-size: 0.95em;
+}
+.form-group textarea { resize: vertical; min-height: 60px; }
+
+.radio-group, .check-group { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; padding: 4px 0; }
+.radio-group label, .check-group label {
+  display: flex; align-items: center; gap: 4px; font-weight: normal; cursor: pointer; font-size: 0.9em;
+}
+input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+/* Bilan table */
+.bilan-table { width: 100%; border-collapse: collapse; font-size: 0.8em; overflow-x: auto; display: block; }
+.bilan-table th, .bilan-table td {
+  border: 1px solid var(--border); padding: 6px 4px; text-align: center; white-space: nowrap;
+}
+.bilan-table th { background: var(--primary); color: #fff; font-size: 0.85em; }
+.bilan-table td:first-child { background: var(--bg2); font-weight: 600; text-align: left; padding-left: 8px; }
+
+/* Material table */
+.mat-table { width: 100%; border-collapse: collapse; }
+.mat-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); }
+.mat-table td:first-child { font-weight: 500; }
+.mat-table input[type="number"] { width: 70px; text-align: center; padding: 4px; }
+.mat-table input[type="text"] { width: 100%; padding: 4px 8px; }
+
+/* Soignant card */
+.soignant-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px; margin-bottom: 10px;
+}
+.soignant-card .soignant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.btn-remove { background: var(--danger); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 1.1em; }
+
+/* Buttons */
+.btn {
+  padding: 10px 20px; border: none; border-radius: var(--radius);
+  cursor: pointer; font-weight: 600; font-size: 0.95em; transition: background 0.2s;
+}
+.btn-primary-main { background: var(--primary); color: #fff; }
+.btn-primary-main:hover { background: var(--primary-hover); }
+.btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-add { background: var(--primary); color: #fff; padding: 8px 16px; font-size: 0.9em; }
+
+.actions-bar { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
+
+/* Fiches list */
+.fiches-list { margin-top: 16px; }
+.fiche-item {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px; margin-bottom: 10px; display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: 8px;
+}
+.fiche-item .fiche-info { font-size: 0.9em; }
+.fiche-item .fiche-info strong { color: var(--primary); }
+.fiche-btns { display: flex; gap: 6px; }
+.fiche-btns button { padding: 6px 12px; font-size: 0.8em; }
+
+.pending-badge {
+  display: inline-block; background: var(--warning); color: #000;
+  padding: 2px 8px; border-radius: 12px; font-size: 0.75em; font-weight: 600;
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; right: 20px; padding: 14px 20px;
+  border-radius: var(--radius); color: #fff; font-weight: 600;
+  z-index: 999; opacity: 0; transition: opacity 0.3s; font-size: 0.9em;
+  max-width: 350px;
+}
+.toast.show { opacity: 1; }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+.toast.info { background: #3498db; }
+
+/* Tabs */
+.tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
+.tab {
+  padding: 10px 20px; cursor: pointer; font-weight: 600;
+  border-bottom: 3px solid transparent; color: var(--text2); transition: all 0.2s;
+}
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* Message */
+.msg-box { padding: 16px; border-radius: var(--radius); margin: 12px 0; text-align: center; }
+.msg-info { background: #e3f2fd; color: #1565c0; }
+.dark .msg-info { background: #1a237e; color: #90caf9; }
+
+@media (max-width: 600px) {
+  .form-group { min-width: 100% !important; }
+  .header { flex-direction: column; text-align: center; }
+  .header-btns { justify-content: center; }
+  .bilan-table { font-size: 0.7em; }
+}
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- Header -->
+<div class="header">
+  <h1>🏥 Croix-Rouge de Belgique</h1>
+  <div class="header-btns">
+    <select id="formatSelect" onchange="changeFormat(this.value)">
+      <option value="pc">💻 PC</option>
+      <option value="tablet">📱 Tablette</option>
+      <option value="phone">📲 Téléphone</option>
+    </select>
+    <button onclick="toggleDark()" id="darkBtn">🌙 Mode Nuit</button>
+    <button onclick="showAuth('login')" id="authBtn">🔐 Connexion</button>
+  </div>
+</div>
+
+<!-- Status bar -->
+<div class="status-bar">
+  État : <span id="onlineStatus"></span> | 
+  <span id="pendingCount">0 fiche(s) en attente</span>
+</div>
+
+<!-- Auth Overlay -->
+<div id="authOverlay" class="auth-overlay" style="display:none;">
+  <!-- Login -->
+  <div id="loginBox" class="auth-box" style="display:none;">
+    <h2>🔐 Connexion</h2>
+    <div class="form-group"><label>Adresse e-mail</label><input type="email" id="loginEmail"></div>
+    <div class="form-group"><label>Mot de passe</label><input type="password" id="loginPassword"></div>
+    <div class="captcha-box"><span class="captcha-q" id="loginCaptchaQ"></span> = <input type="number" id="loginCaptchaA"><span id="loginCaptchaRefresh" onclick="genCaptcha('login')" style="cursor:pointer;">🔄</span></div>
+    <button class="btn-primary" onclick="doLogin()">Se connecter</button>
+    <div class="auth-links">
+      <a onclick="showAuth('register')">Créer un compte</a> | <a onclick="showAuth('forgot')">Mot de passe oublié ?</a><br>
+      <a onclick="closeAuth()">Fermer</a>
+    </div>
+  </div>
+  <!-- Register -->
+  <div id="registerBox" class="auth-box" style="display:none;">
+    <h2>📝 Inscription</h2>
+    <div class="form-row"><div class="form-group"><label>Nom</label><input type="text" id="regNom"></div><div class="form-group"><label>Prénom</label><input type="text" id="regPrenom"></div></div>
+    <div class="form-group"><label>Adresse e-mail</label><input type="email" id="regEmail"></div>
+    <div class="form-group"><label>Mot de passe</label><input type="password" id="regPass1"></div>
+    <div class="form-group"><label>Confirmer le mot de passe</label><input type="password" id="regPass2"></div>
+    <div class="captcha-box"><span class="captcha-q" id="regCaptchaQ"></span> = <input type="number" id="regCaptchaA"><span onclick="genCaptcha('register')" style="cursor:pointer;">🔄</span></div>
+    <button class="btn-primary" onclick="doRegister()">S'inscrire</button>
+    <div class="auth-links"><a onclick="showAuth('login')">Déjà un compte ? Se connecter</a> | <a onclick="closeAuth()">Fermer</a></div>
+  </div>
+  <!-- Forgot -->
+  <div id="forgotBox" class="auth-box" style="display:none;">
+    <h2>🔑 Mot de passe oublié</h2>
+    <div class="form-group"><label>Adresse e-mail</label><input type="email" id="forgotEmail"></div>
+    <button class="btn-primary" onclick="doForgot()">Envoyer le lien</button>
+    <div class="auth-links"><a onclick="showAuth('login')">Retour à la connexion</a> | <a onclick="closeAuth()">Fermer</a></div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="container" id="mainContainer">
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('form')" id="tabForm">📋 Nouvelle Fiche</div>
+  <div class="tab" onclick="switchTab('list')" id="tabList">📁 Mes Fiches</div>
+</div>
+
+<!-- FORM TAB -->
+<div id="formTab">
+
+<!-- Section Titre -->
+<div class="section">
+  <div class="section-title" onclick="toggleSection(this)">📌 TITRE</div>
+  <div class="section-body">
+    <div class="form-row">
+      <div class="form-group small"><label>Fiche Médicale</label>
+        <div class="radio-group"><label><input type="radio" name="ficheMed" value="oui"> OUI</label><label><input type="radio" name="ficheMed" value="non" checked> NON</label></div>
+      </div>
+      <div class="form-group"><label>N° ODIN</label><input type="text" id="numOdin"></div>
+      <div class="form-group"><label>NOM de l'APS</label><input type="text" id="nomAps"></div>
+      <div class="form-group small"><label>N° Patient</label><input type="text" id="numPatient"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Section Information Patient -->
+<div class="section">
+  <div class="section-title" onclick="toggleSection(this)">👤 INFORMATION PATIENT</div>
+  <div class="section-body">
+    <div class="form-row">
+      <div class="form-group"><label>NOM / NAAM</label><input type="text" id="patNom"></div>
+      <div class="form-group"><label>PRÉNOM / VOORNAAM</label><input type="text" id="patPrenom"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>DATE DE NAISSANCE / GEBOORTEDATUM</label><input type="date" id="patDob"></div>
+      <div class="form-group small"><label>&nbsp;</label><div class="check-group"><label><input type="checkbox" id="patMineur"> -18 ans</label></div></div>
+      <div class="form-group small"><label>Sexe</label>
+        <div class="radio-group"><label><input type="radio" name="patSexe" value="homme"> Homme</label><label><input type="radio" name="patSexe" value="femme"> Femme</label></div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Adresse / Adres</label><input type="text" id="patAdresse"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Tél</label><input type="tel" id="patTel"></div>
+      <div class="form-group small"><label>N° Cl</label><input type="text" id="patCl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Section IN -->
+<div class="section">
+  <div class="section-title" onclick="toggleSection(this)">🚪 IN</div>
+  <div class="section-body">
+    <div class="check-group" style="margin-bottom:12px;">
+      <label><input type="checkbox" id="inSpontanee"> Spontanée</label>
+      <label><input type="checkbox" id="inEquipe"> Via équipe</label>
+      <label><input type="checkbox" id="inAmbulance"> Via ambulance</label>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Autre moyen</label><input type="text" id="inAutre"></div>
+      <div class="form-group"><label>DATE</label><input type="date" id="inDate"></div>
+      <div class="form-group small"><label>HEURE IN</label><input type="time" id="inHeure"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Section Soignant -->
+<div class="section">
+  <div class="section-title" onclick="toggleSection(this)">👨‍⚕️ SOIGNANT</div>
+  <div class="section-body">
+    <div id="soignantsContainer"></div>
+    <button class="btn btn-add" onclick="addSoignant()" style="margin-top:8px;">+ Ajouter un soignant</button>
+  </div>
+</div>
+
+<!-- Section Bilan -->
+<div class="section">
+  <div class="section-title" onclick="toggleSection(this)">📊 BILAN</div>
+  <div class="section-body">
+    <div class="form-row">
+      <div class="form-group small"><label>Conscience</label><div class="radio-group"><label><input type="radio" name="conscience" value="oui"> OUI</label><label><input type="radio" name="conscience" value="non"> NON</label></div></div>
+      <div class="form-group small"><label>Respiration</label><div class="radio-group"><label><input type="radio" name="respiration" value="oui"> OUI</label><label><input type="radio" name="respiration" value="non"> NON</label></div></div>
+      <div class="form-group small"><label>Circulation</label><div class="radio-group"><label><input type="radio" name="circulation" value="oui"> OUI</label><label><input type="radio" name="circulation" value="non"> NON</label></div></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Hémorragie</label>
+        <div class="radio-group">
+          <label><input type="radio" name="hemorragie" value="interne"> Interne</label>
+          <label><input type="radio" name="hemorragie" value="externe"> Externe</label>
+          <label><input type="radio" name="hemorragie" value="exteriorisee"> Extériorisée</label>
+          <label><input type="radio" name="hemorragie" value="non"> Non</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Urgence</label>
+        <div class="check-group">
+          <label><input type="radio" name="urgence" value="U1"> U1</label>
+          <label><input type="radio" name="urgence" value="U2"> U2</label>
+          <label><input type="radio" name="urgence" value="U3"> U3</label>
+          <label><input type="radio" name="urgence" value="implique"> Impliqué</label>
+        </div>
+      </div>
+    </div>
+    <div style="overflow-x:auto; margin-top:12px;">
+      <table class="bilan-table" id="bilanTable">
+        <thead><tr>
+          <th></th><th>Tête</th><th>Cervical</th><th>Colonne</th><th>MSD</th><th>MSG</th><th>Thorax</th><th>Abdo</th><th>Bassin</th><th>MID</th><th>MIG</th>
+        </tr></thead>
+        <tbody id="bilanBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Section Soins -->
+<div class="section">
+  <div class="section-title" onclick="toggleSection(this)">💊 SOINS</div>
+  <div class="section-body">
+    <div class="check-group" style="flex-wrap:wrap; gap:10px;">
+      <label><input type="checkbox" data-soin="plaies"> Soin de plaies</label>
+      <label><input type="checkbox" data-soin="pansement"> Pansement</label>
+      <label><input type="checkbox" data-soin="attelle"> Attelle</label>
+      <label><input type="checkbox" data-soin="matelas_depression"> Matelas à dépression</label>
+      <label><input type="checkbox" data-soin="compression"> Compression</label>
+      <label><input type="checkbox" data-soin="bandage"> Bandage</label>
+      <label><input type="checkbox" data-soin="collier_cervical"> Collier Cervical</label>
+      <label><input type="checkbox" data-soin="repos_surveillance"> Repos / Surveillance</label>
+    </div>
+    <div class="form-group" style="margin-top:12px;"><label>Autres soins</label><textarea id="autresSoins"></textarea></div>
+  </div>
+</div>
+
+<!-- Section Matériel -->
+<div class="section">
+  <div class="section-title" onclick="toggleSection(this)">🧰 MATÉRIEL</div>
+  <div class="section-body">
+    <div style="overflow-x:auto;">
+      <table class="mat-table" id="matTable"><tbody id="matBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- Section OUT -->
+<div class="section">
+  <div class="section-title" onclick="toggleSection(this)">🚶 OUT</div>
+  <div class="section-body">
+    <div class="check-group" style="margin-bottom:12px;">
+      <label><input type="checkbox" id="outNormal"> Retour à la vie normale</label>
+      <label><input type="checkbox" id="outRefus"> Refus de soins</label>
+      <label><input type="checkbox" id="outVsl"> Évacuation VSL</label>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Évacuation Ambulance</label><input type="text" id="outAmbulance"></div>
+      <div class="form-group"><label>Autre moyen</label><input type="text" id="outAutreMoyen"></div>
+      <div class="form-group small"><label>Heure OUT</label><input type="time" id="outHeure"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Actions -->
+<div class="actions-bar">
+  <button class="btn btn-primary-main" onclick="saveFiche()">💾 Sauvegarder la fiche</button>
+  <button class="btn btn-secondary" onclick="resetForm()">🗑️ Réinitialiser</button>
+</div>
+
+</div><!-- formTab -->
+
+<!-- LIST TAB -->
+<div id="listTab" style="display:none;">
+  <div id="fichesList" class="fiches-list">
+    <div class="msg-box msg-info">Connectez-vous pour voir vos fiches sauvegardées.</div>
+  </div>
+</div>
+
+</div><!-- container -->
+
+<script>
+// ==================== CONFIG ====================
+const SUPABASE_URL = 'https://sevrfgivcpefyykuffti.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNldnJmZ2l2Y3BlZnl5a3VmZnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NDI1NTMsImV4cCI6MjA3ODUxODU1M30.YZnkSHsVWKQEhfU7xYfWyTFmtkM28Zuzdu7Y1sjBXQc';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let currentUser = null;
+let captchas = { login: {}, register: {} };
+
+const BILAN_ZONES = ['Tête','Cervical','Colonne','MSD','MSG','Thorax','Abdo','Bassin','MID','MIG'];
+const BILAN_LESIONS = ['Fracture','Entorse','Contusion','Brûlure','Piqûre','Autre'];
+const MATERIEL_ITEMS = [
+  'Attelle Zimmer','Attelle MI','Attelle MS','Bandage Triangulaire',
+  'Bandage crêpe 5cm','Bandage crêpe 7cm','Bandage crêpe 10cm','Bassin réuniforme',
+  'Coldpack','Collier Cervical','Compresse 5x5','Compresse 10x10','Compresse',
+  'Couverture Alu','Crème antihistaminique','Crème anti-inflammatoire','Crème antiseptique',
+  'Flapulle antiseptique','Flapulle LP','Gant d\'examen (paire)','Pansement individuel',
+  'Pansement à découper','Paracétamol 500mg','Patch DEA','Pocket Mask','Sparadrap par cm'
+];
+
+// ==================== INIT ====================
+window.addEventListener('load', async () => {
+  buildBilanTable();
+  buildMaterielTable();
+  addSoignant();
+  updateOnlineStatus();
+  window.addEventListener('online', onOnline);
+  window.addEventListener('offline', updateOnlineStatus);
+  // Check dark mode
+  if (localStorage.getItem('cr_dark') === '1') document.body.classList.add('dark');
+  updateDarkBtn();
+  // Check format
+  const fmt = localStorage.getItem('cr_format') || 'pc';
+  document.getElementById('formatSelect').value = fmt;
+  changeFormat(fmt);
+  // Auth
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) setUser(session.user);
+  sb.auth.onAuthStateChange((ev, session) => {
+    if (session) setUser(session.user);
+    else { currentUser = null; updateAuthBtn(); }
+  });
+  updatePendingCount();
+});
+
+// ==================== ONLINE / OFFLINE ====================
+function updateOnlineStatus() {
+  const el = document.getElementById('onlineStatus');
+  if (navigator.onLine) { el.textContent = '🟢 En ligne'; el.className = 'status-online'; }
+  else { el.textContent = '🔴 Hors ligne'; el.className = 'status-offline'; }
+}
+
+async function onOnline() {
+  updateOnlineStatus();
+  await syncPendingFiches();
+}
+
+// ==================== DARK MODE ====================
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  localStorage.setItem('cr_dark', document.body.classList.contains('dark') ? '1' : '0');
+  updateDarkBtn();
+}
+function updateDarkBtn() {
+  document.getElementById('darkBtn').textContent = document.body.classList.contains('dark') ? '☀️ Mode Jour' : '🌙 Mode Nuit';
+}
+
+// ==================== FORMAT ====================
+function changeFormat(f) {
+  const c = document.getElementById('mainContainer');
+  c.classList.remove('tablet','phone');
+  if (f === 'tablet') c.classList.add('tablet');
+  else if (f === 'phone') c.classList.add('phone');
+  localStorage.setItem('cr_format', f);
+}
+
+// ==================== SECTIONS TOGGLE ====================
+function toggleSection(el) {
+  el.classList.toggle('collapsed');
+  el.nextElementSibling.classList.toggle('hidden');
+}
+
+// ==================== TABS ====================
+function switchTab(tab) {
+  document.getElementById('formTab').style.display = tab === 'form' ? '' : 'none';
+  document.getElementById('listTab').style.display = tab === 'list' ? '' : 'none';
+  document.getElementById('tabForm').className = 'tab' + (tab === 'form' ? ' active' : '');
+  document.getElementById('tabList').className = 'tab' + (tab === 'list' ? ' active' : '');
+  if (tab === 'list') loadFiches();
+}
+
+// ==================== TOAST ====================
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ==================== CAPTCHA ====================
+function genCaptcha(type) {
+  const a = Math.floor(Math.random() * 10) + 1;
+  const b = Math.floor(Math.random() * 10) + 1;
+  captchas[type] = { answer: a + b };
+  const el = document.getElementById(type === 'login' ? 'loginCaptchaQ' : 'regCaptchaQ');
+  el.textContent = a + ' + ' + b;
+}
+function checkCaptcha(type) {
+  const val = parseInt(document.getElementById(type === 'login' ? 'loginCaptchaA' : 'regCaptchaA').value);
+  return val === captchas[type].answer;
+}
+
+// ==================== AUTH ====================
+function showAuth(type) {
+  document.getElementById('authOverlay').style.display = 'flex';
+  document.getElementById('loginBox').style.display = type === 'login' ? '' : 'none';
+  document.getElementById('registerBox').style.display = type === 'register' ? '' : 'none';
+  document.getElementById('forgotBox').style.display = type === 'forgot' ? '' : 'none';
+  if (type === 'login') genCaptcha('login');
+  if (type === 'register') genCaptcha('register');
+}
+function closeAuth() { document.getElementById('authOverlay').style.display = 'none'; }
+
+async function doLogin() {
+  if (!checkCaptcha('login')) { showToast('Captcha incorrect', 'error'); genCaptcha('login'); return; }
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  if (!email || !pass) { showToast('Remplissez tous les champs', 'error'); return; }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { showToast(error.message, 'error'); return; }
+  setUser(data.user);
+  closeAuth();
+  showToast('Connexion réussie !', 'success');
+  syncPendingFiches();
+}
+
+async function doRegister() {
+  if (!checkCaptcha('register')) { showToast('Captcha incorrect', 'error'); genCaptcha('register'); return; }
+  const nom = document.getElementById('regNom').value.trim();
+  const prenom = document.getElementById('regPrenom').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const p1 = document.getElementById('regPass1').value;
+  const p2 = document.getElementById('regPass2').value;
+  if (!nom || !prenom || !email || !p1) { showToast('Remplissez tous les champs', 'error'); return; }
+  if (p1 !== p2) { showToast('Les mots de passe ne correspondent pas', 'error'); return; }
+  if (p1.length < 6) { showToast('Mot de passe : 6 caractères minimum', 'error'); return; }
+  const { data, error } = await sb.auth.signUp({
+    email, password: p1,
+    options: { data: { nom, prenom }, emailRedirectTo: window.location.origin }
+  });
+  if (error) { showToast(error.message, 'error'); return; }
+  showToast('Inscription réussie ! Vérifiez votre e-mail.', 'success');
+  closeAuth();
+}
+
+async function doForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email) { showToast('Entrez votre adresse e-mail', 'error'); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin
+  });
+  if (error) { showToast(error.message, 'error'); return; }
+  showToast('E-mail de réinitialisation envoyé !', 'success');
+  closeAuth();
+}
+
+function setUser(user) {
+  currentUser = user;
+  updateAuthBtn();
+}
+
+function updateAuthBtn() {
+  const btn = document.getElementById('authBtn');
+  if (currentUser) {
+    btn.textContent = '👤 ' + (currentUser.user_metadata?.prenom || currentUser.email);
+    btn.onclick = () => { if (confirm('Se déconnecter ?')) { sb.auth.signOut(); currentUser = null; updateAuthBtn(); showToast('Déconnecté', 'info'); } };
+  } else {
+    btn.textContent = '🔐 Connexion';
+    btn.onclick = () => showAuth('login');
+  }
+}
+
+// ==================== SOIGNANTS ====================
+let soignantCount = 0;
+function addSoignant() {
+  const id = soignantCount++;
+  const html = `<div class="soignant-card" id="soignant_${id}">
+    <div class="soignant-header"><strong>Soignant #${id + 1}</strong><button class="btn-remove" onclick="document.getElementById('soignant_${id}').remove()">×</button></div>
+    <div class="form-row"><div class="form-group"><label>NOM</label><input type="text" class="sg-nom"></div><div class="form-group small"><label>N° INAMI</label><input type="text" class="sg-inami"></div></div>
+    <div class="check-group">
+      <label><input type="checkbox" class="sg-sec"> SEC</label>
+      <label><input type="checkbox" class="sg-es"> ES</label>
+      <label><input type="checkbox" class="sg-eps"> EPS</label>
+      <label><input type="checkbox" class="sg-tms"> TMS</label>
+      <label><input type="checkbox" class="sg-amu"> AMU</label>
+      <label><input type="checkbox" class="sg-infirmier"> Infirmier</label>
+      <label><input type="checkbox" class="sg-medecin"> Médecin</label>
+    </div>
+  </div>`;
+  document.getElementById('soignantsContainer').insertAdjacentHTML('beforeend', html);
+}
+
+function getSoignants() {
+  const cards = document.querySelectorAll('.soignant-card');
+  return Array.from(cards).map(c => ({
+    nom: c.querySelector('.sg-nom')?.value || '',
+    is_sec: c.querySelector('.sg-sec')?.checked || false,
+    is_es: c.querySelector('.sg-es')?.checked || false,
+    is_eps: c.querySelector('.sg-eps')?.checked || false,
+    is_tms: c.querySelector('.sg-tms')?.checked || false,
+    is_amu: c.querySelector('.sg-amu')?.checked || false,
+    is_infirmier: c.querySelector('.sg-infirmier')?.checked || false,
+    is_medecin: c.querySelector('.sg-medecin')?.checked || false,
+    numero_inami: c.querySelector('.sg-inami')?.value || ''
+  }));
+}
+
+// ==================== BILAN TABLE ====================
+function buildBilanTable() {
+  const body = document.getElementById('bilanBody');
+  BILAN_LESIONS.forEach(les => {
+    let row = '<tr><td>' + les + '</td>';
+    BILAN_ZONES.forEach(zone => {
+      const id = 'bilan_' + zone.replace(/[^a-z]/gi,'') + '_' + les.replace(/[^a-z]/gi,'');
+      row += '<td><input type="checkbox" id="' + id + '"></td>';
+    });
+    row += '</tr>';
+    body.insertAdjacentHTML('beforeend', row);
+  });
+}
+
+function getBilanTableau() {
+  const data = {};
+  BILAN_LESIONS.forEach(les => {
+    BILAN_ZONES.forEach(zone => {
+      const id = 'bilan_' + zone.replace(/[^a-z]/gi,'') + '_' + les.replace(/[^a-z]/gi,'');
+      const cb = document.getElementById(id);
+      if (cb && cb.checked) {
+        if (!data[zone]) data[zone] = {};
+        data[zone][les] = true;
+      }
+    });
+  });
+  return data;
+}
+
+// ==================== MATERIEL TABLE ====================
+function buildMaterielTable() {
+  const body = document.getElementById('matBody');
+  MATERIEL_ITEMS.forEach(item => {
+    const id = 'mat_' + item.replace(/[^a-z0-9]/gi, '_');
+    body.insertAdjacentHTML('beforeend',
+      '<tr><td>' + item + (item === 'Canulle' ? '' : '') + '</td><td><input type="number" min="0" value="0" id="' + id + '"></td></tr>'
+    );
+  });
+  // Canulle special
+  body.insertAdjacentHTML('beforeend',
+    '<tr><td>Canulle — Taille</td><td><input type="text" id="mat_canulle_taille" placeholder="cm"></td></tr>'
+  );
+  // Autre
+  body.insertAdjacentHTML('beforeend',
+    '<tr><td>Autre</td><td><input type="text" id="mat_autre" placeholder="Préciser..."></td></tr>'
+  );
+}
+
+function getMateriel() {
+  const data = {};
+  MATERIEL_ITEMS.forEach(item => {
+    const id = 'mat_' + item.replace(/[^a-z0-9]/gi, '_');
+    const val = parseInt(document.getElementById(id)?.value) || 0;
+    if (val > 0) data[item] = val;
+  });
+  data['Canulle_taille'] = document.getElementById('mat_canulle_taille')?.value || '';
+  data['Autre'] = document.getElementById('mat_autre')?.value || '';
+  return data;
+}
+
+// ==================== COLLECT FORM DATA ====================
+function getRadio(name) { const el = document.querySelector('input[name="'+name+'"]:checked'); return el ? el.value : ''; }
+
+function collectFormData() {
+  const soins = {};
+  document.querySelectorAll('[data-soin]').forEach(cb => { if (cb.checked) soins[cb.dataset.soin] = true; });
+  return {
+    fiche_medicale: getRadio('ficheMed') === 'oui',
+    numero_odin: document.getElementById('numOdin').value,
+    nom_aps: document.getElementById('nomAps').value,
+    numero_patient: document.getElementById('numPatient').value,
+    patient_nom: document.getElementById('patNom').value,
+    patient_prenom: document.getElementById('patPrenom').value,
+    date_naissance: document.getElementById('patDob').value || null,
+    est_mineur: document.getElementById('patMineur').checked,
+    sexe: getRadio('patSexe'),
+    adresse: document.getElementById('patAdresse').value,
+    telephone: document.getElementById('patTel').value,
+    numero_cl: document.getElementById('patCl').value,
+    in_spontanee: document.getElementById('inSpontanee').checked,
+    in_via_equipe: document.getElementById('inEquipe').checked,
+    in_via_ambulance: document.getElementById('inAmbulance').checked,
+    in_autre_moyen: document.getElementById('inAutre').value,
+    in_date: document.getElementById('inDate').value || null,
+    heure_in: document.getElementById('inHeure').value || null,
+    conscience: getRadio('conscience') === 'oui' ? true : getRadio('conscience') === 'non' ? false : null,
+    respiration: getRadio('respiration') === 'oui' ? true : getRadio('respiration') === 'non' ? false : null,
+    circulation: getRadio('circulation') === 'oui' ? true : getRadio('circulation') === 'non' ? false : null,
+    hemorragie: getRadio('hemorragie') || '',
+    urgence: getRadio('urgence') || '',
+    bilan_tableau: getBilanTableau(),
+    soins: soins,
+    autres_soins: document.getElementById('autresSoins').value,
+    materiel: getMateriel(),
+    out_retour_normal: document.getElementById('outNormal').checked,
+    out_refus_soins: document.getElementById('outRefus').checked,
+    out_evacuation_vsl: document.getElementById('outVsl').checked,
+    out_evacuation_ambulance: document.getElementById('outAmbulance').value,
+    out_autre_moyen: document.getElementById('outAutreMoyen').value,
+    heure_out: document.getElementById('outHeure').value || null,
+    soignants: getSoignants()
+  };
+}
+
+// ==================== SAVE ====================
+async function saveFiche() {
+  const data = collectFormData();
+  if (!data.patient_nom && !data.patient_prenom) {
+    showToast('Veuillez au moins renseigner le nom ou prénom du patient', 'error');
+    return;
+  }
+
+  if (!currentUser || !navigator.onLine) {
+    // Offline or not logged in → local storage
+    const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
+    data._localId = Date.now().toString();
+    data._createdAt = new Date().toISOString();
+    pending.push(data);
+    localStorage.setItem('cr_pending', JSON.stringify(pending));
+    updatePendingCount();
+    if (!currentUser) {
+      showToast('Fiche mise en attente. Connectez-vous et ayez du réseau pour sauvegarder.', 'info');
+    } else {
+      showToast('Pas de connexion internet. Fiche mise en attente.', 'info');
+    }
+    resetForm();
+    return;
+  }
+
+  // Online + logged in → save to DB
+  await saveToSupabase(data);
+  resetForm();
+}
+
+async function saveToSupabase(data) {
+  const soignants = data.soignants;
+  delete data.soignants;
+  delete data._localId;
+  delete data._createdAt;
+  data.user_id = currentUser.id;
+
+  const { data: fiche, error } = await sb.from('fiches_croixrouge').insert(data).select('id').single();
+  if (error) { showToast('Erreur de sauvegarde: ' + error.message, 'error'); return false; }
+
+  if (soignants && soignants.length > 0) {
+    const rows = soignants.filter(s => s.nom).map(s => ({ ...s, fiche_id: fiche.id }));
+    if (rows.length > 0) {
+      const { error: e2 } = await sb.from('soignants_croixrouge').insert(rows);
+      if (e2) console.error('Soignants error:', e2);
+    }
+  }
+  showToast('Fiche sauvegardée avec succès !', 'success');
+  return true;
+}
+
+// ==================== SYNC PENDING ====================
+async function syncPendingFiches() {
+  if (!currentUser || !navigator.onLine) return;
+  const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
+  if (pending.length === 0) return;
+  let remaining = [];
+  for (const fiche of pending) {
+    const ok = await saveToSupabase({ ...fiche });
+    if (!ok) remaining.push(fiche);
+  }
+  localStorage.setItem('cr_pending', JSON.stringify(remaining));
+  updatePendingCount();
+  if (remaining.length === 0 && pending.length > 0) {
+    showToast(pending.length + ' fiche(s) en attente synchronisée(s) !', 'success');
+  }
+}
+
+function updatePendingCount() {
+  const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
+  document.getElementById('pendingCount').textContent = pending.length + ' fiche(s) en attente';
+}
+
+// ==================== LOAD FICHES ====================
+async function loadFiches() {
+  const container = document.getElementById('fichesList');
+  if (!currentUser) {
+    // Show pending only
+    const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
+    if (pending.length === 0) {
+      container.innerHTML = '<div class="msg-box msg-info">Connectez-vous pour voir vos fiches. Aucune fiche en attente.</div>';
+      return;
+    }
+    container.innerHTML = '<h3 style="margin-bottom:12px;">⏳ Fiches en attente (' + pending.length + ')</h3>';
+    pending.forEach((f, i) => {
+      container.innerHTML += '<div class="fiche-item"><div class="fiche-info"><strong>' +
+        (f.patient_nom || '?') + ' ' + (f.patient_prenom || '') +
+        '</strong> — ' + (f.in_date || 'N/A') + ' <span class="pending-badge">En attente</span></div>' +
+        '<div class="fiche-btns"><button class="btn btn-secondary" onclick="deletePending(' + i + ')">🗑️</button></div></div>';
+    });
+    return;
+  }
+
+  if (!navigator.onLine) {
+    container.innerHTML = '<div class="msg-box msg-info">Vous êtes hors ligne. Les fiches sauvegardées ne sont pas accessibles.</div>';
+    return;
+  }
+
+  container.innerHTML = '<p style="text-align:center;">Chargement...</p>';
+  const { data, error } = await sb.from('fiches_croixrouge').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+  if (error) { container.innerHTML = '<div class="msg-box msg-info">Erreur : ' + error.message + '</div>'; return; }
+
+  // Also show pending
+  const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
+  let html = '';
+  if (pending.length > 0) {
+    html += '<h3 style="margin-bottom:12px;">⏳ En attente (' + pending.length + ')</h3>';
+    pending.forEach((f, i) => {
+      html += '<div class="fiche-item"><div class="fiche-info"><strong>' +
+        (f.patient_nom || '?') + ' ' + (f.patient_prenom || '') +
+        '</strong> <span class="pending-badge">En attente</span></div>' +
+        '<div class="fiche-btns"><button class="btn btn-secondary" onclick="deletePending(' + i + ')">🗑️</button></div></div>';
+    });
+  }
+
+  html += '<h3 style="margin:16px 0 12px;">📁 Fiches sauvegardées (' + data.length + ')</h3>';
+  if (data.length === 0) html += '<p style="color:var(--text3);">Aucune fiche sauvegardée.</p>';
+  data.forEach(f => {
+    html += '<div class="fiche-item"><div class="fiche-info"><strong>' +
+      (f.patient_nom || '?') + ' ' + (f.patient_prenom || '') +
+      '</strong> — N°Pat: ' + (f.numero_patient || 'N/A') +
+      ' — ' + (f.in_date || 'N/A') +
+      '</div><div class="fiche-btns">' +
+      '<button class="btn btn-secondary" onclick="deleteFiche(\'' + f.id + '\')">🗑️</button></div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function deletePending(index) {
+  if (!confirm('Supprimer cette fiche en attente ?')) return;
+  const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
+  pending.splice(index, 1);
+  localStorage.setItem('cr_pending', JSON.stringify(pending));
+  updatePendingCount();
+  loadFiches();
+  showToast('Fiche en attente supprimée', 'info');
+}
+
+async function deleteFiche(id) {
+  if (!confirm('Supprimer cette fiche définitivement ?')) return;
+  const { error } = await sb.from('fiches_croixrouge').delete().eq('id', id);
+  if (error) { showToast('Erreur: ' + error.message, 'error'); return; }
+  showToast('Fiche supprimée', 'success');
+  loadFiches();
+}
+
+// ==================== RESET FORM ====================
+function resetForm() {
+  document.querySelectorAll('#formTab input[type="text"], #formTab input[type="tel"], #formTab input[type="date"], #formTab input[type="time"], #formTab textarea').forEach(el => el.value = '');
+  document.querySelectorAll('#formTab input[type="checkbox"]').forEach(el => el.checked = false);
+  document.querySelectorAll('#formTab input[type="radio"]').forEach(el => el.checked = false);
+  document.querySelectorAll('#formTab input[type="number"]').forEach(el => el.value = '0');
+  document.querySelector('input[name="ficheMed"][value="non"]').checked = true;
+  // Reset soignants
+  document.getElementById('soignantsContainer').innerHTML = '';
+  soignantCount = 0;
+  addSoignant();
+}
+</script>
+</body>
+</html>
