@@ -594,9 +594,13 @@ async function doRegister() {
   if (p1 !== p2) { showToast('Les mots de passe ne correspondent pas', 'error'); return; }
   if (p1.length < 6) { showToast('Mot de passe : 6 caractères minimum', 'error'); return; }
   const { data, error } = await sb.auth.signUp({
-    email, password: p1,
-    options: { data: { nom, prenom }, emailRedirectTo: window.location.origin }
-  });
+  email,
+  password: p1,
+  options: { 
+    data: { nom, prenom },
+    emailRedirectTo: 'https://stiorxtwitch.github.io/croix-rouge-fichepatient/confirm.html'   // ← ton chemin
+  }
+});
   if (error) { showToast(error.message, 'error'); return; }
   showToast('Inscription réussie ! Vérifiez votre e-mail.', 'success');
   closeAuth();
