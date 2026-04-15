@@ -129,6 +129,8 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .bilan-table th, .bilan-table td { border: 1px solid var(--border); padding: 6px 4px; text-align: center; white-space: nowrap; }
 .bilan-table th { background: var(--primary); color: #fff; font-weight: 600; font-size: .8em; }
 .bilan-table td:first-child { background: var(--bg2); font-weight: 600; text-align: left; padding-left: 10px; font-size: .85em; }
+/* Highlight checkbox cells when checked */
+.bilan-table td.cell-checked { background: rgba(212,5,17,.08); }
 
 /* ===== MATERIAL TABLE ===== */
 .mat-table { width: 100%; border-collapse: collapse; }
@@ -207,6 +209,8 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .fiche-btns { display: flex; gap: 6px; }
 .fiche-btns button { padding: 6px 12px; font-size: .8em; }
 .pending-badge { display: inline-block; background: var(--warning); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; }
+.btn-view { background: #2980b9; color: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: .8em; cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
+.btn-view:hover { background: #1a6fa0; }
 
 /* ===== TOAST ===== */
 .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: var(--radius); color: #fff; font-weight: 600; z-index: 999; opacity: 0; transition: opacity .3s, transform .3s; font-size: .88em; max-width: 340px; transform: translateY(8px); }
@@ -220,12 +224,59 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .msg-info { background: #e8f4fd; color: #1a5276; border: 1px solid #aed6f1; }
 .dark .msg-info { background: #1a2a3a; color: #85c1e9; border-color: #2e4f6a; }
 
+/* ===== FICHE VIEW MODAL ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 300;
+  display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px);
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+.modal-box {
+  background: var(--card); border-radius: 16px; padding: 0;
+  width: 100%; max-width: 780px; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 80px rgba(0,0,0,.35); border: 1px solid var(--border);
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+.modal-header {
+  background: var(--primary); color: #fff; padding: 16px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-radius: 16px 16px 0 0; position: sticky; top: 0; z-index: 10;
+}
+.modal-header h2 { font-size: 1.05em; font-weight: 700; }
+.modal-close { background: rgba(255,255,255,.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+.modal-close:hover { background: rgba(255,255,255,.4); }
+.modal-body { padding: 20px; }
+.modal-section { margin-bottom: 20px; }
+.modal-section-title { font-weight: 700; font-size: .82em; text-transform: uppercase; letter-spacing: .6px; color: var(--primary); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--primary-light); }
+.modal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.modal-field { background: var(--bg2); border-radius: var(--radius-sm); padding: 8px 12px; }
+.modal-field .lbl { font-size: .72em; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+.modal-field .val { font-size: .9em; font-weight: 600; color: var(--text); }
+.modal-field .val.empty { color: var(--text3); font-style: italic; font-weight: 400; }
+.urgence-badge-modal { display: inline-block; padding: 4px 14px; border-radius: 20px; font-weight: 700; font-size: .9em; color: #fff; }
+.modal-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.modal-tag { background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: .8em; font-weight: 600; }
+.modal-body-schema { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.modal-body-schema svg { max-width: 130px; width: 100%; }
+.modal-lesions-list { flex: 1; min-width: 160px; }
+.modal-lesion-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; margin: 3px; color: #fff; }
+.soignants-modal { display: flex; flex-wrap: wrap; gap: 10px; }
+.soignant-modal-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: .85em; min-width: 150px; }
+.soignant-modal-card strong { display: block; color: var(--text); margin-bottom: 4px; }
+.soignant-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.soignant-badge { background: var(--bg3); color: var(--text2); padding: 1px 7px; border-radius: 10px; font-size: .75em; font-weight: 600; }
+.mat-modal-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.mat-modal-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 12px; font-size: .82em; }
+.mat-modal-item span { font-weight: 700; color: var(--primary); margin-left: 6px; font-family: var(--mono); }
+
 @media (max-width: 600px) {
   .form-group { min-width: 100% !important; }
   .header { flex-direction: column; text-align: center; }
   .header-btns { justify-content: center; }
   .bilan-table { font-size: .68em; }
   .body-schema-wrapper { flex-direction: column; align-items: center; }
+  .modal-grid { grid-template-columns: 1fr 1fr; }
 }
 
 /* Urgence color pills */
@@ -297,6 +348,17 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
     <div class="form-group"><label>Adresse e-mail</label><input type="email" id="forgotEmail"></div>
     <button class="btn-primary" onclick="doForgot()">Envoyer le lien</button>
     <div class="auth-links"><a onclick="showAuth('login')">Retour</a> | <a onclick="closeAuth()">Fermer</a></div>
+  </div>
+</div>
+
+<!-- Fiche View Modal -->
+<div id="ficheModal" class="modal-overlay" style="display:none;" onclick="closeFicheModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modalTitle">📋 Fiche Patient</h2>
+      <button class="modal-close" onclick="document.getElementById('ficheModal').style.display='none'">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
 
@@ -447,7 +509,6 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
                 <text x="31" y="82" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MSG</text>
                 <text x="70" y="175" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MID</text>
                 <text x="50" y="175" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MIG</text>
-                <!-- Colonne indicator -->
                 <text x="60" y="55" text-anchor="middle" font-size="4.5" fill="#666" pointer-events="none" transform="rotate(90,60,55)">Col.</text>
               </svg>
               <div style="font-size:.72em; color:var(--text3); text-align:center;">Cliquez sur une zone<br>pour la sélectionner</div>
@@ -482,7 +543,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
         </div>
 
         <!-- Classic table (secondary) -->
-        <details style="margin-top:14px;">
+        <details style="margin-top:14px;" id="bilanTableDetails">
           <summary style="cursor:pointer; font-weight:600; font-size:.85em; color:var(--text2); padding:6px 0;">📋 Tableau détaillé (optionnel)</summary>
           <div style="overflow-x:auto; margin-top:10px;">
             <table class="bilan-table" id="bilanTable">
@@ -592,9 +653,24 @@ const ZONE_IDS = {
   'MID': 'zone_mid',
   'MIG': 'zone_mig'
 };
+
+// Map lesion display name → table id suffix
+const LESION_ID_MAP = {
+  'Fracture': 'Fracture',
+  'Entorse': 'Entorse',
+  'Contusion': 'Contusion',
+  'Brûlure': 'Brulure',
+  'Piqûre': 'Piqure',
+  'Autre': 'Autre'
+};
+
 let activeLesion = 'Fracture';
 // bodyData: { 'Tête': ['Fracture', 'Contusion'], 'MSD': ['Entorse'] }
 let bodyData = {};
+
+// === Flag to prevent mutual recursion between table↔schema sync ===
+let _syncingFromTable = false;
+let _syncingFromSchema = false;
 
 function setActiveLesion(lesion) {
   activeLesion = lesion;
@@ -609,33 +685,33 @@ function toggleBodyZone(zone) {
   if (!bodyData[zone]) bodyData[zone] = [];
   const arr = bodyData[zone];
   const idx = arr.indexOf(activeLesion);
-  if (idx === -1) {
-    arr.push(activeLesion);
-  } else {
-    arr.splice(idx, 1);
-  }
+  if (idx === -1) arr.push(activeLesion);
+  else arr.splice(idx, 1);
   if (arr.length === 0) delete bodyData[zone];
   updateBodySvg();
   updateActiveZonesList();
+  // Sync to table
+  if (!_syncingFromTable) {
+    _syncingFromSchema = true;
+    syncBodyToTable();
+    _syncingFromSchema = false;
+  }
 }
 
 function updateBodySvg() {
-  // Reset all zones
   Object.entries(ZONE_IDS).forEach(([zone, svgId]) => {
     const el = document.getElementById(svgId);
     if (!el) return;
     if (bodyData[zone] && bodyData[zone].length > 0) {
-      // Use first lesion color (or mix if multiple)
       const colors = bodyData[zone].map(l => LESION_COLORS[l] || '#ccc');
-      if (colors.length === 1) {
-        el.setAttribute('fill', colors[0]);
-        el.setAttribute('opacity', '0.85');
-      } else {
-        // Multiple: use gradient-like approach with primary color
-        el.setAttribute('fill', colors[0]);
-        el.setAttribute('opacity', '0.85');
+      el.setAttribute('fill', colors[0]);
+      el.setAttribute('opacity', '0.85');
+      if (colors.length > 1) {
         el.setAttribute('stroke', colors[1]);
         el.setAttribute('stroke-width', '3');
+      } else {
+        el.setAttribute('stroke', '#999');
+        el.setAttribute('stroke-width', '1.5');
       }
     } else {
       el.setAttribute('fill', '#e8e8e8');
@@ -672,24 +748,58 @@ function removeBodyZone(zone, lesion) {
   }
   updateBodySvg();
   updateActiveZonesList();
+  if (!_syncingFromTable) {
+    _syncingFromSchema = true;
+    syncBodyToTable();
+    _syncingFromSchema = false;
+  }
 }
 
-// Sync body schema with bilan table (keep both in sync)
-function syncBodyToBilanTable() {
-  // Reset all checkboxes first
-  document.querySelectorAll('#bilanBody input[type="checkbox"]').forEach(cb => cb.checked = false);
-  // Apply bodyData
-  const ZONES_MAP = {'Tête':'Tte','Cervical':'Cervical','Colonne':'Colonne','MSD':'MSD','MSG':'MSG','Thorax':'Thorax','Abdo':'Abdo','Bassin':'Bassin','MID':'MID','MIG':'MIG'};
-  const LESIONS_MAP = {'Fracture':'Fracture','Entorse':'Entorse','Contusion':'Contusion','Brûlure':'Brulure','Piqûre':'Piqure','Autre':'Autre'};
+// ===== SYNC: Body schema → Bilan table =====
+function syncBodyToTable() {
+  document.querySelectorAll('#bilanBody input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+    if (cb.parentElement) cb.parentElement.classList.remove('cell-checked');
+  });
   Object.entries(bodyData).forEach(([zone, lesions]) => {
     lesions.forEach(lesion => {
-      const zKey = zone.replace(/[^a-z]/gi,'');
-      const lKey = lesion.replace(/[^a-z]/gi,'');
+      const zKey = zone.replace(/[^a-zA-Z]/g, '');
+      const lKey = (LESION_ID_MAP[lesion] || lesion).replace(/[^a-zA-Z]/g, '');
       const id = 'bilan_' + zKey + '_' + lKey;
       const el = document.getElementById(id);
-      if (el) el.checked = true;
+      if (el) {
+        el.checked = true;
+        if (el.parentElement) el.parentElement.classList.add('cell-checked');
+      }
     });
   });
+}
+
+// ===== SYNC: Bilan table → Body schema =====
+// Called on each checkbox change in the table
+function onBilanCheckboxChange(checkbox, zone, lesionKey) {
+  if (_syncingFromSchema) return; // avoid loop
+
+  // Find the display name for this lesion key
+  const lesionDisplay = Object.keys(LESION_ID_MAP).find(k => LESION_ID_MAP[k] === lesionKey) || lesionKey;
+
+  _syncingFromTable = true;
+
+  if (checkbox.checked) {
+    if (!bodyData[zone]) bodyData[zone] = [];
+    if (!bodyData[zone].includes(lesionDisplay)) bodyData[zone].push(lesionDisplay);
+    if (checkbox.parentElement) checkbox.parentElement.classList.add('cell-checked');
+  } else {
+    if (bodyData[zone]) {
+      bodyData[zone] = bodyData[zone].filter(l => l !== lesionDisplay);
+      if (bodyData[zone].length === 0) delete bodyData[zone];
+    }
+    if (checkbox.parentElement) checkbox.parentElement.classList.remove('cell-checked');
+  }
+
+  updateBodySvg();
+  updateActiveZonesList();
+  _syncingFromTable = false;
 }
 
 // ===== URGENCE PILLS =====
@@ -765,10 +875,13 @@ const BILAN_LESIONS = ['Fracture','Entorse','Contusion','Brûlure','Piqûre','Au
 function buildBilanTable() {
   const body = document.getElementById('bilanBody');
   BILAN_LESIONS.forEach(les => {
+    const lesKey = (LESION_ID_MAP[les] || les).replace(/[^a-zA-Z]/g, '');
     let row = '<tr><td>' + les + '</td>';
     BILAN_ZONES.forEach(zone => {
-      const id = 'bilan_' + zone.replace(/[^a-z]/gi,'') + '_' + les.replace(/[^a-z]/gi,'');
-      row += '<td><input type="checkbox" id="' + id + '"></td>';
+      const zKey = zone.replace(/[^a-zA-Z]/g, '');
+      const id = 'bilan_' + zKey + '_' + lesKey;
+      // onchange triggers sync table → schema
+      row += `<td id="cell_${zKey}_${lesKey}"><input type="checkbox" id="${id}" onchange="onBilanCheckboxChange(this,'${zone}','${lesKey}')"></td>`;
     });
     row += '</tr>';
     body.insertAdjacentHTML('beforeend', row);
@@ -776,11 +889,13 @@ function buildBilanTable() {
 }
 
 function getBilanTableau() {
-  // Merge body schema + table
-  const data = JSON.parse(JSON.stringify(bodyData)); // from schema
+  // Already kept in sync via bodyData — just return bodyData merged with table
+  const data = JSON.parse(JSON.stringify(bodyData));
   BILAN_LESIONS.forEach(les => {
+    const lesKey = (LESION_ID_MAP[les] || les).replace(/[^a-zA-Z]/g, '');
     BILAN_ZONES.forEach(zone => {
-      const id = 'bilan_' + zone.replace(/[^a-z]/gi,'') + '_' + les.replace(/[^a-z]/gi,'');
+      const zKey = zone.replace(/[^a-zA-Z]/g, '');
+      const id = 'bilan_' + zKey + '_' + lesKey;
       const cb = document.getElementById(id);
       if (cb && cb.checked) {
         if (!data[zone]) data[zone] = [];
@@ -1032,7 +1147,6 @@ async function saveFiche() {
 
 async function saveToSupabase(rawData) {
   const soignants = rawData.soignants || [];
-  // Build only the columns that exist in fiches_croixrouge
   const ficheRow = {
     user_id: currentUser.id,
     fiche_medicale: rawData.fiche_medicale,
@@ -1072,20 +1186,9 @@ async function saveToSupabase(rawData) {
     out_autre_moyen: rawData.out_autre_moyen,
     heure_out: rawData.heure_out
   };
-
-  // Remove null/undefined keys to avoid type errors
   Object.keys(ficheRow).forEach(k => { if (ficheRow[k] === undefined) delete ficheRow[k]; });
-
-  console.log('Saving fiche:', ficheRow);
-
   const { data: fiche, error } = await sb.from('fiches_croixrouge').insert(ficheRow).select('id').single();
-  if (error) {
-    console.error('Supabase error:', error);
-    showToast('Erreur: ' + error.message, 'error');
-    return false;
-  }
-
-  // Save soignants
+  if (error) { showToast('Erreur: ' + error.message, 'error'); return false; }
   if (soignants.length > 0) {
     const rows = soignants.filter(s => s.nom && s.nom.trim()).map(s => ({ ...s, fiche_id: fiche.id }));
     if (rows.length > 0) {
@@ -1121,14 +1224,23 @@ async function loadFiches() {
     if (!pending.length) { container.innerHTML = '<div class="msg-box msg-info">Connectez-vous pour voir vos fiches. Aucune fiche en attente.</div>'; return; }
     container.innerHTML = '<h3 style="margin-bottom:12px;">⏳ Fiches en attente (' + pending.length + ')</h3>';
     pending.forEach((f, i) => {
-      container.innerHTML += `<div class="fiche-item"><div class="fiche-info"><strong>${f.patient_nom||'?'} ${f.patient_prenom||''}</strong> — ${f.in_date||'N/A'} <span class="pending-badge">En attente</span></div><div class="fiche-btns"><button class="btn btn-secondary" onclick="deletePending(${i})">🗑️</button></div></div>`;
+      container.innerHTML += `<div class="fiche-item">
+        <div class="fiche-info"><strong>${f.patient_nom||'?'} ${f.patient_prenom||''}</strong> — ${f.in_date||'N/A'} <span class="pending-badge">En attente</span></div>
+        <div class="fiche-btns">
+          <button class="btn-view" onclick="viewPendingFiche(${i})">👁️ Voir</button>
+          <button class="btn btn-secondary" onclick="deletePending(${i})">🗑️</button>
+        </div>
+      </div>`;
     });
     return;
   }
   if (!navigator.onLine) { container.innerHTML = '<div class="msg-box msg-info">Vous êtes hors ligne.</div>'; return; }
 
   container.innerHTML = '<p style="text-align:center;color:var(--text3);">Chargement...</p>';
-  const { data, error } = await sb.from('fiches_croixrouge').select('id,patient_nom,patient_prenom,numero_patient,in_date,urgence,created_at').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+  const { data, error } = await sb.from('fiches_croixrouge')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false });
   if (error) { container.innerHTML = '<div class="msg-box msg-info">Erreur : ' + error.message + '</div>'; return; }
 
   const URGENCE_COLORS = { U1:'#e74c3c', U2:'#f39c12', U3:'#2ecc71', implique:'#5c6bc0' };
@@ -1136,7 +1248,13 @@ async function loadFiches() {
   if (pending.length > 0) {
     html += '<h3 style="margin-bottom:12px;">⏳ En attente (' + pending.length + ')</h3>';
     pending.forEach((f, i) => {
-      html += `<div class="fiche-item"><div class="fiche-info"><strong>${f.patient_nom||'?'} ${f.patient_prenom||''}</strong> — ${f.in_date||'N/A'} <span class="pending-badge">En attente</span></div><div class="fiche-btns"><button class="btn btn-secondary" onclick="deletePending(${i})">🗑️</button></div></div>`;
+      html += `<div class="fiche-item">
+        <div class="fiche-info"><strong>${f.patient_nom||'?'} ${f.patient_prenom||''}</strong> — ${f.in_date||'N/A'} <span class="pending-badge">En attente</span></div>
+        <div class="fiche-btns">
+          <button class="btn-view" onclick="viewPendingFiche(${i})">👁️ Voir</button>
+          <button class="btn btn-secondary" onclick="deletePending(${i})">🗑️</button>
+        </div>
+      </div>`;
     });
   }
   html += '<h3 style="margin:16px 0 12px;">📁 Fiches sauvegardées (' + data.length + ')</h3>';
@@ -1148,11 +1266,231 @@ async function loadFiches() {
     html += `<div class="fiche-item">
       <div class="fiche-info"><strong>${f.patient_nom||'?'} ${f.patient_prenom||''}</strong> — N°Pat: ${f.numero_patient||'N/A'} — ${f.in_date||'N/A'} ${urgLabel}</div>
       <div class="fiche-btns">
+        <button class="btn-view" onclick='viewFiche(${JSON.stringify(JSON.stringify(f))})'>👁️ Voir</button>
         <button class="btn btn-secondary" onclick="deleteFiche('${f.id}')">🗑️</button>
       </div>
     </div>`;
   });
   container.innerHTML = html;
+}
+
+// ===== VIEW FICHE MODAL =====
+function closeFicheModal(event) {
+  if (event.target === document.getElementById('ficheModal')) {
+    document.getElementById('ficheModal').style.display = 'none';
+  }
+}
+
+function viewPendingFiche(index) {
+  const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
+  const f = pending[index];
+  if (!f) return;
+  renderFicheModal(f);
+}
+
+function viewFiche(jsonStr) {
+  const f = JSON.parse(jsonStr);
+  renderFicheModal(f);
+}
+
+function renderFicheModal(f) {
+  const URGENCE_COLORS = { U1:'#e74c3c', U2:'#f39c12', U3:'#2ecc71', implique:'#5c6bc0' };
+  const v = (val, fallback='—') => (val !== null && val !== undefined && val !== '') ? val : `<span class="empty">${fallback}</span>`;
+  const bool2str = (val) => val === true ? '✅ Oui' : val === false ? '❌ Non' : '—';
+
+  // Title
+  document.getElementById('modalTitle').textContent = `📋 ${f.patient_nom || '?'} ${f.patient_prenom || ''} — Fiche Patient`;
+
+  // Build body schema SVG for modal (read-only, smaller)
+  const bilanData = f.bilan_tableau || {};
+  function buildModalSvg(bilanData) {
+    const zoneColors = {};
+    Object.entries(bilanData).forEach(([zone, lesions]) => {
+      if (lesions && lesions.length > 0) {
+        zoneColors[zone] = LESION_COLORS[lesions[0]] || '#999';
+      }
+    });
+    const zoneShapes = {
+      'Tête': '<ellipse cx="60" cy="20" rx="17" ry="18"',
+      'Cervical': '<rect x="53" y="37" width="14" height="12" rx="3"',
+      'Thorax': '<rect x="40" y="49" width="40" height="42" rx="5"',
+      'Abdo': '<rect x="43" y="91" width="34" height="26" rx="4"',
+      'Bassin': '<rect x="40" y="117" width="40" height="20" rx="4"',
+      'MSD': '<rect x="80" y="49" width="18" height="60" rx="6"',
+      'MSG': '<rect x="22" y="49" width="18" height="60" rx="6"',
+      'MID': '<rect x="60" y="137" width="20" height="70" rx="6"',
+      'MIG': '<rect x="40" y="137" width="20" height="70" rx="6"',
+      'Colonne': ''
+    };
+    let svgBody = '';
+    Object.entries(zoneShapes).forEach(([zone, shape]) => {
+      if (!shape) return;
+      const color = zoneColors[zone] || '#e8e8e8';
+      const stroke = zoneColors[zone] ? zoneColors[zone] : '#999';
+      svgBody += `${shape} fill="${color}" stroke="${stroke}" stroke-width="1.5" opacity="${zoneColors[zone] ? '0.85' : '1'}"/>`;
+    });
+    // Feet
+    svgBody += `<ellipse cx="70" cy="210" rx="10" ry="5" fill="${zoneColors['MID']||'#e8e8e8'}" stroke="${zoneColors['MID']||'#999'}" stroke-width="1.5"/>`;
+    svgBody += `<ellipse cx="50" cy="210" rx="10" ry="5" fill="${zoneColors['MIG']||'#e8e8e8'}" stroke="${zoneColors['MIG']||'#999'}" stroke-width="1.5"/>`;
+    // Labels
+    const labels = [
+      [60,21,'Tête'],[60,45,'Cerv.'],[60,73,'Thorax'],[60,107,'Abdo'],[60,130,'Bassin'],
+      [89,82,'MSD'],[31,82,'MSG'],[70,175,'MID'],[50,175,'MIG']
+    ];
+    labels.forEach(([x,y,t]) => { svgBody += `<text x="${x}" y="${y}" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">${t}</text>`; });
+    return `<svg viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg" style="max-width:130px;width:100%;">${svgBody}</svg>`;
+  }
+
+  // Build lesion badges
+  let lesionBadgesHtml = '';
+  if (Object.keys(bilanData).length > 0) {
+    Object.entries(bilanData).forEach(([zone, lesions]) => {
+      (lesions || []).forEach(lesion => {
+        const color = LESION_COLORS[lesion] || '#999';
+        lesionBadgesHtml += `<span class="modal-lesion-badge" style="background:${color};">${zone} — ${lesion}</span>`;
+      });
+    });
+  } else {
+    lesionBadgesHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucune lésion enregistrée</span>';
+  }
+
+  // Soins
+  const soinsData = f.soins || {};
+  const SOINS_LABELS = {
+    plaies:'Soin de plaies', pansement:'Pansement', attelle:'Attelle',
+    matelas_depression:'Matelas à dépression', compression:'Compression',
+    bandage:'Bandage', collier_cervical:'Collier Cervical', repos_surveillance:'Repos / Surveillance'
+  };
+  const soinsActifs = Object.keys(soinsData).filter(k => soinsData[k]).map(k => SOINS_LABELS[k] || k);
+  let soinsHtml = soinsActifs.length > 0
+    ? soinsActifs.map(s => `<span class="modal-tag">${s}</span>`).join('')
+    : '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun soin</span>';
+
+  // Matériel
+  const matData = f.materiel || {};
+  const matKeys = Object.keys(matData);
+  let matHtml = matKeys.length > 0
+    ? matKeys.map(k => `<div class="mat-modal-item">${k}<span>×${matData[k]}</span></div>`).join('')
+    : '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun matériel</span>';
+
+  // Urgence badge
+  const urg = f.urgence;
+  const urgColor = urg ? (URGENCE_COLORS[urg] || '#999') : null;
+  const urgHtml = urg
+    ? `<span class="urgence-badge-modal" style="background:${urgColor};">${urg === 'U1' ? '🔴' : urg === 'U2' ? '🟡' : urg === 'U3' ? '🟢' : '🔵'} ${urg}</span>`
+    : '<span style="color:var(--text3);">—</span>';
+
+  // IN modes
+  const inModes = [];
+  if (f.in_spontanee) inModes.push('Spontanée');
+  if (f.in_via_equipe) inModes.push('Via équipe');
+  if (f.in_via_ambulance) inModes.push('Via ambulance' + (f.in_num_ambulance ? ` (${f.in_num_ambulance})` : ''));
+
+  // OUT modes
+  const outModes = [];
+  if (f.out_retour_normal) outModes.push('Retour à la vie normale');
+  if (f.out_refus_soins) outModes.push('Refus de soins');
+  if (f.out_evacuation_vsl) outModes.push('Évacuation VSL');
+  if (f.out_evacuation_ambulance) outModes.push('Ambulance' + (f.out_num_ambulance ? ` (${f.out_num_ambulance})` : ''));
+
+  // Soignants (from DB or local)
+  let soignantsHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Non disponible (fiche en attente)</span>';
+  if (f.soignants && Array.isArray(f.soignants)) {
+    const validSoignants = f.soignants.filter(s => s.nom && s.nom.trim());
+    if (validSoignants.length > 0) {
+      soignantsHtml = '<div class="soignants-modal">' + validSoignants.map(s => {
+        const roles = ['SEC','ES','EPS','TMS','AMU','Infirmier','Médecin'].filter((r,i) => [s.is_sec,s.is_es,s.is_eps,s.is_tms,s.is_amu,s.is_infirmier,s.is_medecin][i]);
+        return `<div class="soignant-modal-card"><strong>${s.nom}</strong>${s.numero_inami ? `<span style="font-size:.78em;color:var(--text3);">INAMI: ${s.numero_inami}</span>` : ''}<div class="soignant-badges">${roles.map(r=>`<span class="soignant-badge">${r}</span>`).join('')}</div></div>`;
+      }).join('') + '</div>';
+    } else {
+      soignantsHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun soignant</span>';
+    }
+  }
+
+  const createdAt = f.created_at ? new Date(f.created_at).toLocaleString('fr-BE') : (f._createdAt ? new Date(f._createdAt).toLocaleString('fr-BE') : '—');
+
+  document.getElementById('modalBody').innerHTML = `
+    <!-- Titre / Identifiant -->
+    <div class="modal-section">
+      <div class="modal-section-title">📌 Identification</div>
+      <div class="modal-grid">
+        <div class="modal-field"><div class="lbl">N° Patient</div><div class="val">${v(f.numero_patient)}</div></div>
+        <div class="modal-field"><div class="lbl">N° ODIN</div><div class="val">${v(f.numero_odin)}</div></div>
+        <div class="modal-field"><div class="lbl">APS</div><div class="val">${v(f.nom_aps)}</div></div>
+        <div class="modal-field"><div class="lbl">Fiche médicale</div><div class="val">${f.fiche_medicale ? '✅ Oui' : '❌ Non'}</div></div>
+        <div class="modal-field"><div class="lbl">Créée le</div><div class="val">${createdAt}</div></div>
+      </div>
+    </div>
+    <!-- Patient -->
+    <div class="modal-section">
+      <div class="modal-section-title">👤 Patient</div>
+      <div class="modal-grid">
+        <div class="modal-field"><div class="lbl">Nom</div><div class="val">${v(f.patient_nom)}</div></div>
+        <div class="modal-field"><div class="lbl">Prénom</div><div class="val">${v(f.patient_prenom)}</div></div>
+        <div class="modal-field"><div class="lbl">Date de naissance</div><div class="val">${v(f.date_naissance)}</div></div>
+        <div class="modal-field"><div class="lbl">Sexe</div><div class="val">${v(f.sexe)}</div></div>
+        <div class="modal-field"><div class="lbl">Mineur</div><div class="val">${f.est_mineur ? '✅ Oui' : '❌ Non'}</div></div>
+        <div class="modal-field"><div class="lbl">Adresse</div><div class="val">${v(f.adresse)}</div></div>
+        <div class="modal-field"><div class="lbl">Téléphone</div><div class="val">${v(f.telephone)}</div></div>
+        <div class="modal-field"><div class="lbl">N° CL</div><div class="val">${v(f.numero_cl)}</div></div>
+      </div>
+    </div>
+    <!-- IN -->
+    <div class="modal-section">
+      <div class="modal-section-title">🚪 Arrivée (IN)</div>
+      <div class="modal-grid">
+        <div class="modal-field"><div class="lbl">Date</div><div class="val">${v(f.in_date)}</div></div>
+        <div class="modal-field"><div class="lbl">Heure</div><div class="val">${v(f.heure_in)}</div></div>
+        <div class="modal-field" style="grid-column: span 2;"><div class="lbl">Mode d'arrivée</div><div class="val">${inModes.length ? inModes.join(', ') : '—'}</div></div>
+        ${f.in_autre_moyen ? `<div class="modal-field"><div class="lbl">Autre</div><div class="val">${f.in_autre_moyen}</div></div>` : ''}
+      </div>
+    </div>
+    <!-- Bilan -->
+    <div class="modal-section">
+      <div class="modal-section-title">📊 Bilan</div>
+      <div class="modal-grid" style="margin-bottom:14px;">
+        <div class="modal-field"><div class="lbl">Conscience</div><div class="val">${bool2str(f.conscience)}</div></div>
+        <div class="modal-field"><div class="lbl">Respiration</div><div class="val">${bool2str(f.respiration)}</div></div>
+        <div class="modal-field"><div class="lbl">Circulation</div><div class="val">${bool2str(f.circulation)}</div></div>
+        <div class="modal-field"><div class="lbl">Hémorragie</div><div class="val">${v(f.hemorragie)}</div></div>
+        <div class="modal-field"><div class="lbl">Urgence</div><div class="val">${urgHtml}</div></div>
+      </div>
+      <!-- Body schema -->
+      <div style="font-weight:700; font-size:.8em; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px;">🧍 Zones lésées</div>
+      <div class="modal-body-schema">
+        ${buildModalSvg(bilanData)}
+        <div class="modal-lesions-list">${lesionBadgesHtml}</div>
+      </div>
+    </div>
+    <!-- Soignants -->
+    <div class="modal-section">
+      <div class="modal-section-title">👨‍⚕️ Soignants</div>
+      ${soignantsHtml}
+    </div>
+    <!-- Soins -->
+    <div class="modal-section">
+      <div class="modal-section-title">💊 Soins</div>
+      <div class="modal-tags" style="margin-bottom:10px;">${soinsHtml}</div>
+      ${f.autres_soins ? `<div class="modal-field"><div class="lbl">Autres soins</div><div class="val">${f.autres_soins}</div></div>` : ''}
+    </div>
+    <!-- Matériel -->
+    <div class="modal-section">
+      <div class="modal-section-title">🧰 Matériel utilisé</div>
+      <div class="mat-modal-list">${matHtml}</div>
+    </div>
+    <!-- OUT -->
+    <div class="modal-section">
+      <div class="modal-section-title">🚶 Sortie (OUT)</div>
+      <div class="modal-grid">
+        <div class="modal-field" style="grid-column:span 2;"><div class="lbl">Mode de sortie</div><div class="val">${outModes.length ? outModes.join(', ') : '—'}</div></div>
+        ${f.out_vecteur ? `<div class="modal-field"><div class="lbl">Vecteur / Hôpital</div><div class="val">${f.out_vecteur}</div></div>` : ''}
+        ${f.out_autre_moyen ? `<div class="modal-field"><div class="lbl">Autre moyen</div><div class="val">${f.out_autre_moyen}</div></div>` : ''}
+        <div class="modal-field"><div class="lbl">Heure OUT</div><div class="val">${v(f.heure_out)}</div></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('ficheModal').style.display = 'flex';
 }
 
 function deletePending(index) {
@@ -1176,19 +1514,19 @@ function resetForm() {
   document.querySelectorAll('#formTab input[type="checkbox"]').forEach(el => el.checked = false);
   document.querySelectorAll('#formTab input[type="radio"]').forEach(el => el.checked = false);
   document.querySelector('input[name="ficheMed"][value="non"]').checked = true;
-  // Reset material
   MATERIEL_ITEMS.forEach(item => {
     const id = 'mat_' + item.replace(/[^a-z0-9]/gi, '_');
     matValues[id] = 0;
     const display = document.getElementById(id + '_display');
     if (display) { display.textContent = '0'; display.className = 'qty-val'; }
   });
+  // Reset cell highlights
+  document.querySelectorAll('#bilanBody td').forEach(td => td.classList.remove('cell-checked'));
   // Reset body schema
   bodyData = {};
   updateBodySvg();
   updateActiveZonesList();
   updateUrgencePills();
-  // Reset soignants
   document.getElementById('soignantsContainer').innerHTML = '';
   soignantCount = 0;
   addSoignant();
