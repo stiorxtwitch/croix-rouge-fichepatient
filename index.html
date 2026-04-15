@@ -4,29 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Croix-Rouge de Belgique — Fiches Patients</title>
-
-<!-- ===== OPEN GRAPH / SEO ===== -->
 <meta property="og:title" content="Croix-Rouge de Belgique — Fiches Patients">
-<meta property="og:description" content="Application de gestion des fiches patients pour les équipes de la Croix-Rouge de Belgique. Bilan, soins, matériel et suivi en temps réel.">
+<meta property="og:description" content="Application de gestion des fiches patients pour les équipes de la Croix-Rouge de Belgique.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://sevrfgivcpefyykuffti.supabase.co">
 <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Flag_of_the_Red_Cross.svg/1200px-Flag_of_the_Red_Cross.svg.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="800">
-<meta property="og:image:alt" content="Croix-Rouge de Belgique — Fiches Patients">
-<meta property="og:site_name" content="Croix-Rouge de Belgique">
-<meta property="og:locale" content="fr_BE">
-
-<!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Croix-Rouge de Belgique — Fiches Patients">
-<meta name="twitter:description" content="Application de gestion des fiches patients pour les équipes de la Croix-Rouge de Belgique.">
-<meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Flag_of_the_Red_Cross.svg/1200px-Flag_of_the_Red_Cross.svg.png">
-
-<!-- SEO -->
-<meta name="description" content="Application de gestion des fiches patients pour les équipes de la Croix-Rouge de Belgique. Bilan, soins, matériel et suivi en temps réel.">
+<meta name="description" content="Application de gestion des fiches patients pour les équipes de la Croix-Rouge de Belgique.">
 <meta name="theme-color" content="#d40511">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
@@ -35,6 +18,7 @@
   --bg: #f8f7f5; --bg2: #eeece8; --bg3: #e0ddd7;
   --text: #1a1a1a; --text2: #555; --text3: #999;
   --primary: #d40511; --primary-hover: #b0040e; --primary-light: #fde8e9;
+  --medical: #1a5276; --medical-hover: #154360; --medical-light: #d6eaf8;
   --border: #d0cdc8; --shadow: rgba(0,0,0,0.08);
   --success: #1a7a3a; --warning: #d4700a; --danger: #c0392b;
   --card: #ffffff; --input-bg: #ffffff;
@@ -45,6 +29,7 @@
   --bg: #111; --bg2: #1a1a1a; --bg3: #252525;
   --text: #eee; --text2: #aaa; --text3: #666;
   --primary: #e8222e; --primary-hover: #ff4455; --primary-light: #2a0a0c;
+  --medical: #2980b9; --medical-hover: #3498db; --medical-light: #1a2a3a;
   --border: #333; --shadow: rgba(0,0,0,0.5);
   --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c;
   --card: #1a1a1a; --input-bg: #222;
@@ -79,6 +64,20 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 }
 .status-online { color: var(--success); font-weight: 600; }
 .status-offline { color: var(--danger); font-weight: 600; }
+
+/* ===== FICHE INDICATOR ===== */
+.fiche-indicator {
+  background: linear-gradient(135deg, #1a5276, #2980b9);
+  color: #fff; padding: 8px 20px; text-align: center; font-size: .85em; font-weight: 600;
+  display: none; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+}
+.fiche-indicator.show { display: flex; }
+.fiche-indicator .btn-back-main {
+  background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.4);
+  color: #fff; padding: 4px 12px; border-radius: 20px; cursor: pointer;
+  font-size: .82em; font-weight: 700; font-family: var(--font); transition: background .2s;
+}
+.fiche-indicator .btn-back-main:hover { background: rgba(255,255,255,.35); }
 
 /* ===== AUTH ===== */
 .auth-overlay {
@@ -117,6 +116,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .tab { padding: 10px 22px; cursor: pointer; font-weight: 600; font-size: .9em; border-bottom: 3px solid transparent; color: var(--text2); transition: all .2s; margin-bottom: -2px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
 .tab:hover { color: var(--text); background: var(--bg2); }
 .tab.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light); }
+.tab.active-medical { color: var(--medical); border-bottom-color: var(--medical); background: var(--medical-light); }
 
 /* ===== SECTION ===== */
 .section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; box-shadow: 0 2px 8px var(--shadow); overflow: hidden; }
@@ -126,6 +126,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
   display: flex; justify-content: space-between; align-items: center;
   letter-spacing: .2px; user-select: none;
 }
+.section-title.medical-title { background: var(--medical); }
 .section-title .chevron { transition: transform .25s; font-size: .7em; }
 .section-title.collapsed .chevron { transform: rotate(-90deg); }
 .section-body { padding: 16px; }
@@ -148,30 +149,15 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer; }
 
 /* ===== AUTRE LESION INPUT ===== */
-.autre-lesion-box {
-  display: none;
-  margin-top: 10px;
-  animation: fadeSlideIn .2s ease;
-}
+.autre-lesion-box { display: none; margin-top: 10px; animation: fadeSlideIn .2s ease; }
 .autre-lesion-box.visible { display: block; }
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 .autre-lesion-box input {
-  width: 100%; padding: 8px 11px;
-  border: 1.5px solid #3498db;
-  border-radius: var(--radius-sm);
-  background: var(--input-bg); color: var(--text);
-  font-size: .92em; font-family: var(--font);
-  transition: border-color .2s;
+  width: 100%; padding: 8px 11px; border: 1.5px solid #3498db;
+  border-radius: var(--radius-sm); background: var(--input-bg); color: var(--text); font-size: .92em; font-family: var(--font); transition: border-color .2s;
 }
 .autre-lesion-box input:focus { outline: none; border-color: #2980b9; }
-.autre-lesion-box label {
-  font-size: .78em; font-weight: 700; color: #3498db;
-  text-transform: uppercase; letter-spacing: .5px;
-  display: block; margin-bottom: 5px;
-}
+.autre-lesion-box label { font-size: .78em; font-weight: 700; color: #3498db; text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 5px; }
 
 /* ===== BILAN TABLE ===== */
 .bilan-table { width: 100%; border-collapse: collapse; font-size: .78em; }
@@ -197,12 +183,8 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .qty-val.nonzero { color: var(--primary); }
 
 /* ===== BODY SCHEMA ===== */
-.body-schema-wrapper {
-  display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; margin-top: 12px;
-}
-.body-schema-svg-container {
-  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px;
-}
+.body-schema-wrapper { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; margin-top: 12px; }
+.body-schema-svg-container { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .body-schema-svg-container svg { max-width: 200px; width: 100%; cursor: pointer; }
 .body-legend { flex: 1; min-width: 200px; }
 .body-legend h4 { font-size: .82em; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
@@ -212,23 +194,12 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .zone-selector { margin-top: 10px; }
 .zone-selector label { font-size: .8em; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 6px; }
 .zone-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.zone-chip {
-  padding: 4px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; cursor: pointer;
-  border: 1.5px solid var(--border); background: var(--bg2); color: var(--text2);
-  transition: all .15s;
-}
+.zone-chip { padding: 4px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg2); color: var(--text2); transition: all .15s; }
 .zone-chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
 .lesion-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.lesion-chip {
-  padding: 4px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; cursor: pointer;
-  border: 1.5px solid var(--border); background: var(--bg2); color: var(--text2);
-  transition: all .15s;
-}
+.lesion-chip { padding: 4px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg2); color: var(--text2); transition: all .15s; }
 .active-zones-list { margin-top: 12px; }
-.active-zone-badge {
-  display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
-  border-radius: 20px; font-size: .78em; font-weight: 600; margin: 3px; color: #fff;
-}
+.active-zone-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; margin: 3px; color: #fff; }
 .active-zone-badge button { background: none; border: none; color: #fff; cursor: pointer; font-size: .9em; padding: 0 2px; opacity: .8; }
 .active-zone-badge button:hover { opacity: 1; }
 
@@ -242,12 +213,29 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-size: .9em; transition: all .2s; font-family: var(--font); }
 .btn-primary-main { background: var(--primary); color: #fff; }
 .btn-primary-main:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,5,17,.3); }
+.btn-medical-main { background: var(--medical); color: #fff; font-size: 1em; padding: 12px 28px; }
+.btn-medical-main:hover { background: var(--medical-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,82,118,.3); }
 .btn-secondary { background: var(--bg2); color: var(--text); border: 1.5px solid var(--border); }
 .btn-secondary:hover { background: var(--bg3); }
 .btn-success { background: var(--success); color: #fff; }
 .btn-add { background: var(--primary); color: #fff; padding: 8px 16px; font-size: .85em; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
 .btn-add:hover { background: var(--primary-hover); }
+.btn-add-medical { background: var(--medical); color: #fff; padding: 8px 16px; font-size: .85em; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
+.btn-add-medical:hover { background: var(--medical-hover); }
 .actions-bar { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 24px 0; }
+
+/* ===== MEDICAL FICHE BUTTON ===== */
+.medical-fiche-btn-wrapper {
+  text-align: center; margin: 10px 0 30px;
+  padding: 20px; background: var(--medical-light); border: 2px dashed var(--medical);
+  border-radius: var(--radius); position: relative;
+}
+.medical-fiche-btn-wrapper p { font-size: .85em; color: var(--text2); margin-bottom: 12px; }
+.medical-pending-badge {
+  position: absolute; top: -10px; right: 16px;
+  background: var(--warning); color: #fff; padding: 2px 10px;
+  border-radius: 12px; font-size: .72em; font-weight: 700;
+}
 
 /* ===== FICHES LIST ===== */
 .fiche-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; transition: box-shadow .2s; }
@@ -257,6 +245,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .fiche-btns { display: flex; gap: 6px; }
 .fiche-btns button { padding: 6px 12px; font-size: .8em; }
 .pending-badge { display: inline-block; background: var(--warning); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; }
+.medical-badge { display: inline-block; background: var(--medical); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; margin-left: 4px; }
 .btn-view { background: #2980b9; color: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: .8em; cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
 .btn-view:hover { background: #1a6fa0; }
 
@@ -273,30 +262,19 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .dark .msg-info { background: #1a2a3a; color: #85c1e9; border-color: #2e4f6a; }
 
 /* ===== FICHE VIEW MODAL ===== */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 300;
-  display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px);
-  animation: fadeIn .2s ease;
-}
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); animation: fadeIn .2s ease; }
 @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-.modal-box {
-  background: var(--card); border-radius: 16px; padding: 0;
-  width: 100%; max-width: 780px; max-height: 90vh; overflow-y: auto;
-  box-shadow: 0 24px 80px rgba(0,0,0,.35); border: 1px solid var(--border);
-  animation: slideUp .25s ease;
-}
+.modal-box { background: var(--card); border-radius: 16px; padding: 0; width: 100%; max-width: 820px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(0,0,0,.35); border: 1px solid var(--border); animation: slideUp .25s ease; }
 @keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
-.modal-header {
-  background: var(--primary); color: #fff; padding: 16px 20px;
-  display: flex; justify-content: space-between; align-items: center;
-  border-radius: 16px 16px 0 0; position: sticky; top: 0; z-index: 10;
-}
+.modal-header { background: var(--primary); color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 16px 16px 0 0; position: sticky; top: 0; z-index: 10; }
+.modal-header.medical { background: var(--medical); }
 .modal-header h2 { font-size: 1.05em; font-weight: 700; }
 .modal-close { background: rgba(255,255,255,.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center; transition: background .2s; }
 .modal-close:hover { background: rgba(255,255,255,.4); }
 .modal-body { padding: 20px; }
 .modal-section { margin-bottom: 20px; }
 .modal-section-title { font-weight: 700; font-size: .82em; text-transform: uppercase; letter-spacing: .6px; color: var(--primary); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--primary-light); }
+.modal-section-title.medical { color: var(--medical); border-bottom-color: var(--medical-light); }
 .modal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
 .modal-field { background: var(--bg2); border-radius: var(--radius-sm); padding: 8px 12px; }
 .modal-field .lbl { font-size: .72em; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
@@ -318,6 +296,74 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .mat-modal-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 12px; font-size: .82em; }
 .mat-modal-item span { font-weight: 700; color: var(--primary); margin-left: 6px; font-family: var(--mono); }
 
+/* ===== MEDICAL FORM STYLES ===== */
+.medical-header-bar {
+  background: linear-gradient(135deg, #1a5276, #2980b9); color: #fff;
+  padding: 16px 20px; border-radius: var(--radius); margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.medical-header-bar h2 { font-size: 1.1em; font-weight: 700; }
+.medical-header-bar p { font-size: .85em; opacity: .85; margin-top: 4px; }
+
+/* Glasgow grid */
+.glasgow-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.glasgow-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.glasgow-card h4 { font-size: .82em; font-weight: 700; color: var(--medical); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--medical-light); }
+.glasgow-option { display: flex; align-items: center; justify-content: space-between; padding: 5px 8px; border-radius: var(--radius-sm); cursor: pointer; transition: background .15s; }
+.glasgow-option:hover { background: var(--bg3); }
+.glasgow-option label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: .88em; flex: 1; }
+.glasgow-option .score-badge { background: var(--medical); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: .75em; font-weight: 700; font-family: var(--mono); }
+.glasgow-total { background: linear-gradient(135deg, #1a5276, #2980b9); color: #fff; padding: 12px 20px; border-radius: var(--radius); text-align: center; margin-top: 14px; }
+.glasgow-total .score-num { font-size: 2.5em; font-weight: 700; font-family: var(--mono); }
+.glasgow-total .score-label { font-size: .82em; opacity: .85; }
+
+/* Evolution tableau */
+.evolution-table-wrapper { overflow-x: auto; margin-top: 10px; }
+.evolution-table { border-collapse: collapse; font-size: .82em; min-width: 600px; }
+.evolution-table th, .evolution-table td { border: 1.5px solid var(--border); padding: 0; vertical-align: middle; }
+.evolution-table th { background: var(--medical); color: #fff; font-weight: 700; font-size: .8em; padding: 6px 10px; white-space: nowrap; text-align: center; }
+.evolution-table th:first-child { background: var(--bg2); color: var(--text2); text-align: left; min-width: 140px; padding: 6px 10px; }
+.evolution-table td:first-child { background: var(--bg2); font-weight: 600; font-size: .85em; padding: 6px 10px; white-space: nowrap; }
+.evolution-table td input { border: none; background: transparent; color: var(--text); font-family: var(--font); font-size: .88em; padding: 5px 8px; width: 100%; min-width: 80px; text-align: center; }
+.evolution-table td input.large-cell { min-width: 160px; }
+.evolution-table td input:focus { outline: none; background: rgba(41,128,185,.08); }
+.evolution-table td.heure-header input { font-weight: 700; color: var(--medical); text-align: center; }
+
+/* Medical YN Grid */
+.yn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.yn-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; }
+.yn-item .yn-label { font-size: .88em; font-weight: 600; }
+.yn-item .yn-btns { display: flex; gap: 6px; }
+.yn-btn { padding: 3px 10px; border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; font-size: .78em; font-weight: 700; background: var(--bg3); color: var(--text2); transition: all .15s; font-family: var(--font); }
+.yn-btn.yes.active { background: var(--success); color: #fff; border-color: var(--success); }
+.yn-btn.no.active { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+/* Pupilles */
+.pupilles-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.pupille-check { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; cursor: pointer; font-size: .88em; font-weight: 600; transition: all .15s; }
+.pupille-check input { accent-color: var(--medical); }
+.anisocorie-side { display: none; gap: 6px; align-items: center; margin-left: 8px; }
+.anisocorie-side.show { display: flex; }
+.anisocorie-side label { font-size: .8em; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+
+/* Motifs */
+.motifs-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.motif-chip { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: .82em; font-weight: 600; transition: all .15s; }
+.motif-chip input { accent-color: var(--medical); width: 14px; height: 14px; }
+.motif-chip:has(input:checked) { background: var(--medical-light); border-color: var(--medical); color: var(--medical); }
+
+/* Arythmies */
+.arythmie-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.arythmie-chip { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: .82em; font-weight: 600; transition: all .15s; }
+.arythmie-chip input { accent-color: var(--medical); width: 14px; height: 14px; }
+.arythmie-chip:has(input:checked) { background: #fde8e8; border-color: var(--danger); color: var(--danger); }
+
+/* Freq resp */
+.freq-resp-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.freq-chip { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 14px; cursor: pointer; font-size: .88em; font-weight: 700; transition: all .15s; font-family: var(--mono); }
+.freq-chip input { accent-color: var(--medical); width: 14px; height: 14px; }
+.freq-chip:has(input:checked) { background: var(--medical-light); border-color: var(--medical); color: var(--medical); }
+
 @media (max-width: 600px) {
   .form-group { min-width: 100% !important; }
   .header { flex-direction: column; text-align: center; }
@@ -325,6 +371,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
   .bilan-table { font-size: .68em; }
   .body-schema-wrapper { flex-direction: column; align-items: center; }
   .modal-grid { grid-template-columns: 1fr 1fr; }
+  .glasgow-grid { grid-template-columns: 1fr; }
 }
 
 /* Urgence color pills */
@@ -339,6 +386,9 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .urgence-u3.checked { background: #2ecc71; color: #fff; }
 .urgence-impl { background: #eef2ff; color: #3949ab; border-color: #5c6bc0; }
 .urgence-impl.checked { background: #5c6bc0; color: #fff; }
+
+/* Linked fiche indicator in list */
+.fiche-linked { border-left: 4px solid var(--medical); }
 </style>
 </head>
 <body>
@@ -366,6 +416,12 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 <div class="status-bar">
   <span id="onlineStatus"></span> &nbsp;|&nbsp;
   <span id="pendingCount">0 fiche(s) en attente</span>
+</div>
+
+<!-- Fiche médicale indicator bar -->
+<div class="fiche-indicator" id="ficheIndicator">
+  <span>🔵 Fiche médicale en cours — La fiche principale est mise en pause</span>
+  <button class="btn-back-main" onclick="switchToMainForm()">↩ Retour à la fiche principale</button>
 </div>
 
 <!-- Auth Overlay -->
@@ -402,7 +458,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 <!-- Fiche View Modal -->
 <div id="ficheModal" class="modal-overlay" style="display:none;" onclick="closeFicheModal(event)">
   <div class="modal-box">
-    <div class="modal-header">
+    <div class="modal-header" id="modalHeader">
       <h2 id="modalTitle">📋 Fiche Patient</h2>
       <button class="modal-close" onclick="document.getElementById('ficheModal').style.display='none'">×</button>
     </div>
@@ -558,7 +614,6 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
                 <div class="legend-item" onclick="setActiveLesion('Piqûre')"><div class="legend-dot" style="background:#1abc9c;"></div> Piqûre</div>
                 <div class="legend-item" onclick="setActiveLesion('Autre')"><div class="legend-dot" style="background:#3498db;"></div> Autre</div>
               </div>
-
               <div class="zone-selector">
                 <label>Lésion active :</label>
                 <div class="lesion-chips" id="lesionChips">
@@ -570,13 +625,10 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
                   <div class="lesion-chip" onclick="setActiveLesion('Autre')" id="lchip_Autre" style="border-color:#3498db; color:#3498db;">Autre</div>
                 </div>
               </div>
-
-              <!-- ===== AUTRE LÉSION — champ texte ===== -->
               <div class="autre-lesion-box" id="autreLesionBox">
                 <label>✏️ Précisez la lésion « Autre »</label>
                 <input type="text" id="autreLesionText" placeholder="Ex: luxation, hématome, plaie…" oninput="updateAutreLesionLabel()">
               </div>
-
               <div class="active-zones-list" id="activeZonesList" style="margin-top:14px;"></div>
             </div>
           </div>
@@ -648,12 +700,263 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
       </div>
     </div>
 
+    <!-- ===== BOUTON FICHE MÉDICALE ===== -->
+    <div class="medical-fiche-btn-wrapper" id="medicalBtnWrapper">
+      <p>Besoin de compléter un bilan médical détaillé pour ce patient ?<br>La fiche principale sera mise en pause et vous pourrez y revenir.</p>
+      <button class="btn btn-medical-main" onclick="switchToMedicalForm()">
+        🏥 Ajouter une Fiche Médicale
+      </button>
+    </div>
+
     <div class="actions-bar">
       <button class="btn btn-primary-main" onclick="saveFiche()">💾 Sauvegarder la fiche</button>
       <button class="btn btn-secondary" onclick="resetForm()">🗑️ Réinitialiser</button>
     </div>
 
   </div><!-- /formTab -->
+
+  <!-- ===== FICHE MÉDICALE TAB ===== -->
+  <div id="medicalTab" style="display:none;">
+
+    <div class="medical-header-bar">
+      <div>
+        <h2>🏥 Fiche Médicale — Bilan Clinique</h2>
+        <p id="medicalPatientLabel">Patient : —</p>
+      </div>
+      <button class="btn-back-main" onclick="switchToMainForm()" style="font-size:.9em; padding:8px 18px;">↩ Retour à la fiche principale</button>
+    </div>
+
+    <!-- BILAN CLINIQUE INITIAL -->
+    <div class="section">
+      <div class="section-title medical-title" onclick="toggleSection(this)">🩺 BILAN CLINIQUE INITIAL <span class="chevron">▼</span></div>
+      <div class="section-body">
+        <div class="yn-grid">
+          <div class="yn-item"><span class="yn-label">Agité</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_agite','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_agite','non')">NON</button></div></div>
+          <div class="yn-item"><span class="yn-label">Convulsion</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_convulsion','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_convulsion','non')">NON</button></div></div>
+          <div class="yn-item"><span class="yn-label">Cyanosé</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_cyanose','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_cyanose','non')">NON</button></div></div>
+          <div class="yn-item"><span class="yn-label">Déficit moteur</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_deficit_moteur','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_deficit_moteur','non')">NON</button></div></div>
+          <div class="yn-item"><span class="yn-label">Inconscient</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_inconscient','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_inconscient','non')">NON</button></div></div>
+          <div class="yn-item"><span class="yn-label">Resp. anormale</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_resp_anormale','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_resp_anormale','non')">NON</button></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUPILLES -->
+    <div class="section">
+      <div class="section-title medical-title" onclick="toggleSection(this)">👁️ PUPILLES <span class="chevron">▼</span></div>
+      <div class="section-body">
+        <div class="pupilles-grid">
+          <label class="pupille-check"><input type="checkbox" id="pup_normales"> Normales</label>
+          <label class="pupille-check"><input type="checkbox" id="pup_myosis"> Myosis</label>
+          <label class="pupille-check"><input type="checkbox" id="pup_mydriase"> Mydriase</label>
+          <label class="pupille-check" style="flex-wrap:wrap; gap:4px;">
+            <input type="checkbox" id="pup_anisocorie" onchange="toggleAnisocorie()"> Anisocorie
+            <span class="anisocorie-side" id="anisocorieSide">
+              <label><input type="checkbox" id="aniso_g"> G</label>
+              <label><input type="checkbox" id="aniso_d"> D</label>
+            </span>
+          </label>
+          <label class="pupille-check"><input type="checkbox" id="pup_reactives"> Réactives</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRÉQUENCE RESPIRATOIRE -->
+    <div class="section">
+      <div class="section-title medical-title" onclick="toggleSection(this)">🫁 FRÉQUENCE RESPIRATOIRE <span class="chevron">▼</span></div>
+      <div class="section-body">
+        <div class="freq-resp-grid">
+          <label class="freq-chip"><input type="radio" name="freq_resp" value=">25"> &gt; 25 /min</label>
+          <label class="freq-chip"><input type="radio" name="freq_resp" value="24-10"> 24 – 10 /min</label>
+          <label class="freq-chip"><input type="radio" name="freq_resp" value="<10"> &lt; 10 /min</label>
+          <label class="freq-chip"><input type="radio" name="freq_resp" value="0"> 0 (Arrêt)</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- GLASGOW -->
+    <div class="section">
+      <div class="section-title medical-title" onclick="toggleSection(this)">🧠 GLASGOW <span class="chevron">▼</span></div>
+      <div class="section-body">
+        <div class="glasgow-grid">
+          <div class="glasgow-card">
+            <h4>Ouverture des yeux</h4>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_yeux" value="4" onchange="updateGlasgow()"> Spontanée</label><span class="score-badge">4</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_yeux" value="3" onchange="updateGlasgow()"> À la voix</label><span class="score-badge">3</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_yeux" value="2" onchange="updateGlasgow()"> À la douleur</label><span class="score-badge">2</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_yeux" value="1" onchange="updateGlasgow()"> Aucune</label><span class="score-badge">1</span></div>
+          </div>
+          <div class="glasgow-card">
+            <h4>Réponse verbale</h4>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_verbal" value="5" onchange="updateGlasgow()"> Orientée</label><span class="score-badge">5</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_verbal" value="4" onchange="updateGlasgow()"> Confuse</label><span class="score-badge">4</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_verbal" value="3" onchange="updateGlasgow()"> Inappropriée</label><span class="score-badge">3</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_verbal" value="2" onchange="updateGlasgow()"> Incompréhension</label><span class="score-badge">2</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_verbal" value="1" onchange="updateGlasgow()"> Nulle</label><span class="score-badge">1</span></div>
+          </div>
+          <div class="glasgow-card">
+            <h4>Réponse motrice</h4>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="6" onchange="updateGlasgow()"> Obéit</label><span class="score-badge">6</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="5" onchange="updateGlasgow()"> Orientée</label><span class="score-badge">5</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="4" onchange="updateGlasgow()"> Évitement</label><span class="score-badge">4</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="3" onchange="updateGlasgow()"> Flexion</label><span class="score-badge">3</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="2" onchange="updateGlasgow()"> Extension</label><span class="score-badge">2</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="1" onchange="updateGlasgow()"> Nulle</label><span class="score-badge">1</span></div>
+          </div>
+        </div>
+        <div class="glasgow-total">
+          <div class="score-num" id="glasgowTotal">—</div>
+          <div class="score-label">Score Glasgow / 15</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOTIFS CONSTATÉS -->
+    <div class="section">
+      <div class="section-title medical-title" onclick="toggleSection(this)">📋 MOTIFS CONSTATÉS <span class="chevron">▼</span></div>
+      <div class="section-body">
+        <div class="motifs-grid">
+          <label class="motif-chip"><input type="checkbox" id="motif_acc_circ"> Accidents de la circulation</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_bagarre"> Bagarre</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_brulure"> Brûlure</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_chute"> Chute</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_electro"> Électrocution</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_alcool"> Intox. alcool</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_alim"> Intox. alimentaire</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_co"> Intox. CO</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_drogue"> Intox. drogue</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_medic"> Intox. médicamenteuse</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_noyade"> Noyade</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_plaie_pen"> Plaie pénétrante</label>
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label>Autre motif</label>
+          <input type="text" id="motif_autre" placeholder="Préciser...">
+        </div>
+      </div>
+    </div>
+
+    <!-- ARYTHMIES -->
+    <div class="section">
+      <div class="section-title medical-title" onclick="toggleSection(this)">💓 ARYTHMIES <span class="chevron">▼</span></div>
+      <div class="section-body">
+        <div class="arythmie-grid">
+          <label class="arythmie-chip"><input type="checkbox" id="ary_brady"> Bradycardie &lt; 50/min</label>
+          <label class="arythmie-chip"><input type="checkbox" id="ary_tachy"> Tachycardie &gt; 140/min</label>
+          <label class="arythmie-chip"><input type="checkbox" id="ary_asystolie"> Asystolie</label>
+        </div>
+        <div class="form-group">
+          <label>Autre arythmie</label>
+          <input type="text" id="ary_autre" placeholder="Préciser...">
+        </div>
+      </div>
+    </div>
+
+    <!-- BILAN ET REMARQUE -->
+    <div class="section">
+      <div class="section-title medical-title" onclick="toggleSection(this)">📝 BILAN ET REMARQUES <span class="chevron">▼</span></div>
+      <div class="section-body">
+        <div class="form-group">
+          <textarea id="med_bilan_remarque" style="min-height:100px;" placeholder="Bilan clinique, observations, remarques particulières..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- LÉSIONS TRAUMATIQUES -->
+    <div class="section">
+      <div class="section-title medical-title" onclick="toggleSection(this)">🧍 LÉSIONS TRAUMATIQUES <span class="chevron">▼</span></div>
+      <div class="section-body">
+        <p style="font-size:.85em; color:var(--text2); margin-bottom:12px;">Schéma corporel repris depuis la fiche principale</p>
+        <div class="body-schema-wrapper">
+          <div class="body-schema-svg-container">
+            <svg id="bodySvgMedical" viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg">
+              <ellipse id="med_zone_tete" cx="60" cy="20" rx="17" ry="18" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('Tête')" style="cursor:pointer"/>
+              <rect id="med_zone_cervical" x="53" y="37" width="14" height="12" rx="3" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('Cervical')" style="cursor:pointer"/>
+              <rect id="med_zone_thorax" x="40" y="49" width="40" height="42" rx="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('Thorax')" style="cursor:pointer"/>
+              <rect id="med_zone_abdo" x="43" y="91" width="34" height="26" rx="4" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('Abdo')" style="cursor:pointer"/>
+              <rect id="med_zone_bassin" x="40" y="117" width="40" height="20" rx="4" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('Bassin')" style="cursor:pointer"/>
+              <rect id="med_zone_msd" x="80" y="49" width="18" height="60" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MSD')" style="cursor:pointer"/>
+              <rect id="med_zone_msg" x="22" y="49" width="18" height="60" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MSG')" style="cursor:pointer"/>
+              <rect id="med_zone_mid" x="60" y="137" width="20" height="70" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MID')" style="cursor:pointer"/>
+              <rect id="med_zone_mig" x="40" y="137" width="20" height="70" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MIG')" style="cursor:pointer"/>
+              <ellipse cx="70" cy="210" rx="10" ry="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MID')" style="cursor:pointer"/>
+              <ellipse cx="50" cy="210" rx="10" ry="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MIG')" style="cursor:pointer"/>
+              <text x="60" y="21" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Tête</text>
+              <text x="60" y="45" text-anchor="middle" font-size="5" fill="#555" pointer-events="none">Cerv.</text>
+              <text x="60" y="73" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Thorax</text>
+              <text x="60" y="107" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Abdo</text>
+              <text x="60" y="130" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">Bassin</text>
+              <text x="89" y="82" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MSD</text>
+              <text x="31" y="82" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MSG</text>
+              <text x="70" y="175" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MID</text>
+              <text x="50" y="175" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MIG</text>
+            </svg>
+            <div style="font-size:.72em; color:var(--text3); text-align:center;">Cliquez pour ajuster</div>
+          </div>
+          <div class="body-legend">
+            <h4>Zones marquées (médicale)</h4>
+            <div class="active-zones-list" id="medActiveZonesList"></div>
+            <div style="margin-top:10px;">
+              <div class="lesion-chips" id="medLesionChips">
+                <div class="lesion-chip selected" onclick="setActiveLesionMed('Fracture')" id="mlchip_Fracture" style="border-color:#e74c3c; color:#e74c3c;">Fracture</div>
+                <div class="lesion-chip" onclick="setActiveLesionMed('Entorse')" id="mlchip_Entorse" style="border-color:#e67e22; color:#e67e22;">Entorse</div>
+                <div class="lesion-chip" onclick="setActiveLesionMed('Contusion')" id="mlchip_Contusion" style="border-color:#9b59b6; color:#9b59b6;">Contusion</div>
+                <div class="lesion-chip" onclick="setActiveLesionMed('Brûlure')" id="mlchip_Brulure" style="border-color:#e8b800; color:#e8b800;">Brûlure</div>
+                <div class="lesion-chip" onclick="setActiveLesionMed('Piqûre')" id="mlchip_Piqure" style="border-color:#1abc9c; color:#1abc9c;">Piqûre</div>
+                <div class="lesion-chip" onclick="setActiveLesionMed('Autre')" id="mlchip_Autre" style="border-color:#3498db; color:#3498db;">Autre</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÉVOLUTION DU TRAITEMENT -->
+    <div class="section">
+      <div class="section-title medical-title" onclick="toggleSection(this)">📈 ÉVOLUTION DU TRAITEMENT <span class="chevron">▼</span></div>
+      <div class="section-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <span style="font-size:.85em; color:var(--text2);">Tableau de suivi paramétrique — ajoutez des colonnes horaires</span>
+          <button class="btn-add-medical" onclick="addEvolutionColumn()">+ Ajouter une heure</button>
+        </div>
+        <div class="evolution-table-wrapper">
+          <table class="evolution-table" id="evolutionTable">
+            <thead>
+              <tr id="evolutionHeaderRow">
+                <th>Paramètre</th>
+              </tr>
+            </thead>
+            <tbody id="evolutionBody">
+              <tr><td>Saturation O₂</td></tr>
+              <tr><td>Glycémie</td></tr>
+              <tr><td>TA (Tension artérielle)</td></tr>
+              <tr><td>Pulsations</td></tr>
+              <tr><td>Oxygène (L/min)</td></tr>
+              <tr><td>Médicament</td></tr>
+              <tr><td>Injection</td></tr>
+              <tr><td>Perfusion</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATÉRIEL UTILISÉ -->
+    <div class="section">
+      <div class="section-title medical-title" onclick="toggleSection(this)">🧰 MATÉRIEL UTILISÉ <span class="chevron">▼</span></div>
+      <div class="section-body">
+        <div class="form-group">
+          <textarea id="med_materiel" style="min-height:80px;" placeholder="Lister le matériel médical utilisé..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-bar">
+      <button class="btn btn-medical-main" onclick="saveMedicalFiche()">💾 Sauvegarder la fiche médicale</button>
+      <button class="btn btn-secondary" onclick="switchToMainForm()">↩ Retour à la fiche principale</button>
+    </div>
+
+  </div><!-- /medicalTab -->
 
   <!-- LIST TAB -->
   <div id="listTab" style="display:none;">
@@ -671,36 +974,27 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let currentUser = null;
 let captchas = { login: {}, register: {} };
+let currentFicheId = null; // ID of the main fiche when medical form is open
+let medicalLinkedFicheId = null; // Used when saving medical fiche
 
-// ===== BODY SCHEMA STATE =====
+// ===== BODY SCHEMA STATE (Main) =====
 const LESION_COLORS = {
-  'Fracture': '#e74c3c',
-  'Entorse': '#e67e22',
-  'Contusion': '#9b59b6',
-  'Brûlure': '#e8b800',
-  'Piqûre': '#1abc9c',
-  'Autre': '#3498db'
+  'Fracture': '#e74c3c', 'Entorse': '#e67e22', 'Contusion': '#9b59b6',
+  'Brûlure': '#e8b800', 'Piqûre': '#1abc9c', 'Autre': '#3498db'
 };
 const ZONE_IDS = {
-  'Tête': 'zone_tete',
-  'Cervical': 'zone_cervical',
-  'Colonne': 'zone_colonne',
-  'MSD': 'zone_msd',
-  'MSG': 'zone_msg',
-  'Thorax': 'zone_thorax',
-  'Abdo': 'zone_abdo',
-  'Bassin': 'zone_bassin',
-  'MID': 'zone_mid',
-  'MIG': 'zone_mig'
+  'Tête': 'zone_tete', 'Cervical': 'zone_cervical', 'Colonne': 'zone_colonne',
+  'MSD': 'zone_msd', 'MSG': 'zone_msg', 'Thorax': 'zone_thorax',
+  'Abdo': 'zone_abdo', 'Bassin': 'zone_bassin', 'MID': 'zone_mid', 'MIG': 'zone_mig'
 };
-
+const MED_ZONE_IDS = {
+  'Tête': 'med_zone_tete', 'Cervical': 'med_zone_cervical', 'Thorax': 'med_zone_thorax',
+  'Abdo': 'med_zone_abdo', 'Bassin': 'med_zone_bassin', 'MSD': 'med_zone_msd',
+  'MSG': 'med_zone_msg', 'MID': 'med_zone_mid', 'MIG': 'med_zone_mig'
+};
 const LESION_ID_MAP = {
-  'Fracture': 'Fracture',
-  'Entorse': 'Entorse',
-  'Contusion': 'Contusion',
-  'Brûlure': 'Brulure',
-  'Piqûre': 'Piqure',
-  'Autre': 'Autre'
+  'Fracture': 'Fracture', 'Entorse': 'Entorse', 'Contusion': 'Contusion',
+  'Brûlure': 'Brulure', 'Piqûre': 'Piqure', 'Autre': 'Autre'
 };
 
 let activeLesion = 'Fracture';
@@ -708,34 +1002,210 @@ let bodyData = {};
 let _syncingFromTable = false;
 let _syncingFromSchema = false;
 
-// ===== AUTRE LÉSION LABEL =====
-function updateAutreLesionLabel() {
-  // Re-render active zones to reflect the new custom label
-  updateActiveZonesList();
+// Medical body schema
+let activeLesionMed = 'Fracture';
+let bodyDataMed = {};
+
+// YN state
+let ynValues = {};
+
+// Evolution table columns
+let evolutionColCount = 0;
+
+// ===== YN BUTTONS =====
+function toggleYN(btn, field, value) {
+  const card = btn.closest('.yn-item');
+  card.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ynValues[field] = value;
 }
 
-function getAutreLesionLabel() {
-  const txt = document.getElementById('autreLesionText')?.value?.trim();
-  return txt ? `Autre (${txt})` : 'Autre';
+// ===== GLASGOW =====
+function updateGlasgow() {
+  const e = parseInt(getRadio('gcs_yeux') || 0);
+  const v = parseInt(getRadio('gcs_verbal') || 0);
+  const m = parseInt(getRadio('gcs_moteur') || 0);
+  const total = (e || 0) + (v || 0) + (m || 0);
+  const el = document.getElementById('glasgowTotal');
+  if (e && v && m) {
+    el.textContent = total + ' / 15';
+    el.style.color = total <= 8 ? '#e74c3c' : total <= 12 ? '#f39c12' : '#2ecc71';
+  } else {
+    el.textContent = '—';
+    el.style.color = '#fff';
+  }
 }
+
+// ===== ANISOCORIE =====
+function toggleAnisocorie() {
+  const cb = document.getElementById('pup_anisocorie');
+  const side = document.getElementById('anisocorieSide');
+  if (cb.checked) side.classList.add('show');
+  else side.classList.remove('show');
+}
+
+// ===== EVOLUTION TABLE =====
+function addEvolutionColumn() {
+  evolutionColCount++;
+  const col = evolutionColCount;
+  const header = document.getElementById('evolutionHeaderRow');
+  const th = document.createElement('th');
+  th.className = 'heure-header';
+  th.innerHTML = `<input type="time" id="evo_heure_${col}" placeholder="HH:MM">`;
+  header.appendChild(th);
+
+  const rows = ['sat_o2','glycemie','ta','pulsations','oxygene','medicament','injection','perfusion'];
+  const isLarge = ['medicament','injection','perfusion'];
+  document.querySelectorAll('#evolutionBody tr').forEach((row, i) => {
+    const td = document.createElement('td');
+    const inputClass = isLarge.includes(rows[i]) ? 'large-cell' : '';
+    td.innerHTML = `<input type="text" id="evo_${rows[i]}_${col}" class="${inputClass}" placeholder="—">`;
+    row.appendChild(td);
+  });
+}
+
+function getEvolutionData() {
+  if (evolutionColCount === 0) return [];
+  const result = [];
+  const rows = ['sat_o2','glycemie','ta','pulsations','oxygene','medicament','injection','perfusion'];
+  const labels = ['Saturation O₂','Glycémie','TA','Pulsations','Oxygène L/min','Médicament','Injection','Perfusion'];
+  for (let c = 1; c <= evolutionColCount; c++) {
+    const heureEl = document.getElementById('evo_heure_' + c);
+    const col = { heure: heureEl ? heureEl.value : '' };
+    rows.forEach((r, i) => {
+      const el = document.getElementById('evo_' + r + '_' + c);
+      col[labels[i]] = el ? el.value : '';
+    });
+    result.push(col);
+  }
+  return result;
+}
+
+// ===== MEDICAL BODY SCHEMA =====
+function setActiveLesionMed(lesion) {
+  activeLesionMed = lesion;
+  document.querySelectorAll('#medLesionChips .lesion-chip').forEach(c => c.classList.remove('selected'));
+  const chipMap = { 'Fracture':'Fracture','Entorse':'Entorse','Contusion':'Contusion','Brûlure':'Brulure','Piqûre':'Piqure','Autre':'Autre' };
+  const chip = document.getElementById('mlchip_' + (chipMap[lesion] || lesion));
+  if (chip) chip.classList.add('selected');
+}
+
+function toggleBodyZoneMed(zone) {
+  if (!bodyDataMed[zone]) bodyDataMed[zone] = [];
+  const arr = bodyDataMed[zone];
+  const idx = arr.indexOf(activeLesionMed);
+  if (idx === -1) arr.push(activeLesionMed);
+  else arr.splice(idx, 1);
+  if (arr.length === 0) delete bodyDataMed[zone];
+  updateBodySvgMed();
+  updateMedActiveZonesList();
+}
+
+function updateBodySvgMed() {
+  Object.entries(MED_ZONE_IDS).forEach(([zone, svgId]) => {
+    const el = document.getElementById(svgId);
+    if (!el) return;
+    if (bodyDataMed[zone] && bodyDataMed[zone].length > 0) {
+      const colors = bodyDataMed[zone].map(l => LESION_COLORS[l] || '#ccc');
+      el.setAttribute('fill', colors[0]);
+      el.setAttribute('opacity', '0.85');
+      el.setAttribute('stroke', colors.length > 1 ? colors[1] : '#999');
+      el.setAttribute('stroke-width', colors.length > 1 ? '3' : '1.5');
+    } else {
+      el.setAttribute('fill', '#e8e8e8');
+      el.setAttribute('opacity', '1');
+      el.setAttribute('stroke', '#999');
+      el.setAttribute('stroke-width', '1.5');
+    }
+  });
+}
+
+function updateMedActiveZonesList() {
+  const container = document.getElementById('medActiveZonesList');
+  if (!container) return;
+  if (Object.keys(bodyDataMed).length === 0) {
+    container.innerHTML = '<div style="font-size:.8em; color:var(--text3); font-style:italic;">Aucune zone sélectionnée</div>';
+    return;
+  }
+  let html = '';
+  Object.entries(bodyDataMed).forEach(([zone, lesions]) => {
+    lesions.forEach(lesion => {
+      const color = LESION_COLORS[lesion] || '#999';
+      html += `<span class="active-zone-badge" style="background:${color};">
+        ${zone} — ${lesion}
+        <button onclick="removeBodyZoneMed('${zone}','${lesion}')">×</button>
+      </span>`;
+    });
+  });
+  container.innerHTML = html;
+}
+
+function removeBodyZoneMed(zone, lesion) {
+  if (bodyDataMed[zone]) {
+    bodyDataMed[zone] = bodyDataMed[zone].filter(l => l !== lesion);
+    if (bodyDataMed[zone].length === 0) delete bodyDataMed[zone];
+  }
+  updateBodySvgMed();
+  updateMedActiveZonesList();
+}
+
+// Copy main body schema to medical
+function syncBodyToMedical() {
+  bodyDataMed = JSON.parse(JSON.stringify(bodyData));
+  updateBodySvgMed();
+  updateMedActiveZonesList();
+}
+
+// ===== SWITCH FORMS =====
+function switchToMedicalForm() {
+  // Save current main form state indicator
+  const patNom = document.getElementById('patNom').value.trim();
+  const patPrenom = document.getElementById('patPrenom').value.trim();
+  document.getElementById('medicalPatientLabel').textContent =
+    'Patient : ' + (patNom || '?') + ' ' + (patPrenom || '');
+
+  // Show medical tab, hide others
+  document.getElementById('formTab').style.display = 'none';
+  document.getElementById('medicalTab').style.display = '';
+  document.getElementById('listTab').style.display = 'none';
+  document.getElementById('tabForm').className = 'tab';
+  document.getElementById('tabList').className = 'tab';
+
+  // Show indicator bar
+  document.getElementById('ficheIndicator').classList.add('show');
+
+  // Sync body schema
+  syncBodyToMedical();
+
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('Fiche principale mise en pause — remplissez la fiche médicale', 'info');
+}
+
+function switchToMainForm() {
+  document.getElementById('formTab').style.display = '';
+  document.getElementById('medicalTab').style.display = 'none';
+  document.getElementById('listTab').style.display = 'none';
+  document.getElementById('tabForm').className = 'tab active';
+  document.getElementById('tabList').className = 'tab';
+  document.getElementById('ficheIndicator').classList.remove('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('Retour à la fiche principale', 'info');
+}
+
+// ===== MAIN BODY SCHEMA =====
+function updateAutreLesionLabel() { updateActiveZonesList(); }
 
 function setActiveLesion(lesion) {
   activeLesion = lesion;
   document.querySelectorAll('.lesion-chip').forEach(c => c.classList.remove('selected'));
   const chipMap = { 'Fracture':'Fracture','Entorse':'Entorse','Contusion':'Contusion','Brûlure':'Brulure','Piqûre':'Piqure','Autre':'Autre' };
-  const chipId = 'lchip_' + (chipMap[lesion] || lesion);
-  const chip = document.getElementById(chipId);
+  const chip = document.getElementById('lchip_' + (chipMap[lesion] || lesion));
   if (chip) chip.classList.add('selected');
-
-  // Show/hide the "Autre" text input
   const box = document.getElementById('autreLesionBox');
   if (box) {
-    if (lesion === 'Autre') {
-      box.classList.add('visible');
-      document.getElementById('autreLesionText').focus();
-    } else {
-      box.classList.remove('visible');
-    }
+    if (lesion === 'Autre') { box.classList.add('visible'); document.getElementById('autreLesionText').focus(); }
+    else box.classList.remove('visible');
   }
 }
 
@@ -748,11 +1218,7 @@ function toggleBodyZone(zone) {
   if (arr.length === 0) delete bodyData[zone];
   updateBodySvg();
   updateActiveZonesList();
-  if (!_syncingFromTable) {
-    _syncingFromSchema = true;
-    syncBodyToTable();
-    _syncingFromSchema = false;
-  }
+  if (!_syncingFromTable) { _syncingFromSchema = true; syncBodyToTable(); _syncingFromSchema = false; }
 }
 
 function updateBodySvg() {
@@ -761,20 +1227,12 @@ function updateBodySvg() {
     if (!el) return;
     if (bodyData[zone] && bodyData[zone].length > 0) {
       const colors = bodyData[zone].map(l => LESION_COLORS[l] || '#ccc');
-      el.setAttribute('fill', colors[0]);
-      el.setAttribute('opacity', '0.85');
-      if (colors.length > 1) {
-        el.setAttribute('stroke', colors[1]);
-        el.setAttribute('stroke-width', '3');
-      } else {
-        el.setAttribute('stroke', '#999');
-        el.setAttribute('stroke-width', '1.5');
-      }
+      el.setAttribute('fill', colors[0]); el.setAttribute('opacity', '0.85');
+      el.setAttribute('stroke', colors.length > 1 ? colors[1] : '#999');
+      el.setAttribute('stroke-width', colors.length > 1 ? '3' : '1.5');
     } else {
-      el.setAttribute('fill', '#e8e8e8');
-      el.setAttribute('opacity', '1');
-      el.setAttribute('stroke', '#999');
-      el.setAttribute('stroke-width', '1.5');
+      el.setAttribute('fill', '#e8e8e8'); el.setAttribute('opacity', '1');
+      el.setAttribute('stroke', '#999'); el.setAttribute('stroke-width', '1.5');
     }
   });
 }
@@ -790,11 +1248,10 @@ function updateActiveZonesList() {
   Object.entries(bodyData).forEach(([zone, lesions]) => {
     lesions.forEach(lesion => {
       const color = LESION_COLORS[lesion] || '#999';
-      // Show custom "Autre" label if typed
       const displayLabel = (lesion === 'Autre' && autreTxt) ? `Autre (${autreTxt})` : lesion;
       html += `<span class="active-zone-badge" style="background:${color};">
         ${zone} — ${displayLabel}
-        <button onclick="removeBodyZone('${zone}','${lesion}')" title="Supprimer">×</button>
+        <button onclick="removeBodyZone('${zone}','${lesion}')">×</button>
       </span>`;
     });
   });
@@ -806,13 +1263,8 @@ function removeBodyZone(zone, lesion) {
     bodyData[zone] = bodyData[zone].filter(l => l !== lesion);
     if (bodyData[zone].length === 0) delete bodyData[zone];
   }
-  updateBodySvg();
-  updateActiveZonesList();
-  if (!_syncingFromTable) {
-    _syncingFromSchema = true;
-    syncBodyToTable();
-    _syncingFromSchema = false;
-  }
+  updateBodySvg(); updateActiveZonesList();
+  if (!_syncingFromTable) { _syncingFromSchema = true; syncBodyToTable(); _syncingFromSchema = false; }
 }
 
 function syncBodyToTable() {
@@ -824,12 +1276,8 @@ function syncBodyToTable() {
     lesions.forEach(lesion => {
       const zKey = zone.replace(/[^a-zA-Z]/g, '');
       const lKey = (LESION_ID_MAP[lesion] || lesion).replace(/[^a-zA-Z]/g, '');
-      const id = 'bilan_' + zKey + '_' + lKey;
-      const el = document.getElementById(id);
-      if (el) {
-        el.checked = true;
-        if (el.parentElement) el.parentElement.classList.add('cell-checked');
-      }
+      const el = document.getElementById('bilan_' + zKey + '_' + lKey);
+      if (el) { el.checked = true; if (el.parentElement) el.parentElement.classList.add('cell-checked'); }
     });
   });
 }
@@ -842,10 +1290,7 @@ function onBilanCheckboxChange(checkbox, zone, lesionKey) {
     if (!bodyData[zone]) bodyData[zone] = [];
     if (!bodyData[zone].includes(lesionDisplay)) bodyData[zone].push(lesionDisplay);
     if (checkbox.parentElement) checkbox.parentElement.classList.add('cell-checked');
-    // If "Autre" checked from table, show the input box too
-    if (lesionDisplay === 'Autre') {
-      setActiveLesion('Autre');
-    }
+    if (lesionDisplay === 'Autre') setActiveLesion('Autre');
   } else {
     if (bodyData[zone]) {
       bodyData[zone] = bodyData[zone].filter(l => l !== lesionDisplay);
@@ -853,14 +1298,13 @@ function onBilanCheckboxChange(checkbox, zone, lesionKey) {
     }
     if (checkbox.parentElement) checkbox.parentElement.classList.remove('cell-checked');
   }
-  updateBodySvg();
-  updateActiveZonesList();
+  updateBodySvg(); updateActiveZonesList();
   _syncingFromTable = false;
 }
 
 // ===== URGENCE PILLS =====
 function updateUrgencePills() {
-  const pills = {U1:'pill_U1', U2:'pill_U2', U3:'pill_U3', implique:'pill_implique'};
+  const pills = { U1:'pill_U1', U2:'pill_U2', U3:'pill_U3', implique:'pill_implique' };
   const val = getRadio('urgence');
   Object.entries(pills).forEach(([v, id]) => {
     const el = document.getElementById(id);
@@ -945,7 +1389,6 @@ function buildBilanTable() {
 
 function getBilanTableau() {
   const data = JSON.parse(JSON.stringify(bodyData));
-  // Enrich "Autre" entries with custom label if provided
   const autreTxt = document.getElementById('autreLesionText')?.value?.trim();
   if (autreTxt && data) {
     Object.keys(data).forEach(zone => {
@@ -960,7 +1403,8 @@ function getBilanTableau() {
       const cb = document.getElementById(id);
       if (cb && cb.checked) {
         if (!data[zone]) data[zone] = [];
-        const label = (les === 'Autre' && autreTxt) ? `Autre: ${autreTxt}` : les;
+        const autreTxtLocal = document.getElementById('autreLesionText')?.value?.trim();
+        const label = (les === 'Autre' && autreTxtLocal) ? `Autre: ${autreTxtLocal}` : les;
         if (!data[zone].includes(label) && !data[zone].includes(les)) data[zone].push(label);
       }
     });
@@ -1016,34 +1460,32 @@ function getSoignants() {
 
 // ===== HELPERS =====
 function getRadio(name) {
-  const el = document.querySelector('input[name="'+name+'"]:checked');
+  const el = document.querySelector('input[name="' + name + '"]:checked');
   return el ? el.value : '';
 }
-function toggleInAmbulance() {
-  document.getElementById('inAmbulanceGroup').style.display = document.getElementById('inAmbulance').checked ? 'flex' : 'none';
-}
-function toggleOutAmbulance() {
-  document.getElementById('outAmbulanceGroup').style.display = document.getElementById('outAmbulanceCheck').checked ? 'flex' : 'none';
-}
-function toggleSection(el) {
-  el.classList.toggle('collapsed');
-  el.nextElementSibling.classList.toggle('hidden');
-}
+function getChecked(id) { return document.getElementById(id)?.checked || false; }
+function toggleInAmbulance() { document.getElementById('inAmbulanceGroup').style.display = document.getElementById('inAmbulance').checked ? 'flex' : 'none'; }
+function toggleOutAmbulance() { document.getElementById('outAmbulanceGroup').style.display = document.getElementById('outAmbulanceCheck').checked ? 'flex' : 'none'; }
+function toggleSection(el) { el.classList.toggle('collapsed'); el.nextElementSibling.classList.toggle('hidden'); }
+
 function switchTab(tab) {
   document.getElementById('formTab').style.display = tab === 'form' ? '' : 'none';
+  document.getElementById('medicalTab').style.display = 'none';
   document.getElementById('listTab').style.display = tab === 'list' ? '' : 'none';
   document.getElementById('tabForm').className = 'tab' + (tab === 'form' ? ' active' : '');
   document.getElementById('tabList').className = 'tab' + (tab === 'list' ? ' active' : '');
+  document.getElementById('ficheIndicator').classList.remove('show');
   if (tab === 'list') loadFiches();
 }
-function showToast(msg, type='info') {
+
+function showToast(msg, type = 'info') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'toast ' + type + ' show';
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 function changeFormat(f) {
   const c = document.getElementById('mainContainer');
-  c.classList.remove('tablet','phone');
+  c.classList.remove('tablet', 'phone');
   if (f === 'tablet') c.classList.add('tablet');
   else if (f === 'phone') c.classList.add('phone');
   localStorage.setItem('cr_format', f);
@@ -1058,18 +1500,19 @@ function updateDarkBtn() {
 }
 function updateOnlineStatus() {
   const el = document.getElementById('onlineStatus');
-  if (navigator.onLine) { el.innerHTML = '🟢 <span class="status-online">En ligne</span>'; }
-  else { el.innerHTML = '🔴 <span class="status-offline">Hors ligne</span>'; }
+  if (navigator.onLine) el.innerHTML = '🟢 <span class="status-online">En ligne</span>';
+  else el.innerHTML = '🔴 <span class="status-offline">Hors ligne</span>';
 }
 function updatePendingCount() {
   const p = JSON.parse(localStorage.getItem('cr_pending') || '[]');
-  document.getElementById('pendingCount').textContent = p.length + ' fiche(s) en attente';
+  const pm = JSON.parse(localStorage.getItem('cr_pending_medical') || '[]');
+  document.getElementById('pendingCount').textContent = (p.length + pm.length) + ' fiche(s) en attente';
 }
 
 // ===== CAPTCHA =====
 function genCaptcha(type) {
-  const a = Math.floor(Math.random()*10)+1, b = Math.floor(Math.random()*10)+1;
-  captchas[type] = { answer: a+b };
+  const a = Math.floor(Math.random() * 10) + 1, b = Math.floor(Math.random() * 10) + 1;
+  captchas[type] = { answer: a + b };
   document.getElementById(type === 'login' ? 'loginCaptchaQ' : 'regCaptchaQ').textContent = a + ' + ' + b;
 }
 function checkCaptcha(type) {
@@ -1080,7 +1523,7 @@ function checkCaptcha(type) {
 // ===== AUTH =====
 function showAuth(type) {
   document.getElementById('authOverlay').style.display = 'flex';
-  ['loginBox','registerBox','forgotBox'].forEach(id => document.getElementById(id).style.display = 'none');
+  ['loginBox', 'registerBox', 'forgotBox'].forEach(id => document.getElementById(id).style.display = 'none');
   if (type === 'login') { document.getElementById('loginBox').style.display = ''; genCaptcha('login'); }
   if (type === 'register') { document.getElementById('registerBox').style.display = ''; genCaptcha('register'); }
   if (type === 'forgot') document.getElementById('forgotBox').style.display = '';
@@ -1131,7 +1574,7 @@ function updateAuthBtn() {
   }
 }
 
-// ===== COLLECT FORM =====
+// ===== COLLECT MAIN FORM =====
 function collectFormData() {
   const soins = {};
   document.querySelectorAll('[data-soin]').forEach(cb => { if (cb.checked) soins[cb.dataset.soin] = true; });
@@ -1177,12 +1620,64 @@ function collectFormData() {
   };
 }
 
-// ===== SAVE =====
+// ===== COLLECT MEDICAL FORM =====
+function collectMedicalData() {
+  const motifs = [];
+  const motifIds = ['acc_circ','bagarre','brulure','chute','electro','alcool','alim','co','drogue','medic','noyade','plaie_pen'];
+  const motifLabels = ['Accidents de la circulation','Bagarre','Brûlure','Chute','Électrocution','Intox. alcool','Intox. alimentaire','Intox. CO','Intox. drogue','Intox. médicamenteuse','Noyade','Plaie pénétrante'];
+  motifIds.forEach((m, i) => { if (document.getElementById('motif_' + m)?.checked) motifs.push(motifLabels[i]); });
+  const motifAutre = document.getElementById('motif_autre')?.value?.trim();
+  if (motifAutre) motifs.push('Autre: ' + motifAutre);
+
+  return {
+    bilan_clinique: {
+      agite: ynValues['med_agite'] || null,
+      convulsion: ynValues['med_convulsion'] || null,
+      cyanose: ynValues['med_cyanose'] || null,
+      deficit_moteur: ynValues['med_deficit_moteur'] || null,
+      inconscient: ynValues['med_inconscient'] || null,
+      resp_anormale: ynValues['med_resp_anormale'] || null
+    },
+    pupilles: {
+      normales: getChecked('pup_normales'),
+      myosis: getChecked('pup_myosis'),
+      mydriase: getChecked('pup_mydriase'),
+      anisocorie: getChecked('pup_anisocorie'),
+      anisocorie_g: getChecked('aniso_g'),
+      anisocorie_d: getChecked('aniso_d'),
+      reactives: getChecked('pup_reactives')
+    },
+    freq_respiratoire: getRadio('freq_resp') || null,
+    glasgow: {
+      yeux: parseInt(getRadio('gcs_yeux') || 0) || null,
+      verbal: parseInt(getRadio('gcs_verbal') || 0) || null,
+      moteur: parseInt(getRadio('gcs_moteur') || 0) || null,
+      total: (() => {
+        const e = parseInt(getRadio('gcs_yeux') || 0);
+        const v = parseInt(getRadio('gcs_verbal') || 0);
+        const m = parseInt(getRadio('gcs_moteur') || 0);
+        return (e && v && m) ? e + v + m : null;
+      })()
+    },
+    motifs: motifs,
+    arythmies: {
+      bradycardie: getChecked('ary_brady'),
+      tachycardie: getChecked('ary_tachy'),
+      asystolie: getChecked('ary_asystolie'),
+      autre: document.getElementById('ary_autre')?.value?.trim() || null
+    },
+    bilan_remarque: document.getElementById('med_bilan_remarque')?.value?.trim() || null,
+    lesions_traumatiques: bodyDataMed,
+    evolution_traitement: getEvolutionData(),
+    materiel_utilise: document.getElementById('med_materiel')?.value?.trim() || null
+  };
+}
+
+// ===== SAVE MAIN FICHE =====
 async function saveFiche() {
   const data = collectFormData();
   if (!data.patient_nom && !data.patient_prenom) {
-    showToast('Veuillez renseigner le nom ou prénom du patient', 'error');
-    return;
+    showToast('Veuillez renseigner le nom ou prénom du patient', 'error'); return;
   }
   if (!currentUser) {
     const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
@@ -1204,8 +1699,11 @@ async function saveFiche() {
     showToast('Hors ligne — fiche mise en attente.', 'info');
     resetForm(); return;
   }
-  const ok = await saveToSupabase(data);
-  if (ok) resetForm();
+  const ficheId = await saveToSupabase(data);
+  if (ficheId) {
+    currentFicheId = ficheId;
+    resetForm();
+  }
 }
 
 async function saveToSupabase(rawData) {
@@ -1252,7 +1750,7 @@ async function saveToSupabase(rawData) {
   };
   Object.keys(ficheRow).forEach(k => { if (ficheRow[k] === undefined) delete ficheRow[k]; });
   const { data: fiche, error } = await sb.from('fiches_croixrouge').insert(ficheRow).select('id').single();
-  if (error) { showToast('Erreur: ' + error.message, 'error'); return false; }
+  if (error) { showToast('Erreur: ' + error.message, 'error'); return null; }
   if (soignants.length > 0) {
     const rows = soignants.filter(s => s.nom && s.nom.trim()).map(s => ({ ...s, fiche_id: fiche.id }));
     if (rows.length > 0) {
@@ -1261,35 +1759,111 @@ async function saveToSupabase(rawData) {
     }
   }
   showToast('✅ Fiche sauvegardée avec succès !', 'success');
-  return true;
+  return fiche.id;
+}
+
+// ===== SAVE MEDICAL FICHE =====
+async function saveMedicalFiche() {
+  const medData = collectMedicalData();
+
+  if (!currentUser) {
+    const pending = JSON.parse(localStorage.getItem('cr_pending_medical') || '[]');
+    medData._localId = Date.now().toString();
+    medData._createdAt = new Date().toISOString();
+    medData._ficheId = currentFicheId || null;
+    const patNom = document.getElementById('patNom').value.trim();
+    const patPrenom = document.getElementById('patPrenom').value.trim();
+    medData._patientName = (patNom || '?') + ' ' + (patPrenom || '');
+    pending.push(medData);
+    localStorage.setItem('cr_pending_medical', JSON.stringify(pending));
+    updatePendingCount();
+    showToast('Non connecté — fiche médicale mise en attente.', 'info');
+    switchToMainForm(); return;
+  }
+  if (!navigator.onLine) {
+    const pending = JSON.parse(localStorage.getItem('cr_pending_medical') || '[]');
+    medData._localId = Date.now().toString();
+    medData._createdAt = new Date().toISOString();
+    medData._ficheId = currentFicheId || null;
+    pending.push(medData);
+    localStorage.setItem('cr_pending_medical', JSON.stringify(pending));
+    updatePendingCount();
+    showToast('Hors ligne — fiche médicale mise en attente.', 'info');
+    switchToMainForm(); return;
+  }
+
+  const medRow = {
+    user_id: currentUser.id,
+    fiche_id: currentFicheId || null,
+    bilan_clinique: medData.bilan_clinique,
+    pupilles: medData.pupilles,
+    freq_respiratoire: medData.freq_respiratoire,
+    glasgow: medData.glasgow,
+    motifs: medData.motifs,
+    arythmies: medData.arythmies,
+    bilan_remarque: medData.bilan_remarque,
+    lesions_traumatiques: medData.lesions_traumatiques,
+    evolution_traitement: medData.evolution_traitement,
+    materiel_utilise: medData.materiel_utilise
+  };
+  Object.keys(medRow).forEach(k => { if (medRow[k] === undefined) delete medRow[k]; });
+  const { error } = await sb.from('fiches_medicales_croixrouge').insert(medRow);
+  if (error) { showToast('Erreur: ' + error.message, 'error'); return; }
+  showToast('✅ Fiche médicale sauvegardée !', 'success');
+  switchToMainForm();
 }
 
 // ===== SYNC PENDING =====
 async function syncPendingFiches() {
   if (!currentUser || !navigator.onLine) return;
+  // Sync main fiches
   const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
-  if (!pending.length) return;
   let remaining = [];
+  const idMap = {};
   for (const fiche of pending) {
-    const ok = await saveToSupabase({ ...fiche });
-    if (!ok) remaining.push(fiche);
+    const id = await saveToSupabase({ ...fiche });
+    if (id) idMap[fiche._localId] = id;
+    else remaining.push(fiche);
   }
   localStorage.setItem('cr_pending', JSON.stringify(remaining));
+
+  // Sync medical fiches
+  const pendingMed = JSON.parse(localStorage.getItem('cr_pending_medical') || '[]');
+  let remainingMed = [];
+  for (const med of pendingMed) {
+    const ficheId = (med._ficheId && idMap[med._ficheId]) ? idMap[med._ficheId] : med._ficheId;
+    const medRow = {
+      user_id: currentUser.id, fiche_id: ficheId || null,
+      bilan_clinique: med.bilan_clinique, pupilles: med.pupilles,
+      freq_respiratoire: med.freq_respiratoire, glasgow: med.glasgow,
+      motifs: med.motifs, arythmies: med.arythmies,
+      bilan_remarque: med.bilan_remarque, lesions_traumatiques: med.lesions_traumatiques,
+      evolution_traitement: med.evolution_traitement, materiel_utilise: med.materiel_utilise
+    };
+    const { error } = await sb.from('fiches_medicales_croixrouge').insert(medRow);
+    if (error) remainingMed.push(med);
+  }
+  localStorage.setItem('cr_pending_medical', JSON.stringify(remainingMed));
   updatePendingCount();
-  if (!remaining.length && pending.length > 0) showToast(pending.length + ' fiche(s) synchronisée(s) !', 'success');
+  if (!remaining.length && !remainingMed.length && (pending.length + pendingMed.length > 0)) {
+    showToast((pending.length + pendingMed.length) + ' fiche(s) synchronisée(s) !', 'success');
+  }
 }
 
 // ===== LOAD FICHES =====
 async function loadFiches() {
   const container = document.getElementById('fichesList');
   const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
+  const pendingMed = JSON.parse(localStorage.getItem('cr_pending_medical') || '[]');
 
   if (!currentUser) {
-    if (!pending.length) { container.innerHTML = '<div class="msg-box msg-info">Connectez-vous pour voir vos fiches. Aucune fiche en attente.</div>'; return; }
-    container.innerHTML = '<h3 style="margin-bottom:12px;">⏳ Fiches en attente (' + pending.length + ')</h3>';
+    if (!pending.length && !pendingMed.length) {
+      container.innerHTML = '<div class="msg-box msg-info">Connectez-vous pour voir vos fiches. Aucune fiche en attente.</div>'; return;
+    }
+    container.innerHTML = '<h3 style="margin-bottom:12px;">⏳ Fiches en attente (' + (pending.length + pendingMed.length) + ')</h3>';
     pending.forEach((f, i) => {
       container.innerHTML += `<div class="fiche-item">
-        <div class="fiche-info"><strong>${f.patient_nom||'?'} ${f.patient_prenom||''}</strong> — ${f.in_date||'N/A'} <span class="pending-badge">En attente</span></div>
+        <div class="fiche-info"><strong>${f.patient_nom || '?'} ${f.patient_prenom || ''}</strong> — ${f.in_date || 'N/A'} <span class="pending-badge">En attente</span></div>
         <div class="fiche-btns">
           <button class="btn-view" onclick="viewPendingFiche(${i})">👁️ Voir</button>
           <button class="btn btn-secondary" onclick="deletePending(${i})">🗑️</button>
@@ -1302,18 +1876,18 @@ async function loadFiches() {
 
   container.innerHTML = '<p style="text-align:center;color:var(--text3);">Chargement...</p>';
   const { data, error } = await sb.from('fiches_croixrouge')
-    .select('*')
+    .select('*, fiches_medicales_croixrouge(id)')
     .eq('user_id', currentUser.id)
     .order('created_at', { ascending: false });
   if (error) { container.innerHTML = '<div class="msg-box msg-info">Erreur : ' + error.message + '</div>'; return; }
 
-  const URGENCE_COLORS = { U1:'#e74c3c', U2:'#f39c12', U3:'#2ecc71', implique:'#5c6bc0' };
+  const URGENCE_COLORS = { U1: '#e74c3c', U2: '#f39c12', U3: '#2ecc71', implique: '#5c6bc0' };
   let html = '';
-  if (pending.length > 0) {
-    html += '<h3 style="margin-bottom:12px;">⏳ En attente (' + pending.length + ')</h3>';
+  if (pending.length + pendingMed.length > 0) {
+    html += '<h3 style="margin-bottom:12px;">⏳ En attente (' + (pending.length + pendingMed.length) + ')</h3>';
     pending.forEach((f, i) => {
       html += `<div class="fiche-item">
-        <div class="fiche-info"><strong>${f.patient_nom||'?'} ${f.patient_prenom||''}</strong> — ${f.in_date||'N/A'} <span class="pending-badge">En attente</span></div>
+        <div class="fiche-info"><strong>${f.patient_nom || '?'} ${f.patient_prenom || ''}</strong> — ${f.in_date || 'N/A'} <span class="pending-badge">En attente</span></div>
         <div class="fiche-btns">
           <button class="btn-view" onclick="viewPendingFiche(${i})">👁️ Voir</button>
           <button class="btn btn-secondary" onclick="deletePending(${i})">🗑️</button>
@@ -1327,10 +1901,14 @@ async function loadFiches() {
     const urg = f.urgence;
     const urgColor = urg ? (URGENCE_COLORS[urg] || '#999') : 'transparent';
     const urgLabel = urg ? `<span style="background:${urgColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:.72em;font-weight:700;">${urg}</span>` : '';
-    html += `<div class="fiche-item">
-      <div class="fiche-info"><strong>${f.patient_nom||'?'} ${f.patient_prenom||''}</strong> — N°Pat: ${f.numero_patient||'N/A'} — ${f.in_date||'N/A'} ${urgLabel}</div>
+    const hasMedical = f.fiches_medicales_croixrouge && f.fiches_medicales_croixrouge.length > 0;
+    const medBadge = hasMedical ? '<span class="medical-badge">🏥 Méd.</span>' : '';
+    const linkedClass = hasMedical ? ' fiche-linked' : '';
+    html += `<div class="fiche-item${linkedClass}">
+      <div class="fiche-info"><strong>${f.patient_nom || '?'} ${f.patient_prenom || ''}</strong> — N°Pat: ${f.numero_patient || 'N/A'} — ${f.in_date || 'N/A'} ${urgLabel}${medBadge}</div>
       <div class="fiche-btns">
         <button class="btn-view" onclick='viewFiche(${JSON.stringify(JSON.stringify(f))})'>👁️ Voir</button>
+        ${hasMedical ? `<button class="btn-view" style="background:#1a5276;" onclick="viewMedicalFiche('${f.id}')">🏥 Médicale</button>` : ''}
         <button class="btn btn-secondary" onclick="deleteFiche('${f.id}')">🗑️</button>
       </div>
     </div>`;
@@ -1338,10 +1916,139 @@ async function loadFiches() {
   container.innerHTML = html;
 }
 
-// ===== VIEW FICHE MODAL =====
+// ===== VIEW MEDICAL FICHE =====
+async function viewMedicalFiche(ficheId) {
+  if (!navigator.onLine) { showToast('Hors ligne', 'error'); return; }
+  const { data, error } = await sb.from('fiches_medicales_croixrouge')
+    .select('*').eq('fiche_id', ficheId).order('created_at', { ascending: false }).limit(1).single();
+  if (error) { showToast('Erreur chargement fiche médicale', 'error'); return; }
+  renderMedicalModal(data);
+}
+
+function renderMedicalModal(f) {
+  document.getElementById('modalTitle').textContent = '🏥 Fiche Médicale — Bilan Clinique';
+  document.getElementById('modalHeader').className = 'modal-header medical';
+  const v = (val, fallback = '—') => (val !== null && val !== undefined && val !== '') ? val : `<span class="empty">${fallback}</span>`;
+
+  const bc = f.bilan_clinique || {};
+  const ynStr = (val) => val === 'oui' ? '✅ OUI' : val === 'non' ? '❌ NON' : '—';
+  const boolStr = (val) => val === true ? '✅ OUI' : val === false ? '❌ NON' : '—';
+
+  const pupilles = f.pupilles || {};
+  const pupList = [];
+  if (pupilles.normales) pupList.push('Normales');
+  if (pupilles.myosis) pupList.push('Myosis');
+  if (pupilles.mydriase) pupList.push('Mydriase');
+  if (pupilles.anisocorie) {
+    let a = 'Anisocorie';
+    const sides = [pupilles.anisocorie_g ? 'G' : null, pupilles.anisocorie_d ? 'D' : null].filter(Boolean);
+    if (sides.length) a += ' (' + sides.join('+') + ')';
+    pupList.push(a);
+  }
+  if (pupilles.reactives) pupList.push('Réactives');
+
+  const glasgow = f.glasgow || {};
+  const ary = f.arythmies || {};
+  const motifs = f.motifs || [];
+  const evolution = f.evolution_traitement || [];
+
+  const bilanData = f.lesions_traumatiques || {};
+  const LESION_COLORS_LOCAL = {
+    'Fracture': '#e74c3c', 'Entorse': '#e67e22', 'Contusion': '#9b59b6',
+    'Brûlure': '#e8b800', 'Piqûre': '#1abc9c', 'Autre': '#3498db'
+  };
+  let lesionBadgesHtml = '';
+  if (Object.keys(bilanData).length > 0) {
+    Object.entries(bilanData).forEach(([zone, lesions]) => {
+      (lesions || []).forEach(lesion => {
+        const color = LESION_COLORS_LOCAL[lesion] || '#999';
+        lesionBadgesHtml += `<span class="modal-lesion-badge" style="background:${color};">${zone} — ${lesion}</span>`;
+      });
+    });
+  } else {
+    lesionBadgesHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucune lésion</span>';
+  }
+
+  let evolutionHtml = '';
+  if (evolution.length > 0) {
+    const params = ['Saturation O₂', 'Glycémie', 'TA', 'Pulsations', 'Oxygène L/min', 'Médicament', 'Injection', 'Perfusion'];
+    evolutionHtml = '<div style="overflow-x:auto;"><table class="evolution-table" style="font-size:.78em;">';
+    evolutionHtml += '<thead><tr><th>Paramètre</th>' + evolution.map(c => `<th>${c.heure || '—'}</th>`).join('') + '</tr></thead><tbody>';
+    params.forEach(p => {
+      evolutionHtml += '<tr><td>' + p + '</td>' + evolution.map(c => `<td style="padding:6px 10px;">${c[p] || '—'}</td>`).join('') + '</tr>';
+    });
+    evolutionHtml += '</tbody></table></div>';
+  } else {
+    evolutionHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucune donnée d\'évolution</span>';
+  }
+
+  const createdAt = f.created_at ? new Date(f.created_at).toLocaleString('fr-BE') : '—';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-section">
+      <div class="modal-section-title medical">🩺 Bilan clinique initial</div>
+      <div class="modal-grid">
+        <div class="modal-field"><div class="lbl">Agité</div><div class="val">${ynStr(bc.agite)}</div></div>
+        <div class="modal-field"><div class="lbl">Convulsion</div><div class="val">${ynStr(bc.convulsion)}</div></div>
+        <div class="modal-field"><div class="lbl">Cyanosé</div><div class="val">${ynStr(bc.cyanose)}</div></div>
+        <div class="modal-field"><div class="lbl">Déficit moteur</div><div class="val">${ynStr(bc.deficit_moteur)}</div></div>
+        <div class="modal-field"><div class="lbl">Inconscient</div><div class="val">${ynStr(bc.inconscient)}</div></div>
+        <div class="modal-field"><div class="lbl">Resp. anormale</div><div class="val">${ynStr(bc.resp_anormale)}</div></div>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title medical">👁️ Pupilles</div>
+      <div class="modal-tags">${pupList.length ? pupList.map(p => `<span class="modal-tag" style="background:var(--medical-light);color:var(--medical);">${p}</span>`).join('') : '<span style="color:var(--text3);font-size:.85em;">—</span>'}</div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title medical">🫁 Fréquence respiratoire</div>
+      <div class="modal-field" style="display:inline-block;"><div class="val">${v(f.freq_respiratoire)}</div></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title medical">🧠 Glasgow</div>
+      <div class="modal-grid">
+        <div class="modal-field"><div class="lbl">Ouverture yeux</div><div class="val">${glasgow.yeux || '—'}</div></div>
+        <div class="modal-field"><div class="lbl">Verbal</div><div class="val">${glasgow.verbal || '—'}</div></div>
+        <div class="modal-field"><div class="lbl">Moteur</div><div class="val">${glasgow.moteur || '—'}</div></div>
+        <div class="modal-field" style="background:${glasgow.total ? (glasgow.total <= 8 ? '#fde8e8' : glasgow.total <= 12 ? '#fef6e4' : '#e8f8ef') : 'var(--bg2)'};">
+          <div class="lbl">Total</div>
+          <div class="val" style="font-size:1.3em;color:${glasgow.total ? (glasgow.total <= 8 ? '#c0392b' : glasgow.total <= 12 ? '#d4700a' : '#1a7a3a') : 'var(--text)'};">${glasgow.total ? glasgow.total + ' / 15' : '—'}</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title medical">📋 Motifs constatés</div>
+      <div class="modal-tags">${motifs.length ? motifs.map(m => `<span class="modal-tag" style="background:var(--medical-light);color:var(--medical);">${m}</span>`).join('') : '<span style="color:var(--text3);font-size:.85em;">Aucun</span>'}</div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title medical">💓 Arythmies</div>
+      <div class="modal-grid">
+        <div class="modal-field"><div class="lbl">Bradycardie &lt;50</div><div class="val">${boolStr(ary.bradycardie)}</div></div>
+        <div class="modal-field"><div class="lbl">Tachycardie &gt;140</div><div class="val">${boolStr(ary.tachycardie)}</div></div>
+        <div class="modal-field"><div class="lbl">Asystolie</div><div class="val">${boolStr(ary.asystolie)}</div></div>
+        ${ary.autre ? `<div class="modal-field"><div class="lbl">Autre</div><div class="val">${ary.autre}</div></div>` : ''}
+      </div>
+    </div>
+    ${f.bilan_remarque ? `<div class="modal-section"><div class="modal-section-title medical">📝 Bilan & Remarques</div><div class="modal-field"><div class="val">${f.bilan_remarque}</div></div></div>` : ''}
+    <div class="modal-section">
+      <div class="modal-section-title medical">🧍 Lésions traumatiques</div>
+      <div class="modal-tags">${lesionBadgesHtml}</div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title medical">📈 Évolution du traitement</div>
+      ${evolutionHtml}
+    </div>
+    ${f.materiel_utilise ? `<div class="modal-section"><div class="modal-section-title medical">🧰 Matériel utilisé</div><div class="modal-field"><div class="val">${f.materiel_utilise}</div></div></div>` : ''}
+    <div style="text-align:right;font-size:.75em;color:var(--text3);margin-top:10px;">Fiche médicale créée le ${createdAt}</div>
+  `;
+  document.getElementById('ficheModal').style.display = 'flex';
+}
+
+// ===== VIEW MAIN FICHE MODAL =====
 function closeFicheModal(event) {
   if (event.target === document.getElementById('ficheModal')) {
     document.getElementById('ficheModal').style.display = 'none';
+    document.getElementById('modalHeader').className = 'modal-header';
   }
 }
 
@@ -1354,24 +2061,27 @@ function viewPendingFiche(index) {
 
 function viewFiche(jsonStr) {
   const f = JSON.parse(jsonStr);
+  document.getElementById('modalHeader').className = 'modal-header';
   renderFicheModal(f);
 }
 
 function renderFicheModal(f) {
-  const URGENCE_COLORS = { U1:'#e74c3c', U2:'#f39c12', U3:'#2ecc71', implique:'#5c6bc0' };
-  const v = (val, fallback='—') => (val !== null && val !== undefined && val !== '') ? val : `<span class="empty">${fallback}</span>`;
+  const URGENCE_COLORS = { U1: '#e74c3c', U2: '#f39c12', U3: '#2ecc71', implique: '#5c6bc0' };
+  const v = (val, fallback = '—') => (val !== null && val !== undefined && val !== '') ? val : `<span class="empty">${fallback}</span>`;
   const bool2str = (val) => val === true ? '✅ Oui' : val === false ? '❌ Non' : '—';
 
   document.getElementById('modalTitle').textContent = `📋 ${f.patient_nom || '?'} ${f.patient_prenom || ''} — Fiche Patient`;
+  document.getElementById('modalHeader').className = 'modal-header';
 
   const bilanData = f.bilan_tableau || {};
+  const LESION_COLORS_LOCAL = { 'Fracture': '#e74c3c', 'Entorse': '#e67e22', 'Contusion': '#9b59b6', 'Brûlure': '#e8b800', 'Piqûre': '#1abc9c', 'Autre': '#3498db' };
+
   function buildModalSvg(bilanData) {
     const zoneColors = {};
     Object.entries(bilanData).forEach(([zone, lesions]) => {
       if (lesions && lesions.length > 0) {
-        // Pick the color based on the base lesion type
         const baseLesion = lesions[0].split(':')[0].trim();
-        zoneColors[zone] = LESION_COLORS[baseLesion] || '#999';
+        zoneColors[zone] = LESION_COLORS_LOCAL[baseLesion] || '#999';
       }
     });
     const zoneShapes = {
@@ -1390,16 +2100,13 @@ function renderFicheModal(f) {
     Object.entries(zoneShapes).forEach(([zone, shape]) => {
       if (!shape) return;
       const color = zoneColors[zone] || '#e8e8e8';
-      const stroke = zoneColors[zone] ? zoneColors[zone] : '#999';
+      const stroke = zoneColors[zone] || '#999';
       svgBody += `${shape} fill="${color}" stroke="${stroke}" stroke-width="1.5" opacity="${zoneColors[zone] ? '0.85' : '1'}"/>`;
     });
-    svgBody += `<ellipse cx="70" cy="210" rx="10" ry="5" fill="${zoneColors['MID']||'#e8e8e8'}" stroke="${zoneColors['MID']||'#999'}" stroke-width="1.5"/>`;
-    svgBody += `<ellipse cx="50" cy="210" rx="10" ry="5" fill="${zoneColors['MIG']||'#e8e8e8'}" stroke="${zoneColors['MIG']||'#999'}" stroke-width="1.5"/>`;
-    const labels = [
-      [60,21,'Tête'],[60,45,'Cerv.'],[60,73,'Thorax'],[60,107,'Abdo'],[60,130,'Bassin'],
-      [89,82,'MSD'],[31,82,'MSG'],[70,175,'MID'],[50,175,'MIG']
-    ];
-    labels.forEach(([x,y,t]) => { svgBody += `<text x="${x}" y="${y}" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">${t}</text>`; });
+    svgBody += `<ellipse cx="70" cy="210" rx="10" ry="5" fill="${zoneColors['MID'] || '#e8e8e8'}" stroke="${zoneColors['MID'] || '#999'}" stroke-width="1.5"/>`;
+    svgBody += `<ellipse cx="50" cy="210" rx="10" ry="5" fill="${zoneColors['MIG'] || '#e8e8e8'}" stroke="${zoneColors['MIG'] || '#999'}" stroke-width="1.5"/>`;
+    const labels = [[60,21,'Tête'],[60,45,'Cerv.'],[60,73,'Thorax'],[60,107,'Abdo'],[60,130,'Bassin'],[89,82,'MSD'],[31,82,'MSG'],[70,175,'MID'],[50,175,'MIG']];
+    labels.forEach(([x, y, t]) => { svgBody += `<text x="${x}" y="${y}" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">${t}</text>`; });
     return `<svg viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg" style="max-width:130px;width:100%;">${svgBody}</svg>`;
   }
 
@@ -1408,7 +2115,7 @@ function renderFicheModal(f) {
     Object.entries(bilanData).forEach(([zone, lesions]) => {
       (lesions || []).forEach(lesion => {
         const baseLesion = lesion.split(':')[0].trim();
-        const color = LESION_COLORS[baseLesion] || '#999';
+        const color = LESION_COLORS_LOCAL[baseLesion] || '#999';
         lesionBadgesHtml += `<span class="modal-lesion-badge" style="background:${color};">${zone} — ${lesion}</span>`;
       });
     });
@@ -1417,27 +2124,16 @@ function renderFicheModal(f) {
   }
 
   const soinsData = f.soins || {};
-  const SOINS_LABELS = {
-    plaies:'Soin de plaies', pansement:'Pansement', attelle:'Attelle',
-    matelas_depression:'Matelas à dépression', compression:'Compression',
-    bandage:'Bandage', collier_cervical:'Collier Cervical', repos_surveillance:'Repos / Surveillance'
-  };
+  const SOINS_LABELS = { plaies:'Soin de plaies', pansement:'Pansement', attelle:'Attelle', matelas_depression:'Matelas à dépression', compression:'Compression', bandage:'Bandage', collier_cervical:'Collier Cervical', repos_surveillance:'Repos / Surveillance' };
   const soinsActifs = Object.keys(soinsData).filter(k => soinsData[k]).map(k => SOINS_LABELS[k] || k);
-  let soinsHtml = soinsActifs.length > 0
-    ? soinsActifs.map(s => `<span class="modal-tag">${s}</span>`).join('')
-    : '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun soin</span>';
+  const soinsHtml = soinsActifs.length > 0 ? soinsActifs.map(s => `<span class="modal-tag">${s}</span>`).join('') : '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun soin</span>';
 
   const matData = f.materiel || {};
-  const matKeys = Object.keys(matData);
-  let matHtml = matKeys.length > 0
-    ? matKeys.map(k => `<div class="mat-modal-item">${k}<span>×${matData[k]}</span></div>`).join('')
-    : '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun matériel</span>';
+  const matHtml = Object.keys(matData).length > 0 ? Object.keys(matData).map(k => `<div class="mat-modal-item">${k}<span>×${matData[k]}</span></div>`).join('') : '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun matériel</span>';
 
   const urg = f.urgence;
   const urgColor = urg ? (URGENCE_COLORS[urg] || '#999') : null;
-  const urgHtml = urg
-    ? `<span class="urgence-badge-modal" style="background:${urgColor};">${urg === 'U1' ? '🔴' : urg === 'U2' ? '🟡' : urg === 'U3' ? '🟢' : '🔵'} ${urg}</span>`
-    : '<span style="color:var(--text3);">—</span>';
+  const urgHtml = urg ? `<span class="urgence-badge-modal" style="background:${urgColor};">${urg === 'U1' ? '🔴' : urg === 'U2' ? '🟡' : urg === 'U3' ? '🟢' : '🔵'} ${urg}</span>` : '<span style="color:var(--text3);">—</span>';
 
   const inModes = [];
   if (f.in_spontanee) inModes.push('Spontanée');
@@ -1450,22 +2146,25 @@ function renderFicheModal(f) {
   if (f.out_evacuation_vsl) outModes.push('Évacuation VSL');
   if (f.out_evacuation_ambulance) outModes.push('Ambulance' + (f.out_num_ambulance ? ` (${f.out_num_ambulance})` : ''));
 
-  let soignantsHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Non disponible (fiche en attente)</span>';
+  let soignantsHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Non disponible</span>';
   if (f.soignants && Array.isArray(f.soignants)) {
     const validSoignants = f.soignants.filter(s => s.nom && s.nom.trim());
     if (validSoignants.length > 0) {
       soignantsHtml = '<div class="soignants-modal">' + validSoignants.map(s => {
-        const roles = ['SEC','ES','EPS','TMS','AMU','Infirmier','Médecin'].filter((r,i) => [s.is_sec,s.is_es,s.is_eps,s.is_tms,s.is_amu,s.is_infirmier,s.is_medecin][i]);
-        return `<div class="soignant-modal-card"><strong>${s.nom}</strong>${s.numero_inami ? `<span style="font-size:.78em;color:var(--text3);">INAMI: ${s.numero_inami}</span>` : ''}<div class="soignant-badges">${roles.map(r=>`<span class="soignant-badge">${r}</span>`).join('')}</div></div>`;
+        const roles = ['SEC','ES','EPS','TMS','AMU','Infirmier','Médecin'].filter((r, i) => [s.is_sec,s.is_es,s.is_eps,s.is_tms,s.is_amu,s.is_infirmier,s.is_medecin][i]);
+        return `<div class="soignant-modal-card"><strong>${s.nom}</strong>${s.numero_inami ? `<span style="font-size:.78em;color:var(--text3);">INAMI: ${s.numero_inami}</span>` : ''}<div class="soignant-badges">${roles.map(r => `<span class="soignant-badge">${r}</span>`).join('')}</div></div>`;
       }).join('') + '</div>';
-    } else {
-      soignantsHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun soignant</span>';
-    }
+    } else soignantsHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun soignant</span>';
   }
 
+  const hasMedical = f.fiches_medicales_croixrouge && f.fiches_medicales_croixrouge.length > 0;
   const createdAt = f.created_at ? new Date(f.created_at).toLocaleString('fr-BE') : (f._createdAt ? new Date(f._createdAt).toLocaleString('fr-BE') : '—');
 
   document.getElementById('modalBody').innerHTML = `
+    ${hasMedical ? `<div style="background:var(--medical-light);border:1.5px solid var(--medical);border-radius:var(--radius);padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <span style="color:var(--medical);font-weight:700;font-size:.9em;">🏥 Une fiche médicale est liée à ce patient</span>
+      <button class="btn-view" style="background:var(--medical);font-size:.8em;" onclick="viewMedicalFiche('${f.id}');document.getElementById('ficheModal').style.display='none';">Voir la fiche médicale</button>
+    </div>` : ''}
     <div class="modal-section">
       <div class="modal-section-title">📌 Identification</div>
       <div class="modal-grid">
@@ -1550,7 +2249,8 @@ function deletePending(index) {
   showToast('Fiche supprimée', 'info');
 }
 async function deleteFiche(id) {
-  if (!confirm('Supprimer cette fiche définitivement ?')) return;
+  if (!confirm('Supprimer cette fiche définitivement ? (La fiche médicale liée sera aussi supprimée)')) return;
+  await sb.from('fiches_medicales_croixrouge').delete().eq('fiche_id', id);
   const { error } = await sb.from('fiches_croixrouge').delete().eq('id', id);
   if (error) { showToast('Erreur: ' + error.message, 'error'); return; }
   showToast('Fiche supprimée', 'success'); loadFiches();
@@ -1569,7 +2269,6 @@ function resetForm() {
     if (display) { display.textContent = '0'; display.className = 'qty-val'; }
   });
   document.querySelectorAll('#bilanBody td').forEach(td => td.classList.remove('cell-checked'));
-  // Reset "Autre" lesion box
   const autreLesionBox = document.getElementById('autreLesionBox');
   if (autreLesionBox) autreLesionBox.classList.remove('visible');
   const autreLesionText = document.getElementById('autreLesionText');
@@ -1581,10 +2280,10 @@ function resetForm() {
   document.getElementById('soignantsContainer').innerHTML = '';
   soignantCount = 0;
   addSoignant();
-  // Reset active lesion selection back to default
   setActiveLesion('Fracture');
   const chipFracture = document.getElementById('lchip_Fracture');
   if (chipFracture) chipFracture.classList.add('selected');
+  currentFicheId = null;
 }
 
 // ===== INIT =====
@@ -1594,6 +2293,7 @@ window.addEventListener('load', async () => {
   addSoignant();
   updateOnlineStatus();
   updateActiveZonesList();
+  updateMedActiveZonesList();
   window.addEventListener('online', () => { updateOnlineStatus(); syncPendingFiches(); });
   window.addEventListener('offline', updateOnlineStatus);
   if (localStorage.getItem('cr_dark') === '1') document.body.classList.add('dark');
