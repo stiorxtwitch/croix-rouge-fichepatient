@@ -327,7 +327,10 @@ input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; accent-
     <div class="check-group" style="margin-bottom:12px;">
       <label><input type="checkbox" id="inSpontanee"> Spontanée</label>
       <label><input type="checkbox" id="inEquipe"> Via équipe</label>
-      <label><input type="checkbox" id="inAmbulance"> Via ambulance</label>
+      <label><input type="checkbox" id="inAmbulance" onchange="toggleInAmbulance()"> Via ambulance</label>
+    </div>
+    <div class="form-row" id="inAmbulanceGroup" style="display:none;">
+      <div class="form-group"><label>N° Ambulance</label><input type="text" id="inNumAmbulance" placeholder="Ex: AMB-456"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Autre moyen</label><input type="text" id="inAutre"></div>
@@ -422,14 +425,23 @@ input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; accent-
       <label><input type="checkbox" id="outNormal"> Retour à la vie normale</label>
       <label><input type="checkbox" id="outRefus"> Refus de soins</label>
       <label><input type="checkbox" id="outVsl"> Évacuation VSL</label>
+      <label><input type="checkbox" id="outAmbulanceCheck" onchange="toggleOutAmbulance()"> Ambulance</label>
     </div>
+    
+    <div id="outAmbulanceGroup" style="display:none; margin-bottom:12px;">
+      <div class="form-row">
+        <div class="form-group"><label>N° Ambulance</label><input type="text" id="outNumAmbulance" placeholder="Ex: AMB-789"></div>
+        <div class="form-group"><label>Vecteur</label><input type="text" id="outVecteur" placeholder="Ex: Hôpital Erasme"></div>
+      </div>
+    </div>
+
     <div class="form-row">
-      <div class="form-group"><label>Évacuation Ambulance</label><input type="text" id="outAmbulance"></div>
       <div class="form-group"><label>Autre moyen</label><input type="text" id="outAutreMoyen"></div>
       <div class="form-group small"><label>Heure OUT</label><input type="time" id="outHeure"></div>
     </div>
   </div>
 </div>
+
 
 <!-- Actions -->
 <div class="actions-bar">
@@ -449,6 +461,16 @@ input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; accent-
 </div><!-- container -->
 
 <script>
+function toggleInAmbulance() {
+  const checked = document.getElementById('inAmbulance').checked;
+  document.getElementById('inAmbulanceGroup').style.display = checked ? 'flex' : 'none';
+}
+function toggleInami(checkbox) {
+  const card = checkbox.closest('.soignant-card');
+  const inamiInput = card.querySelector('.sg-inami');
+  const isInfOrMed = card.querySelector('.sg-infirmier').checked || card.querySelector('.sg-medecin').checked;
+  inamiInput.style.display = isInfOrMed ? 'block' : 'none';
+}
 // ==================== CONFIG ====================
 const SUPABASE_URL = 'https://sevrfgivcpefyykuffti.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNldnJmZ2l2Y3BlZnl5a3VmZnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NDI1NTMsImV4cCI6MjA3ODUxODU1M30.YZnkSHsVWKQEhfU7xYfWyTFmtkM28Zuzdu7Y1sjBXQc';
@@ -467,7 +489,33 @@ const MATERIEL_ITEMS = [
   'Flapulle antiseptique','Flapulle LP','Gant d\'examen (paire)','Pansement individuel',
   'Pansement à découper','Paracétamol 500mg','Patch DEA','Pocket Mask','Sparadrap par cm'
 ];
+async function viewFiche(id) {
+  if (!currentUser || !navigator.onLine) {
+    showToast("Impossible d'afficher la fiche (hors ligne ou non connecté)", "error");
+    return;
+  }
 
+  const { data, error } = await sb.from('fiches_croixrouge')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) {
+    showToast("Erreur lors du chargement de la fiche", "error");
+    return;
+  }
+
+  // Ici tu peux soit :
+  // Option 1 : Ouvrir dans un nouvel onglet avec une page de visualisation (plus propre)
+  // Option 2 : Afficher dans un modal (plus rapide à coder)
+
+  alert("Fonction de visualisation en cours de développement.\n\nPour l'instant, voici les infos principales :\n\n" +
+        "Patient : " + (data.patient_nom || '') + " " + (data.patient_prenom || '') + "\n" +
+        "Date IN : " + (data.in_date || 'N/A') + "\n" +
+        "Heure IN : " + (data.heure_in || 'N/A'));
+
+  // Je te proposerai plus tard un beau modal ou une page dédiée si tu veux.
+}
 // ==================== INIT ====================
 window.addEventListener('load', async () => {
   buildBilanTable();
@@ -639,15 +687,18 @@ function addSoignant() {
   const id = soignantCount++;
   const html = `<div class="soignant-card" id="soignant_${id}">
     <div class="soignant-header"><strong>Soignant #${id + 1}</strong><button class="btn-remove" onclick="document.getElementById('soignant_${id}').remove()">×</button></div>
-    <div class="form-row"><div class="form-group"><label>NOM</label><input type="text" class="sg-nom"></div><div class="form-group small"><label>N° INAMI</label><input type="text" class="sg-inami"></div></div>
+    <div class="form-row">
+      <div class="form-group"><label>NOM</label><input type="text" class="sg-nom"></div>
+      <div class="form-group small"><label>N° INAMI</label><input type="text" class="sg-inami" style="display:none;" placeholder="N° INAMI"></div>
+    </div>
     <div class="check-group">
       <label><input type="checkbox" class="sg-sec"> SEC</label>
       <label><input type="checkbox" class="sg-es"> ES</label>
       <label><input type="checkbox" class="sg-eps"> EPS</label>
       <label><input type="checkbox" class="sg-tms"> TMS</label>
       <label><input type="checkbox" class="sg-amu"> AMU</label>
-      <label><input type="checkbox" class="sg-infirmier"> Infirmier</label>
-      <label><input type="checkbox" class="sg-medecin"> Médecin</label>
+      <label><input type="checkbox" class="sg-infirmier" onchange="toggleInami(this)"> Infirmier</label>
+      <label><input type="checkbox" class="sg-medecin" onchange="toggleInami(this)"> Médecin</label>
     </div>
   </div>`;
   document.getElementById('soignantsContainer').insertAdjacentHTML('beforeend', html);
@@ -860,7 +911,8 @@ async function loadFiches() {
       container.innerHTML += '<div class="fiche-item"><div class="fiche-info"><strong>' +
         (f.patient_nom || '?') + ' ' + (f.patient_prenom || '') +
         '</strong> — ' + (f.in_date || 'N/A') + ' <span class="pending-badge">En attente</span></div>' +
-        '<div class="fiche-btns"><button class="btn btn-secondary" onclick="deletePending(' + i + ')">🗑️</button></div></div>';
+        '<div class="fiche-btns"><button class="btn btn-secondary" onclick="deleteFiche('${f.id}')">🗑️</button></div></div>' +
+        '<div class=fiche-btns"><button class="btn btn-secondary" onclick="viewFiche('${f.id}')">👁️ Voir</button></div></div>;
     });
     return;
   }
