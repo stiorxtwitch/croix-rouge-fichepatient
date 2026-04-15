@@ -3,7 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Croix-Rouge de Belgique - Fiches Patients</title>
+<title>Croix-Rouge de Belgique — Fiches Patients</title>
+
+<!-- ===== OPEN GRAPH / SEO ===== -->
+<meta property="og:title" content="Croix-Rouge de Belgique — Fiches Patients">
+<meta property="og:description" content="Application de gestion des fiches patients pour les équipes de la Croix-Rouge de Belgique. Bilan, soins, matériel et suivi en temps réel.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sevrfgivcpefyykuffti.supabase.co">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Flag_of_the_Red_Cross.svg/1200px-Flag_of_the_Red_Cross.svg.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="800">
+<meta property="og:image:alt" content="Croix-Rouge de Belgique — Fiches Patients">
+<meta property="og:site_name" content="Croix-Rouge de Belgique">
+<meta property="og:locale" content="fr_BE">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Croix-Rouge de Belgique — Fiches Patients">
+<meta name="twitter:description" content="Application de gestion des fiches patients pour les équipes de la Croix-Rouge de Belgique.">
+<meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Flag_of_the_Red_Cross.svg/1200px-Flag_of_the_Red_Cross.svg.png">
+
+<!-- SEO -->
+<meta name="description" content="Application de gestion des fiches patients pour les équipes de la Croix-Rouge de Belgique. Bilan, soins, matériel et suivi en temps réel.">
+<meta name="theme-color" content="#d40511">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
@@ -124,12 +147,37 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .radio-group label, .check-group label { display: flex; align-items: center; gap: 5px; font-weight: 500; cursor: pointer; font-size: .9em; }
 input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer; }
 
+/* ===== AUTRE LESION INPUT ===== */
+.autre-lesion-box {
+  display: none;
+  margin-top: 10px;
+  animation: fadeSlideIn .2s ease;
+}
+.autre-lesion-box.visible { display: block; }
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.autre-lesion-box input {
+  width: 100%; padding: 8px 11px;
+  border: 1.5px solid #3498db;
+  border-radius: var(--radius-sm);
+  background: var(--input-bg); color: var(--text);
+  font-size: .92em; font-family: var(--font);
+  transition: border-color .2s;
+}
+.autre-lesion-box input:focus { outline: none; border-color: #2980b9; }
+.autre-lesion-box label {
+  font-size: .78em; font-weight: 700; color: #3498db;
+  text-transform: uppercase; letter-spacing: .5px;
+  display: block; margin-bottom: 5px;
+}
+
 /* ===== BILAN TABLE ===== */
 .bilan-table { width: 100%; border-collapse: collapse; font-size: .78em; }
 .bilan-table th, .bilan-table td { border: 1px solid var(--border); padding: 6px 4px; text-align: center; white-space: nowrap; }
 .bilan-table th { background: var(--primary); color: #fff; font-weight: 600; font-size: .8em; }
 .bilan-table td:first-child { background: var(--bg2); font-weight: 600; text-align: left; padding-left: 10px; font-size: .85em; }
-/* Highlight checkbox cells when checked */
 .bilan-table td.cell-checked { background: rgba(212,5,17,.08); }
 
 /* ===== MATERIAL TABLE ===== */
@@ -474,32 +522,18 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
           <div class="body-schema-wrapper">
             <div class="body-schema-svg-container">
               <svg id="bodySvg" viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg">
-                <!-- HEAD -->
                 <ellipse id="zone_tete" cx="60" cy="20" rx="17" ry="18" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('Tête')" style="cursor:pointer"/>
-                <!-- CERVICAL -->
                 <rect id="zone_cervical" x="53" y="37" width="14" height="12" rx="3" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('Cervical')" style="cursor:pointer"/>
-                <!-- THORAX -->
                 <rect id="zone_thorax" x="40" y="49" width="40" height="42" rx="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('Thorax')" style="cursor:pointer"/>
-                <!-- COLONNE (behind thorax, clickable strip) -->
                 <rect id="zone_colonne" x="55" y="49" width="10" height="80" rx="3" fill="rgba(0,0,0,0)" stroke="none" onclick="toggleBodyZone('Colonne')" style="cursor:pointer"/>
-                <!-- ABDO -->
                 <rect id="zone_abdo" x="43" y="91" width="34" height="26" rx="4" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('Abdo')" style="cursor:pointer"/>
-                <!-- BASSIN -->
                 <rect id="zone_bassin" x="40" y="117" width="40" height="20" rx="4" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('Bassin')" style="cursor:pointer"/>
-                <!-- MSD (right = left on screen) -->
                 <rect id="zone_msd" x="80" y="49" width="18" height="60" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MSD')" style="cursor:pointer"/>
-                <!-- MSG -->
                 <rect id="zone_msg" x="22" y="49" width="18" height="60" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MSG')" style="cursor:pointer"/>
-                <!-- MID -->
                 <rect id="zone_mid" x="60" y="137" width="20" height="70" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MID')" style="cursor:pointer"/>
-                <!-- MIG -->
                 <rect id="zone_mig" x="40" y="137" width="20" height="70" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MIG')" style="cursor:pointer"/>
-                <!-- MID FOOT -->
                 <ellipse cx="70" cy="210" rx="10" ry="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MID')" style="cursor:pointer"/>
-                <!-- MIG FOOT -->
                 <ellipse cx="50" cy="210" rx="10" ry="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MIG')" style="cursor:pointer"/>
-
-                <!-- Labels -->
                 <text x="60" y="21" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Tête</text>
                 <text x="60" y="45" text-anchor="middle" font-size="5" fill="#555" pointer-events="none">Cerv.</text>
                 <text x="60" y="73" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Thorax</text>
@@ -535,6 +569,12 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
                   <div class="lesion-chip" onclick="setActiveLesion('Piqûre')" id="lchip_Piqure" style="border-color:#1abc9c; color:#1abc9c;">Piqûre</div>
                   <div class="lesion-chip" onclick="setActiveLesion('Autre')" id="lchip_Autre" style="border-color:#3498db; color:#3498db;">Autre</div>
                 </div>
+              </div>
+
+              <!-- ===== AUTRE LÉSION — champ texte ===== -->
+              <div class="autre-lesion-box" id="autreLesionBox">
+                <label>✏️ Précisez la lésion « Autre »</label>
+                <input type="text" id="autreLesionText" placeholder="Ex: luxation, hématome, plaie…" oninput="updateAutreLesionLabel()">
               </div>
 
               <div class="active-zones-list" id="activeZonesList" style="margin-top:14px;"></div>
@@ -654,7 +694,6 @@ const ZONE_IDS = {
   'MIG': 'zone_mig'
 };
 
-// Map lesion display name → table id suffix
 const LESION_ID_MAP = {
   'Fracture': 'Fracture',
   'Entorse': 'Entorse',
@@ -665,12 +704,20 @@ const LESION_ID_MAP = {
 };
 
 let activeLesion = 'Fracture';
-// bodyData: { 'Tête': ['Fracture', 'Contusion'], 'MSD': ['Entorse'] }
 let bodyData = {};
-
-// === Flag to prevent mutual recursion between table↔schema sync ===
 let _syncingFromTable = false;
 let _syncingFromSchema = false;
+
+// ===== AUTRE LÉSION LABEL =====
+function updateAutreLesionLabel() {
+  // Re-render active zones to reflect the new custom label
+  updateActiveZonesList();
+}
+
+function getAutreLesionLabel() {
+  const txt = document.getElementById('autreLesionText')?.value?.trim();
+  return txt ? `Autre (${txt})` : 'Autre';
+}
 
 function setActiveLesion(lesion) {
   activeLesion = lesion;
@@ -679,6 +726,17 @@ function setActiveLesion(lesion) {
   const chipId = 'lchip_' + (chipMap[lesion] || lesion);
   const chip = document.getElementById(chipId);
   if (chip) chip.classList.add('selected');
+
+  // Show/hide the "Autre" text input
+  const box = document.getElementById('autreLesionBox');
+  if (box) {
+    if (lesion === 'Autre') {
+      box.classList.add('visible');
+      document.getElementById('autreLesionText').focus();
+    } else {
+      box.classList.remove('visible');
+    }
+  }
 }
 
 function toggleBodyZone(zone) {
@@ -690,7 +748,6 @@ function toggleBodyZone(zone) {
   if (arr.length === 0) delete bodyData[zone];
   updateBodySvg();
   updateActiveZonesList();
-  // Sync to table
   if (!_syncingFromTable) {
     _syncingFromSchema = true;
     syncBodyToTable();
@@ -728,12 +785,15 @@ function updateActiveZonesList() {
     container.innerHTML = '<div style="font-size:.8em; color:var(--text3); font-style:italic;">Aucune zone sélectionnée</div>';
     return;
   }
+  const autreTxt = document.getElementById('autreLesionText')?.value?.trim();
   let html = '<div style="font-size:.8em; font-weight:700; color:var(--text2); margin-bottom:6px;">Zones marquées :</div>';
   Object.entries(bodyData).forEach(([zone, lesions]) => {
     lesions.forEach(lesion => {
       const color = LESION_COLORS[lesion] || '#999';
+      // Show custom "Autre" label if typed
+      const displayLabel = (lesion === 'Autre' && autreTxt) ? `Autre (${autreTxt})` : lesion;
       html += `<span class="active-zone-badge" style="background:${color};">
-        ${zone} — ${lesion}
+        ${zone} — ${displayLabel}
         <button onclick="removeBodyZone('${zone}','${lesion}')" title="Supprimer">×</button>
       </span>`;
     });
@@ -755,7 +815,6 @@ function removeBodyZone(zone, lesion) {
   }
 }
 
-// ===== SYNC: Body schema → Bilan table =====
 function syncBodyToTable() {
   document.querySelectorAll('#bilanBody input[type="checkbox"]').forEach(cb => {
     cb.checked = false;
@@ -775,20 +834,18 @@ function syncBodyToTable() {
   });
 }
 
-// ===== SYNC: Bilan table → Body schema =====
-// Called on each checkbox change in the table
 function onBilanCheckboxChange(checkbox, zone, lesionKey) {
-  if (_syncingFromSchema) return; // avoid loop
-
-  // Find the display name for this lesion key
+  if (_syncingFromSchema) return;
   const lesionDisplay = Object.keys(LESION_ID_MAP).find(k => LESION_ID_MAP[k] === lesionKey) || lesionKey;
-
   _syncingFromTable = true;
-
   if (checkbox.checked) {
     if (!bodyData[zone]) bodyData[zone] = [];
     if (!bodyData[zone].includes(lesionDisplay)) bodyData[zone].push(lesionDisplay);
     if (checkbox.parentElement) checkbox.parentElement.classList.add('cell-checked');
+    // If "Autre" checked from table, show the input box too
+    if (lesionDisplay === 'Autre') {
+      setActiveLesion('Autre');
+    }
   } else {
     if (bodyData[zone]) {
       bodyData[zone] = bodyData[zone].filter(l => l !== lesionDisplay);
@@ -796,7 +853,6 @@ function onBilanCheckboxChange(checkbox, zone, lesionKey) {
     }
     if (checkbox.parentElement) checkbox.parentElement.classList.remove('cell-checked');
   }
-
   updateBodySvg();
   updateActiveZonesList();
   _syncingFromTable = false;
@@ -880,7 +936,6 @@ function buildBilanTable() {
     BILAN_ZONES.forEach(zone => {
       const zKey = zone.replace(/[^a-zA-Z]/g, '');
       const id = 'bilan_' + zKey + '_' + lesKey;
-      // onchange triggers sync table → schema
       row += `<td id="cell_${zKey}_${lesKey}"><input type="checkbox" id="${id}" onchange="onBilanCheckboxChange(this,'${zone}','${lesKey}')"></td>`;
     });
     row += '</tr>';
@@ -889,8 +944,14 @@ function buildBilanTable() {
 }
 
 function getBilanTableau() {
-  // Already kept in sync via bodyData — just return bodyData merged with table
   const data = JSON.parse(JSON.stringify(bodyData));
+  // Enrich "Autre" entries with custom label if provided
+  const autreTxt = document.getElementById('autreLesionText')?.value?.trim();
+  if (autreTxt && data) {
+    Object.keys(data).forEach(zone => {
+      data[zone] = data[zone].map(l => (l === 'Autre' ? `Autre: ${autreTxt}` : l));
+    });
+  }
   BILAN_LESIONS.forEach(les => {
     const lesKey = (LESION_ID_MAP[les] || les).replace(/[^a-zA-Z]/g, '');
     BILAN_ZONES.forEach(zone => {
@@ -899,7 +960,8 @@ function getBilanTableau() {
       const cb = document.getElementById(id);
       if (cb && cb.checked) {
         if (!data[zone]) data[zone] = [];
-        if (!data[zone].includes(les)) data[zone].push(les);
+        const label = (les === 'Autre' && autreTxt) ? `Autre: ${autreTxt}` : les;
+        if (!data[zone].includes(label) && !data[zone].includes(les)) data[zone].push(label);
       }
     });
   });
@@ -1099,6 +1161,7 @@ function collectFormData() {
     hemorragie: getRadio('hemorragie') || null,
     urgence: getRadio('urgence') || null,
     bilan_tableau: getBilanTableau(),
+    autre_lesion_precision: document.getElementById('autreLesionText')?.value?.trim() || null,
     soins: soins,
     autres_soins: document.getElementById('autresSoins').value.trim() || null,
     materiel: getMateriel(),
@@ -1174,6 +1237,7 @@ async function saveToSupabase(rawData) {
     hemorragie: rawData.hemorragie,
     urgence: rawData.urgence,
     bilan_tableau: rawData.bilan_tableau,
+    autre_lesion_precision: rawData.autre_lesion_precision,
     soins: rawData.soins,
     autres_soins: rawData.autres_soins,
     materiel: rawData.materiel,
@@ -1298,16 +1362,16 @@ function renderFicheModal(f) {
   const v = (val, fallback='—') => (val !== null && val !== undefined && val !== '') ? val : `<span class="empty">${fallback}</span>`;
   const bool2str = (val) => val === true ? '✅ Oui' : val === false ? '❌ Non' : '—';
 
-  // Title
   document.getElementById('modalTitle').textContent = `📋 ${f.patient_nom || '?'} ${f.patient_prenom || ''} — Fiche Patient`;
 
-  // Build body schema SVG for modal (read-only, smaller)
   const bilanData = f.bilan_tableau || {};
   function buildModalSvg(bilanData) {
     const zoneColors = {};
     Object.entries(bilanData).forEach(([zone, lesions]) => {
       if (lesions && lesions.length > 0) {
-        zoneColors[zone] = LESION_COLORS[lesions[0]] || '#999';
+        // Pick the color based on the base lesion type
+        const baseLesion = lesions[0].split(':')[0].trim();
+        zoneColors[zone] = LESION_COLORS[baseLesion] || '#999';
       }
     });
     const zoneShapes = {
@@ -1329,10 +1393,8 @@ function renderFicheModal(f) {
       const stroke = zoneColors[zone] ? zoneColors[zone] : '#999';
       svgBody += `${shape} fill="${color}" stroke="${stroke}" stroke-width="1.5" opacity="${zoneColors[zone] ? '0.85' : '1'}"/>`;
     });
-    // Feet
     svgBody += `<ellipse cx="70" cy="210" rx="10" ry="5" fill="${zoneColors['MID']||'#e8e8e8'}" stroke="${zoneColors['MID']||'#999'}" stroke-width="1.5"/>`;
     svgBody += `<ellipse cx="50" cy="210" rx="10" ry="5" fill="${zoneColors['MIG']||'#e8e8e8'}" stroke="${zoneColors['MIG']||'#999'}" stroke-width="1.5"/>`;
-    // Labels
     const labels = [
       [60,21,'Tête'],[60,45,'Cerv.'],[60,73,'Thorax'],[60,107,'Abdo'],[60,130,'Bassin'],
       [89,82,'MSD'],[31,82,'MSG'],[70,175,'MID'],[50,175,'MIG']
@@ -1341,12 +1403,12 @@ function renderFicheModal(f) {
     return `<svg viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg" style="max-width:130px;width:100%;">${svgBody}</svg>`;
   }
 
-  // Build lesion badges
   let lesionBadgesHtml = '';
   if (Object.keys(bilanData).length > 0) {
     Object.entries(bilanData).forEach(([zone, lesions]) => {
       (lesions || []).forEach(lesion => {
-        const color = LESION_COLORS[lesion] || '#999';
+        const baseLesion = lesion.split(':')[0].trim();
+        const color = LESION_COLORS[baseLesion] || '#999';
         lesionBadgesHtml += `<span class="modal-lesion-badge" style="background:${color};">${zone} — ${lesion}</span>`;
       });
     });
@@ -1354,7 +1416,6 @@ function renderFicheModal(f) {
     lesionBadgesHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucune lésion enregistrée</span>';
   }
 
-  // Soins
   const soinsData = f.soins || {};
   const SOINS_LABELS = {
     plaies:'Soin de plaies', pansement:'Pansement', attelle:'Attelle',
@@ -1366,34 +1427,29 @@ function renderFicheModal(f) {
     ? soinsActifs.map(s => `<span class="modal-tag">${s}</span>`).join('')
     : '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun soin</span>';
 
-  // Matériel
   const matData = f.materiel || {};
   const matKeys = Object.keys(matData);
   let matHtml = matKeys.length > 0
     ? matKeys.map(k => `<div class="mat-modal-item">${k}<span>×${matData[k]}</span></div>`).join('')
     : '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucun matériel</span>';
 
-  // Urgence badge
   const urg = f.urgence;
   const urgColor = urg ? (URGENCE_COLORS[urg] || '#999') : null;
   const urgHtml = urg
     ? `<span class="urgence-badge-modal" style="background:${urgColor};">${urg === 'U1' ? '🔴' : urg === 'U2' ? '🟡' : urg === 'U3' ? '🟢' : '🔵'} ${urg}</span>`
     : '<span style="color:var(--text3);">—</span>';
 
-  // IN modes
   const inModes = [];
   if (f.in_spontanee) inModes.push('Spontanée');
   if (f.in_via_equipe) inModes.push('Via équipe');
   if (f.in_via_ambulance) inModes.push('Via ambulance' + (f.in_num_ambulance ? ` (${f.in_num_ambulance})` : ''));
 
-  // OUT modes
   const outModes = [];
   if (f.out_retour_normal) outModes.push('Retour à la vie normale');
   if (f.out_refus_soins) outModes.push('Refus de soins');
   if (f.out_evacuation_vsl) outModes.push('Évacuation VSL');
   if (f.out_evacuation_ambulance) outModes.push('Ambulance' + (f.out_num_ambulance ? ` (${f.out_num_ambulance})` : ''));
 
-  // Soignants (from DB or local)
   let soignantsHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Non disponible (fiche en attente)</span>';
   if (f.soignants && Array.isArray(f.soignants)) {
     const validSoignants = f.soignants.filter(s => s.nom && s.nom.trim());
@@ -1410,7 +1466,6 @@ function renderFicheModal(f) {
   const createdAt = f.created_at ? new Date(f.created_at).toLocaleString('fr-BE') : (f._createdAt ? new Date(f._createdAt).toLocaleString('fr-BE') : '—');
 
   document.getElementById('modalBody').innerHTML = `
-    <!-- Titre / Identifiant -->
     <div class="modal-section">
       <div class="modal-section-title">📌 Identification</div>
       <div class="modal-grid">
@@ -1421,7 +1476,6 @@ function renderFicheModal(f) {
         <div class="modal-field"><div class="lbl">Créée le</div><div class="val">${createdAt}</div></div>
       </div>
     </div>
-    <!-- Patient -->
     <div class="modal-section">
       <div class="modal-section-title">👤 Patient</div>
       <div class="modal-grid">
@@ -1435,7 +1489,6 @@ function renderFicheModal(f) {
         <div class="modal-field"><div class="lbl">N° CL</div><div class="val">${v(f.numero_cl)}</div></div>
       </div>
     </div>
-    <!-- IN -->
     <div class="modal-section">
       <div class="modal-section-title">🚪 Arrivée (IN)</div>
       <div class="modal-grid">
@@ -1445,7 +1498,6 @@ function renderFicheModal(f) {
         ${f.in_autre_moyen ? `<div class="modal-field"><div class="lbl">Autre</div><div class="val">${f.in_autre_moyen}</div></div>` : ''}
       </div>
     </div>
-    <!-- Bilan -->
     <div class="modal-section">
       <div class="modal-section-title">📊 Bilan</div>
       <div class="modal-grid" style="margin-bottom:14px;">
@@ -1454,31 +1506,27 @@ function renderFicheModal(f) {
         <div class="modal-field"><div class="lbl">Circulation</div><div class="val">${bool2str(f.circulation)}</div></div>
         <div class="modal-field"><div class="lbl">Hémorragie</div><div class="val">${v(f.hemorragie)}</div></div>
         <div class="modal-field"><div class="lbl">Urgence</div><div class="val">${urgHtml}</div></div>
+        ${f.autre_lesion_precision ? `<div class="modal-field" style="grid-column:span 2;"><div class="lbl">🔵 Précision lésion « Autre »</div><div class="val" style="color:#3498db;">${f.autre_lesion_precision}</div></div>` : ''}
       </div>
-      <!-- Body schema -->
       <div style="font-weight:700; font-size:.8em; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px;">🧍 Zones lésées</div>
       <div class="modal-body-schema">
         ${buildModalSvg(bilanData)}
         <div class="modal-lesions-list">${lesionBadgesHtml}</div>
       </div>
     </div>
-    <!-- Soignants -->
     <div class="modal-section">
       <div class="modal-section-title">👨‍⚕️ Soignants</div>
       ${soignantsHtml}
     </div>
-    <!-- Soins -->
     <div class="modal-section">
       <div class="modal-section-title">💊 Soins</div>
       <div class="modal-tags" style="margin-bottom:10px;">${soinsHtml}</div>
       ${f.autres_soins ? `<div class="modal-field"><div class="lbl">Autres soins</div><div class="val">${f.autres_soins}</div></div>` : ''}
     </div>
-    <!-- Matériel -->
     <div class="modal-section">
       <div class="modal-section-title">🧰 Matériel utilisé</div>
       <div class="mat-modal-list">${matHtml}</div>
     </div>
-    <!-- OUT -->
     <div class="modal-section">
       <div class="modal-section-title">🚶 Sortie (OUT)</div>
       <div class="modal-grid">
@@ -1520,9 +1568,12 @@ function resetForm() {
     const display = document.getElementById(id + '_display');
     if (display) { display.textContent = '0'; display.className = 'qty-val'; }
   });
-  // Reset cell highlights
   document.querySelectorAll('#bilanBody td').forEach(td => td.classList.remove('cell-checked'));
-  // Reset body schema
+  // Reset "Autre" lesion box
+  const autreLesionBox = document.getElementById('autreLesionBox');
+  if (autreLesionBox) autreLesionBox.classList.remove('visible');
+  const autreLesionText = document.getElementById('autreLesionText');
+  if (autreLesionText) autreLesionText.value = '';
   bodyData = {};
   updateBodySvg();
   updateActiveZonesList();
@@ -1530,6 +1581,10 @@ function resetForm() {
   document.getElementById('soignantsContainer').innerHTML = '';
   soignantCount = 0;
   addSoignant();
+  // Reset active lesion selection back to default
+  setActiveLesion('Fracture');
+  const chipFracture = document.getElementById('lchip_Fracture');
+  if (chipFracture) chipFracture.classList.add('selected');
 }
 
 // ===== INIT =====
