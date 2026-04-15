@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Confirmation en cours...</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <p>Vérification de l'email en cours...</p>
+
+  <script>
+    const SUPABASE_URL = 'https://sevrfgivcpefyykuffti.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNldnJmZ2l2Y3BlZnl5a3VmZnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NDI1NTMsImV4cCI6MjA3ODUxODU1M30.YZnkSHsVWKQEhfU7xYfWyTFmtkM28Zuzdu7Y1sjBXQc'; // ton anon key
+
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    async function handleConfirm() {
+      const { data, error } = await sb.auth.verifyOtp({
+        token_hash: new URLSearchParams(window.location.search).get('token_hash'),
+        type: 'signup'   // ou 'recovery' selon le cas
+      });
+
+      if (error) {
+        document.body.innerHTML = `<p style="color:red">Erreur : ${error.message}</p>`;
+      } else {
+        // Redirection vers ta page principale
+        window.location.href = 'https://stiorxtwitch.github.io/croix-rouge-fichepatient/';   // ou '/croix-rouge-fichepatient.html'
+      }
+    }
+
+    handleConfirm();
+  </script>
+</body>
+</html>
