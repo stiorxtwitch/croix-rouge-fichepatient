@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://sevrfgivcpefyykuffti.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; connect-src 'self' https://sevrfgivcpefyykuffti.supabase.co https://fonts.googleapis.com;">
+<!-- CSP CORRIGÉ : cdn.jsdelivr.net ajouté dans connect-src, X-Frame-Options retiré (doit être header HTTP) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://sevrfgivcpefyykuffti.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; connect-src 'self' https://sevrfgivcpefyykuffti.supabase.co https://fonts.googleapis.com https://cdn.jsdelivr.net;">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="X-Frame-Options" content="DENY">
 <meta http-equiv="Referrer-Policy" content="no-referrer">
 <meta name="robots" content="noindex, nofollow, noarchive">
 <title>Fiches Patients — Secours</title>
@@ -40,7 +40,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; transition: background .3s, color .3s; }
 
-/* ====== SECURITY GATE (full-screen login wall) ====== */
+/* ====== SECURITY GATE ====== */
 #securityGate {
   position: fixed; inset: 0; z-index: 9999;
   background: linear-gradient(135deg, #0a0a0a 0%, #1a0204 50%, #0a0a0a 100%);
@@ -114,7 +114,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .lockout-bar.show { display: block; }
 .gate-view { display: none; }
 .gate-view.active { display: block; }
-/* Animated strength bar */
 .strength-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.1); margin-top: 6px; overflow: hidden; }
 .strength-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0; }
 .strength-label { font-size: .72em; margin-top: 4px; font-weight: 600; }
@@ -540,7 +539,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 <div class="secure-delete-overlay" id="secureDeleteOverlay">
   <div class="secure-delete-box">
     <h3>🗑️ Suppression définitive</h3>
-    <p id="secureDeleteDesc">Cette action est <strong>irréversible</strong>. La fiche principale, la fiche médicale liée et tous les soignants associés seront <strong>définitivement supprimés</strong> de la base de données.</p>
+    <p id="secureDeleteDesc">Cette action est <strong>irréversible</strong>.</p>
     <div class="delete-steps" id="deleteSteps" style="display:none;">
       <div class="delete-step"><div class="step-icon step-pending" id="step1icon">1</div><span id="step1text">Suppression des soignants...</span></div>
       <div class="delete-step"><div class="step-icon step-pending" id="step2icon">2</div><span id="step2text">Suppression de la fiche médicale...</span></div>
@@ -559,8 +558,6 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 
 <!-- ========== MAIN APP ========== -->
 <div id="appContent" style="display:none;">
-
-  <!-- Header -->
   <div class="header">
     <div class="header-logo">
       <svg viewBox="0 0 40 40" fill="none"><rect x="15" y="2" width="10" height="36" fill="white" rx="2"/><rect x="2" y="15" width="36" height="10" fill="white" rx="2"/></svg>
@@ -578,14 +575,12 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
     </div>
   </div>
 
-  <!-- Status bar -->
   <div class="status-bar">
     <span id="onlineStatus"></span> &nbsp;|&nbsp;
     <span id="pendingCount">0 fiche(s) en attente</span> &nbsp;|&nbsp;
     <span id="userLabel" style="color:var(--text2);"></span>
   </div>
 
-  <!-- Fiche médicale indicator bar -->
   <div class="fiche-indicator" id="ficheIndicator">
     <span>🔵 Fiche médicale en cours — La fiche principale est mise en pause</span>
     <button class="btn-back-main" onclick="switchToMainForm()">↩ Retour à la fiche principale</button>
@@ -605,20 +600,18 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
     </div>
   </div>
 
-  <!-- Main container -->
   <div class="container" id="mainContainer">
     <div class="tabs">
       <div class="tab active" onclick="switchTab('form')" id="tabForm">📋 Nouvelle Fiche</div>
       <div class="tab" onclick="switchTab('list')" id="tabList">📁 Mes Fiches</div>
     </div>
 
-    <!-- ===== FORM TAB ===== -->
+    <!-- FORM TAB -->
     <div id="formTab">
       <div id="savedIndicator" class="saved-indicator">
         ✅ Fiche sauvegardée (ID: <span id="savedFicheId"></span>) — Réinitialisez pour une nouvelle fiche.
       </div>
 
-      <!-- TITRE -->
       <div class="section">
         <div class="section-title" onclick="toggleSection(this)">📌 TITRE <span class="chevron">▼</span></div>
         <div class="section-body">
@@ -631,7 +624,6 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
         </div>
       </div>
 
-      <!-- PATIENT -->
       <div class="section">
         <div class="section-title" onclick="toggleSection(this)">👤 INFORMATION PATIENT <span class="chevron">▼</span></div>
         <div class="section-body">
@@ -652,7 +644,6 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
         </div>
       </div>
 
-      <!-- IN -->
       <div class="section">
         <div class="section-title" onclick="toggleSection(this)">🚪 IN <span class="chevron">▼</span></div>
         <div class="section-body">
@@ -672,7 +663,6 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
         </div>
       </div>
 
-      <!-- SOIGNANT -->
       <div class="section">
         <div class="section-title" onclick="toggleSection(this)">👨‍⚕️ SOIGNANT <span class="chevron">▼</span></div>
         <div class="section-body">
@@ -681,7 +671,6 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
         </div>
       </div>
 
-      <!-- BILAN -->
       <div class="section">
         <div class="section-title" onclick="toggleSection(this)">📊 BILAN <span class="chevron">▼</span></div>
         <div class="section-body">
@@ -769,7 +758,6 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
         </div>
       </div>
 
-      <!-- SOINS -->
       <div class="section">
         <div class="section-title" onclick="toggleSection(this)">💊 SOINS <span class="chevron">▼</span></div>
         <div class="section-body">
@@ -787,13 +775,11 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
         </div>
       </div>
 
-      <!-- MATÉRIEL -->
       <div class="section">
         <div class="section-title" onclick="toggleSection(this)">🧰 MATÉRIEL <span class="chevron">▼</span></div>
         <div class="section-body"><div style="overflow-x:auto;"><table class="mat-table"><tbody id="matBody"></tbody></table></div></div>
       </div>
 
-      <!-- OUT -->
       <div class="section">
         <div class="section-title" onclick="toggleSection(this)">🚶 OUT <span class="chevron">▼</span></div>
         <div class="section-body">
@@ -816,7 +802,6 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
         </div>
       </div>
 
-      <!-- BOUTON FICHE MÉDICALE -->
       <div class="medical-fiche-btn-wrapper" id="medicalBtnWrapper">
         <p>Besoin d'un bilan médical détaillé ? La fiche principale sera d'abord sauvegardée.</p>
         <button class="btn btn-medical-main" id="btnOpenMedical" onclick="saveAndOpenMedical()">🏥 Sauvegarder & Ajouter une Fiche Médicale</button>
@@ -828,7 +813,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
       </div>
     </div><!-- /formTab -->
 
-    <!-- ===== FICHE MÉDICALE TAB ===== -->
+    <!-- FICHE MÉDICALE TAB -->
     <div id="medicalTab" style="display:none;">
       <div class="medical-header-bar">
         <div>
@@ -986,12 +971,11 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
       </div>
     </div><!-- /medicalTab -->
 
-    <!-- ===== LIST TAB ===== -->
+    <!-- LIST TAB -->
     <div id="listTab" style="display:none;">
       <div id="fichesList"></div>
     </div>
   </div>
-
 </div><!-- /appContent -->
 
 <script>
@@ -1002,16 +986,18 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ========== SECURITY CONSTANTS ==========
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
-const SESSION_TIMEOUT_MS  = 60 * 60 * 1000; // 60 minutes
-const SESSION_WARNING_MS  = 5 * 60 * 1000;  // warning at 5 min remaining
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
+const SESSION_TIMEOUT_MS  = 60 * 60 * 1000;
+const SESSION_WARNING_MS  = 5 * 60 * 1000;
 const MIN_PASSWORD_LENGTH = 8;
 
-// ========== SECURITY STATE ==========
+// ========== STATE ==========
 let currentUser = null;
 let sessionTimer = null;
 let sessionWarningTimer = null;
 let sessionExpiry = null;
+// FIX: flag pour éviter double initialisation lors du refresh
+let _appInitialized = false;
 
 // ========== SANITIZE ==========
 function sanitize(str) {
@@ -1035,8 +1021,7 @@ function getLoginAttempts() {
   try { return JSON.parse(localStorage.getItem('sec_attempts') || '{"count":0,"ts":0}'); } catch { return {count:0,ts:0}; }
 }
 function incLoginAttempts() {
-  const a = getLoginAttempts();
-  a.count++; a.ts = Date.now();
+  const a = getLoginAttempts(); a.count++; a.ts = Date.now();
   localStorage.setItem('sec_attempts', JSON.stringify(a));
 }
 function resetLoginAttempts() { localStorage.removeItem('sec_attempts'); }
@@ -1087,7 +1072,6 @@ function showSessionWarning() {
     countdown.textContent = m + ':' + s.toString().padStart(2,'0');
   }, 1000);
 }
-// Reset session timer on user activity
 ['click','keydown','mousemove','touchstart'].forEach(ev => {
   document.addEventListener(ev, () => { if (currentUser) startSessionTimer(); }, { passive: true });
 });
@@ -1138,34 +1122,37 @@ function switchGateView(v) {
 }
 function hideGateErrors() {
   ['gateLoginError','gateLoginSuccess','gateRegError','gateRegSuccess','gateForgotSuccess'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.classList.remove('show'); }
+    const el = document.getElementById(id); if (el) el.classList.remove('show');
   });
 }
-function showGateError(id, msg) {
-  const el = document.getElementById(id);
+// FIX: showGateError accepte 2 paramètres (id de la div erreur + message)
+function showGateError(divId, msg) {
+  const el = document.getElementById(divId);
   if (!el) return;
   el.classList.add('show');
-  const span = el.querySelector('span') || el;
-  span.textContent = msg;
+  const span = el.querySelector('span');
+  if (span) span.textContent = msg; else el.textContent = '⛔ ' + msg;
 }
-function showGateSuccess(id, msg) {
-  const el = document.getElementById(id);
+function showGateSuccess(divId, msg) {
+  const el = document.getElementById(divId);
   if (!el) return;
   el.classList.add('show');
-  const span = el.querySelector('span') || el;
-  span.textContent = msg;
+  const span = el.querySelector('span');
+  if (span) span.textContent = msg; else el.textContent = '✅ ' + msg;
 }
 
 // ========== GATE LOGIN ==========
 async function doGateLogin() {
   hideGateErrors();
   if (isLockedOut()) { showLockout(); return; }
-  if (!checkGateCaptcha()) { showGateError('gateLoginError','gateLoginErrorMsg','Captcha incorrect. Réessayez.'); genGateCaptcha(); incLoginAttempts(); return; }
+  if (!checkGateCaptcha()) {
+    showGateError('gateLoginError', 'Captcha incorrect. Réessayez.');
+    genGateCaptcha(); incLoginAttempts(); return;
+  }
   const email = document.getElementById('gateEmail').value.trim();
   const pass  = document.getElementById('gatePassword').value;
-  if (!email || !pass) { showGateError('gateLoginError','gateLoginErrorMsg','Veuillez remplir tous les champs.'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showGateError('gateLoginError','gateLoginErrorMsg','Adresse e-mail invalide.'); return; }
+  if (!email || !pass) { showGateError('gateLoginError', 'Veuillez remplir tous les champs.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showGateError('gateLoginError', 'Adresse e-mail invalide.'); return; }
   const btn = document.getElementById('gateBtnLogin');
   btn.disabled = true; btn.textContent = '⏳ Connexion...';
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
@@ -1175,12 +1162,11 @@ async function doGateLogin() {
     const attempts = getLoginAttempts();
     const remaining = MAX_LOGIN_ATTEMPTS - attempts.count;
     if (isLockedOut()) { showLockout(); return; }
-    showGateError('gateLoginError','gateLoginErrorMsg', `Identifiants incorrects. ${remaining > 0 ? remaining + ' tentative(s) restante(s).' : ''}`);
-    genGateCaptcha();
-    return;
+    showGateError('gateLoginError', `Identifiants incorrects. ${remaining > 0 ? remaining + ' tentative(s) restante(s).' : ''}`);
+    genGateCaptcha(); return;
   }
   resetLoginAttempts();
-  setUser(data.user);
+  currentUser = data.user;
   unlockApp();
 }
 
@@ -1192,14 +1178,14 @@ async function doGateRegister() {
   const email  = document.getElementById('gateRegEmail').value.trim();
   const p1     = document.getElementById('gateRegPass1').value;
   const p2     = document.getElementById('gateRegPass2').value;
-  if (!nom || !prenom || !email || !p1) { showGateError('gateRegError','gateRegErrorMsg','Remplissez tous les champs.'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showGateError('gateRegError','gateRegErrorMsg','E-mail invalide.'); return; }
-  if (p1.length < MIN_PASSWORD_LENGTH) { showGateError('gateRegError','gateRegErrorMsg',`Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`); return; }
-  if (p1 !== p2) { showGateError('gateRegError','gateRegErrorMsg','Les mots de passe ne correspondent pas.'); return; }
-  if (!checkGateRegCaptcha()) { showGateError('gateRegError','gateRegErrorMsg','Captcha incorrect.'); genGateRegCaptcha(); return; }
+  if (!nom || !prenom || !email || !p1) { showGateError('gateRegError', 'Remplissez tous les champs.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showGateError('gateRegError', 'E-mail invalide.'); return; }
+  if (p1.length < MIN_PASSWORD_LENGTH) { showGateError('gateRegError', `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`); return; }
+  if (p1 !== p2) { showGateError('gateRegError', 'Les mots de passe ne correspondent pas.'); return; }
+  if (!checkGateRegCaptcha()) { showGateError('gateRegError', 'Captcha incorrect.'); genGateRegCaptcha(); return; }
   const { error } = await sb.auth.signUp({ email, password: p1, options: { data: { nom: sanitize(nom), prenom: sanitize(prenom) }, emailRedirectTo: window.location.href } });
-  if (error) { showGateError('gateRegError','gateRegErrorMsg', error.message); return; }
-  showGateSuccess('gateRegSuccess','gateRegSuccessMsg','Inscription réussie ! Vérifiez votre e-mail pour confirmer votre compte.');
+  if (error) { showGateError('gateRegError', error.message); return; }
+  showGateSuccess('gateRegSuccess', 'Inscription réussie ! Vérifiez votre e-mail pour confirmer votre compte.');
 }
 
 // ========== GATE FORGOT ==========
@@ -1208,18 +1194,24 @@ async function doGateForgot() {
   if (!email) return;
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
   if (error) { showToast(error.message, 'error'); return; }
-  showGateSuccess('gateForgotSuccess','gateForgotSuccessMsg','Lien de réinitialisation envoyé à ' + email);
+  showGateSuccess('gateForgotSuccess', 'Lien de réinitialisation envoyé à ' + email);
 }
 
 // ========== UNLOCK APP ==========
+// FIX: garde le flag _appInitialized pour ne pas rebuilder les tables 2 fois au refresh
 function unlockApp() {
   document.getElementById('securityGate').style.display = 'none';
   document.getElementById('appContent').style.display = '';
   startSessionTimer();
-  buildBilanTable();
-  buildMaterielTable();
-  addSoignant();
+  // Ne construire les tables qu'une seule fois
+  if (!_appInitialized) {
+    buildBilanTable();
+    buildMaterielTable();
+    addSoignant();
+    _appInitialized = true;
+  }
   updateOnlineStatus();
+  updatePendingCount();
   updateActiveZonesList();
   updateMedActiveZonesList();
   updateSavedIndicator();
@@ -1240,7 +1232,7 @@ async function doLogout() {
   document.getElementById('sessionWarning').classList.remove('show');
   await sb.auth.signOut();
   currentUser = null;
-  // Clear all local storage related to session
+  _appInitialized = false; // FIX: reset le flag pour pouvoir réinitialiser si reconnexion
   ['cr_pending','cr_pending_medical'].forEach(k => localStorage.removeItem(k));
   document.getElementById('appContent').style.display = 'none';
   document.getElementById('securityGate').style.display = 'flex';
@@ -1260,61 +1252,48 @@ function openSecureDelete(ficheId, patientName) {
   document.getElementById('secureDeleteInput').value = '';
   document.getElementById('btnConfirmDelete').disabled = true;
   document.getElementById('deleteSteps').style.display = 'none';
-  document.getElementById('secureDeleteDesc').innerHTML = `Vous allez supprimer définitivement la fiche de <strong>${sanitize(patientName)}</strong>. Cette action est <strong>irréversible</strong>. La fiche principale, la fiche médicale liée et tous les soignants associés seront <strong>effacés</strong> de la base de données.`;
+  document.getElementById('secureDeleteDesc').innerHTML = `Vous allez supprimer définitivement la fiche de <strong>${sanitize(patientName)}</strong>. Cette action est <strong>irréversible</strong>.`;
   document.getElementById('secureDeleteOverlay').classList.add('show');
 }
-
 function closeSecureDelete() {
   _deleteTarget = null;
   document.getElementById('secureDeleteOverlay').classList.remove('show');
 }
-
 function checkDeleteConfirm() {
   const val = document.getElementById('secureDeleteInput').value;
   const phrase = document.getElementById('confirmPhrase').dataset.phrase;
   document.getElementById('btnConfirmDelete').disabled = val !== phrase;
 }
-
 async function executeSecureDelete() {
   if (!_deleteTarget || !currentUser) return;
   const ficheId = _deleteTarget;
   document.getElementById('btnConfirmDelete').disabled = true;
   document.getElementById('deleteSteps').style.display = 'flex';
-
   function setStep(n, state) {
     const icon = document.getElementById('step' + n + 'icon');
     icon.className = 'step-icon step-' + state;
     icon.textContent = state === 'done' ? '✓' : n;
   }
-
   try {
-    // Step 1 — Delete soignants
     setStep(1,'active');
     const { error: e1 } = await sb.from('soignants_croixrouge').delete().eq('fiche_id', ficheId);
     if (e1) throw new Error('Erreur suppression soignants: ' + e1.message);
     setStep(1,'done');
-
-    // Step 2 — Delete medical fiche
     setStep(2,'active');
     const { error: e2 } = await sb.from('fiches_medicales_croixrouge').delete().eq('fiche_id', ficheId);
     if (e2) throw new Error('Erreur suppression fiche médicale: ' + e2.message);
     setStep(2,'done');
-
-    // Step 3 — Delete main fiche
     setStep(3,'active');
     const { error: e3 } = await sb.from('fiches_croixrouge').delete().eq('id', ficheId).eq('user_id', currentUser.id);
     if (e3) throw new Error('Erreur suppression fiche: ' + e3.message);
     setStep(3,'done');
-
-    // Step 4 — Verify deletion
     setStep(4,'active');
     const { data: check } = await sb.from('fiches_croixrouge').select('id').eq('id', ficheId).maybeSingle();
     if (check) throw new Error('La fiche existe encore — contactez l\'administrateur.');
     setStep(4,'done');
-
     await new Promise(r => setTimeout(r, 600));
     closeSecureDelete();
-    showToast('✅ Fiche définitivement supprimée de la base de données.', 'success');
+    showToast('✅ Fiche définitivement supprimée.', 'success');
     loadFiches();
   } catch(err) {
     showToast('❌ ' + err.message, 'error');
@@ -1329,12 +1308,10 @@ async function executeSecureDelete() {
 // ========== APP STATE ==========
 let currentFicheId = null;
 let medicalSaved = false;
-
 const LESION_COLORS = { 'Fracture':'#e74c3c','Entorse':'#e67e22','Contusion':'#9b59b6','Brûlure':'#e8b800','Piqûre':'#1abc9c','Autre':'#3498db' };
 const ZONE_IDS = { 'Tête':'zone_tete','Cervical':'zone_cervical','Colonne':'zone_colonne','MSD':'zone_msd','MSG':'zone_msg','Thorax':'zone_thorax','Abdo':'zone_abdo','Bassin':'zone_bassin','MID':'zone_mid','MIG':'zone_mig' };
 const MED_ZONE_IDS = { 'Tête':'med_zone_tete','Cervical':'med_zone_cervical','Thorax':'med_zone_thorax','Abdo':'med_zone_abdo','Bassin':'med_zone_bassin','MSD':'med_zone_msd','MSG':'med_zone_msg','MID':'med_zone_mid','MIG':'med_zone_mig' };
 const LESION_ID_MAP = { 'Fracture':'Fracture','Entorse':'Entorse','Contusion':'Contusion','Brûlure':'Brulure','Piqûre':'Piqure','Autre':'Autre' };
-
 let activeLesion = 'Fracture', bodyData = {}, _syncingFromTable = false, _syncingFromSchema = false;
 let activeLesionMed = 'Fracture', bodyDataMed = {}, ynValues = {}, evolutionColCount = 0;
 
@@ -1374,7 +1351,6 @@ function toggleAnisocorie() {
 function addEvolutionColumn() {
   evolutionColCount++;
   const col=evolutionColCount, header=document.getElementById('evolutionHeaderRow'), th=document.createElement('th');
-  th.className='heure-header';
   th.innerHTML=`<input type="time" id="evo_heure_${col}">`;
   header.appendChild(th);
   const rows=['sat_o2','glycemie','ta','pulsations','oxygene','medicament','injection','perfusion'];
@@ -1402,7 +1378,7 @@ function getEvolutionData() {
 // ========== BODY SCHEMA MAIN ==========
 function setActiveLesion(lesion) {
   activeLesion=lesion;
-  document.querySelectorAll('.lesion-chip').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('#lesionChips .lesion-chip').forEach(c=>c.classList.remove('selected'));
   const chipMap={'Fracture':'Fracture','Entorse':'Entorse','Contusion':'Contusion','Brûlure':'Brulure','Piqûre':'Piqure','Autre':'Autre'};
   const chip=document.getElementById('lchip_'+(chipMap[lesion]||lesion));
   if(chip)chip.classList.add('selected');
@@ -1428,7 +1404,7 @@ function updateBodySvg() {
   });
 }
 function updateActiveZonesList() {
-  const container=document.getElementById('activeZonesList');
+  const container=document.getElementById('activeZonesList');if(!container)return;
   if(Object.keys(bodyData).length===0){container.innerHTML='<div style="font-size:.8em;color:var(--text3);font-style:italic;">Aucune zone sélectionnée</div>';return;}
   const autreTxt=document.getElementById('autreLesionText')?.value?.trim();
   let html='<div style="font-size:.8em;font-weight:700;color:var(--text2);margin-bottom:6px;">Zones marquées :</div>';
@@ -1526,10 +1502,15 @@ function updateUrgencePills(){
 }
 
 // ========== MATERIAL ==========
+// FIX: liste unique, pas de doublon
 const MATERIEL_ITEMS=['Attelle Zimmer','Attelle MI','Attelle MS','Bandage Triangulaire','Bandage crêpe 5cm','Bandage crêpe 7cm','Bandage crêpe 10cm','Bassin réuniforme','Coldpack','Collier Cervical','Compresse 5x5','Compresse 10x10','Compresse','Couverture Alu','Crème antihistaminique','Crème anti-inflammatoire','Crème antiseptique','Flapulle antiseptique','Flapulle LP','Gant d\'examen (paire)','Pansement individuel','Pansement à découper','Paracétamol 500mg','Patch DEA','Pocket Mask','Sparadrap par cm'];
 let matValues={};
+let _materielBuilt = false; // FIX: flag anti-doublon
 function buildMaterielTable(){
+  if(_materielBuilt) return; // FIX: ne pas reconstruire si déjà fait
+  _materielBuilt = true;
   const body=document.getElementById('matBody');
+  body.innerHTML = ''; // FIX: vider avant de remplir
   MATERIEL_ITEMS.forEach(item=>{
     const id='mat_'+item.replace(/[^a-z0-9]/gi,'_');
     matValues[id]=0;
@@ -1555,8 +1536,12 @@ function getMateriel(){
 // ========== BILAN TABLE ==========
 const BILAN_ZONES=['Tête','Cervical','Colonne','MSD','MSG','Thorax','Abdo','Bassin','MID','MIG'];
 const BILAN_LESIONS=['Fracture','Entorse','Contusion','Brûlure','Piqûre','Autre'];
+let _bilanBuilt = false; // FIX: flag anti-doublon
 function buildBilanTable(){
+  if(_bilanBuilt) return; // FIX: ne pas reconstruire si déjà fait
+  _bilanBuilt = true;
   const body=document.getElementById('bilanBody');
+  body.innerHTML = ''; // FIX: vider avant de remplir
   BILAN_LESIONS.forEach(les=>{
     const lesKey=(LESION_ID_MAP[les]||les).replace(/[^a-zA-Z]/g,'');
     let row='<tr><td>'+les+'</td>';
@@ -1898,8 +1883,7 @@ function closeFicheModal(event){
 }
 function viewPendingFiche(index){
   const pending=JSON.parse(localStorage.getItem('cr_pending')||'[]');
-  const f=pending[index];if(!f)return;
-  renderFicheModal(f);
+  const f=pending[index];if(!f)return;renderFicheModal(f);
 }
 function viewFiche(jsonStr){ const f=JSON.parse(jsonStr);renderFicheModal(f); }
 let _currentModalFicheId=null,_currentModalFicheData=null;
@@ -1914,8 +1898,7 @@ async function viewMedicalFiche(ficheId,fromMain){
     document.getElementById('modalHeader').className='modal-header medical';
     document.getElementById('modalMedBtn').style.display='none';
     document.getElementById('modalBody').innerHTML='<div style="text-align:center;padding:40px 20px;"><div style="font-size:3em;margin-bottom:16px;">🏥</div><h3 style="color:var(--text2);">Aucune fiche médicale liée</h3></div>';
-    document.getElementById('ficheModal').style.display='flex';
-    return;
+    document.getElementById('ficheModal').style.display='flex';return;
   }
   renderMedicalModal(data[0],fromMain);
 }
@@ -1967,7 +1950,7 @@ function renderMedicalModal(f,fromMain){
     <div class="modal-section"><div class="modal-section-title medical">📋 Motifs</div><div class="modal-tags">${motifs.length?motifs.map(m=>`<span class="modal-tag" style="background:var(--medical-light);color:var(--medical);">${sanitize(m)}</span>`).join(''):'<span style="color:var(--text3);">Aucun</span>'}</div></div>
     <div class="modal-section"><div class="modal-section-title medical">💓 Arythmies</div>
       <div class="modal-grid">
-        <div class="modal-field"><div class="lbl">Bradycardie</div><div class="val">${ary.bradycardie?'✅':' ❌'}</div></div>
+        <div class="modal-field"><div class="lbl">Bradycardie</div><div class="val">${ary.bradycardie?'✅':'❌'}</div></div>
         <div class="modal-field"><div class="lbl">Tachycardie</div><div class="val">${ary.tachycardie?'✅':'❌'}</div></div>
         <div class="modal-field"><div class="lbl">Asystolie</div><div class="val">${ary.asystolie?'✅':'❌'}</div></div>
         ${ary.autre?`<div class="modal-field"><div class="lbl">Autre</div><div class="val">${sanitize(ary.autre)}</div></div>`:''}
@@ -2107,27 +2090,49 @@ function resetForm(){
   showToast('Formulaire réinitialisé','info');
 }
 
-function setUser(user){ currentUser=user; }
-
 // ========== INIT ==========
-window.addEventListener('load', async()=>{
-  genGateCaptcha();genGateRegCaptcha();
-  if(localStorage.getItem('cr_dark')==='1')document.body.classList.add('dark');
-  document.getElementById('darkBtn') && (document.getElementById('darkBtn').textContent=document.body.classList.contains('dark')?'☀️ Mode Jour':'🌙 Mode Nuit');
-  window.addEventListener('online',()=>{updateOnlineStatus();syncPendingFiches();});
-  window.addEventListener('offline',updateOnlineStatus);
-  const{data:{session}}=await sb.auth.getSession();
-  if(session){
-    setUser(session.user);
+// FIX: Gestion correcte de la session au refresh
+window.addEventListener('load', async () => {
+  genGateCaptcha();
+  genGateRegCaptcha();
+
+  if (localStorage.getItem('cr_dark') === '1') document.body.classList.add('dark');
+  const darkBtn = document.getElementById('darkBtn');
+  if (darkBtn) darkBtn.textContent = document.body.classList.contains('dark') ? '☀️ Mode Jour' : '🌙 Mode Nuit';
+
+  window.addEventListener('online', () => { updateOnlineStatus(); syncPendingFiches(); });
+  window.addEventListener('offline', updateOnlineStatus);
+
+  // FIX: récupérer la session existante au démarrage (persist après refresh)
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && session.user) {
+    currentUser = session.user;
     unlockApp();
     syncPendingFiches();
   }
-  sb.auth.onAuthStateChange((ev,session)=>{
-    if(session&&!currentUser){setUser(session.user);unlockApp();syncPendingFiches();}
-    else if(!session&&currentUser){currentUser=null;document.getElementById('appContent').style.display='none';document.getElementById('securityGate').style.display='flex';genGateCaptcha();}
+
+  // Écouter les changements d'état d'authentification
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session && !currentUser) {
+      currentUser = session.user;
+      unlockApp();
+      syncPendingFiches();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      _appInitialized = false;
+      document.getElementById('appContent').style.display = 'none';
+      document.getElementById('securityGate').style.display = 'flex';
+      genGateCaptcha();
+    } else if (event === 'TOKEN_REFRESHED' && session) {
+      // FIX: mettre à jour l'utilisateur quand le token est rafraîchi
+      currentUser = session.user;
+    }
   });
-  const fmt=localStorage.getItem('cr_format')||'pc';
-  if(document.getElementById('formatSelect'))document.getElementById('formatSelect').value=fmt;
+
+  const fmt = localStorage.getItem('cr_format') || 'pc';
+  const formatSelect = document.getElementById('formatSelect');
+  if (formatSelect) formatSelect.value = fmt;
+  changeFormat(fmt);
 });
 </script>
 </body>
