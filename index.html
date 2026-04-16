@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Croix-Rouge de Belgique — Fiches Patients</title>
-<meta property="og:title" content="Croix-Rouge de Belgique — Fiches Patients">
-<meta property="og:description" content="Application de gestion des fiches patients pour les équipes de la Croix-Rouge de Belgique.">
+<title>Fiches Patients — Secours</title>
+<meta property="og:title" content="Fiches Patients — Secours">
+<meta property="og:description" content="Application de gestion des fiches patients pour les équipes de secours.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Flag_of_the_Red_Cross.svg/1200px-Flag_of_the_Red_Cross.svg.png">
-<meta name="description" content="Application de gestion des fiches patients pour les équipes de la Croix-Rouge de Belgique.">
+<meta name="description" content="Application de gestion des fiches patients pour les équipes de secours.">
 <meta name="theme-color" content="#d40511">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -194,7 +193,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .zone-selector { margin-top: 10px; }
 .zone-selector label { font-size: .8em; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 6px; }
 .zone-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.zone-chip { padding: 4px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg2); color: var(--text2); transition: all .15s; }
+.zone-chip { padding: 4px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg2); color: var(--text2); transition: all .15px; }
 .zone-chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
 .lesion-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .lesion-chip { padding: 4px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg2); color: var(--text2); transition: all .15s; }
@@ -213,8 +212,10 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-size: .9em; transition: all .2s; font-family: var(--font); }
 .btn-primary-main { background: var(--primary); color: #fff; }
 .btn-primary-main:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,5,17,.3); }
+.btn-primary-main:disabled { background: #aaa; cursor: not-allowed; transform: none; box-shadow: none; }
 .btn-medical-main { background: var(--medical); color: #fff; font-size: 1em; padding: 12px 28px; }
 .btn-medical-main:hover { background: var(--medical-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,82,118,.3); }
+.btn-medical-main:disabled { background: #aaa; cursor: not-allowed; transform: none; box-shadow: none; }
 .btn-secondary { background: var(--bg2); color: var(--text); border: 1.5px solid var(--border); }
 .btn-secondary:hover { background: var(--bg3); }
 .btn-success { background: var(--success); color: #fff; }
@@ -242,7 +243,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .fiche-item:hover { box-shadow: 0 4px 16px var(--shadow); }
 .fiche-info { font-size: .88em; }
 .fiche-info strong { color: var(--primary); font-size: 1.05em; }
-.fiche-btns { display: flex; gap: 6px; }
+.fiche-btns { display: flex; gap: 6px; flex-wrap: wrap; }
 .fiche-btns button { padding: 6px 12px; font-size: .8em; }
 .pending-badge { display: inline-block; background: var(--warning); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; }
 .medical-badge { display: inline-block; background: var(--medical); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; margin-left: 4px; }
@@ -389,17 +390,21 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 
 /* Linked fiche indicator in list */
 .fiche-linked { border-left: 4px solid var(--medical); }
+
+/* Saved indicator */
+.saved-indicator { background: var(--success); color: #fff; border-radius: var(--radius); padding: 8px 16px; font-size: .85em; font-weight: 700; text-align: center; margin-bottom: 12px; display: none; }
+.saved-indicator.show { display: block; }
 </style>
 </head>
 <body>
 
 <div id="toast" class="toast"></div>
 
-<!-- Header -->
+<!-- Header — sans référence à une organisation spécifique -->
 <div class="header">
   <div class="header-logo">
     <svg viewBox="0 0 40 40" fill="none"><rect x="15" y="2" width="10" height="36" fill="white" rx="2"/><rect x="2" y="15" width="36" height="10" fill="white" rx="2"/></svg>
-    <h1>Croix-Rouge de Belgique — Fiches Patients</h1>
+    <h1>Fiches Patients — Secours</h1>
   </div>
   <div class="header-btns">
     <select id="formatSelect" onchange="changeFormat(this.value)">
@@ -478,6 +483,11 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 
   <!-- FORM TAB -->
   <div id="formTab">
+
+    <!-- Indicateur de fiche déjà sauvegardée -->
+    <div id="savedIndicator" class="saved-indicator">
+      ✅ Fiche principale déjà sauvegardée (ID: <span id="savedFicheId"></span>) — Vous pouvez compléter la fiche médicale ou réinitialiser pour une nouvelle fiche.
+    </div>
 
     <!-- TITRE -->
     <div class="section">
@@ -705,14 +715,14 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 
     <!-- ===== BOUTON FICHE MÉDICALE ===== -->
     <div class="medical-fiche-btn-wrapper" id="medicalBtnWrapper">
-      <p>Besoin de compléter un bilan médical détaillé pour ce patient ?<br>La fiche principale sera mise en pause et vous pourrez y revenir.</p>
-      <button class="btn btn-medical-main" onclick="saveAndOpenMedical()">
-        🏥 Ajouter une Fiche Médicale
+      <p>Besoin de compléter un bilan médical détaillé pour ce patient ?<br>La fiche principale sera d'abord sauvegardée, puis vous passerez à la fiche médicale.</p>
+      <button class="btn btn-medical-main" id="btnOpenMedical" onclick="saveAndOpenMedical()">
+        🏥 Sauvegarder & Ajouter une Fiche Médicale
       </button>
     </div>
 
     <div class="actions-bar">
-      <button class="btn btn-primary-main" onclick="saveFiche()">💾 Sauvegarder la fiche</button>
+      <button class="btn btn-primary-main" id="btnSaveFiche" onclick="saveFiche()">💾 Sauvegarder la fiche</button>
       <button class="btn btn-secondary" onclick="resetForm()">🗑️ Réinitialiser</button>
     </div>
 
@@ -955,7 +965,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
     </div>
 
     <div class="actions-bar">
-      <button class="btn btn-medical-main" onclick="saveMedicalFiche()">💾 Sauvegarder la fiche médicale</button>
+      <button class="btn btn-medical-main" id="btnSaveMedical" onclick="saveMedicalFiche()">💾 Sauvegarder la fiche médicale</button>
       <button class="btn btn-secondary" onclick="switchToMainForm()">↩ Retour à la fiche principale</button>
     </div>
 
@@ -977,8 +987,12 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let currentUser = null;
 let captchas = { login: {}, register: {} };
-let currentFicheId = null; // ID de la fiche principale en cours (évite les doublons)
-let medicalLinkedFicheId = null;
+
+// ===== ÉTAT CENTRAL DES FICHES =====
+// currentFicheId : ID Supabase de la fiche principale, null si pas encore sauvegardée
+// medicalSaved   : true si la fiche médicale a déjà été sauvegardée pour ce cycle
+let currentFicheId = null;
+let medicalSaved = false;
 
 // ===== BODY SCHEMA STATE (Main) =====
 const LESION_COLORS = {
@@ -1014,6 +1028,34 @@ let ynValues = {};
 
 // Evolution table columns
 let evolutionColCount = 0;
+
+// ===== UI HELPERS =====
+function updateSavedIndicator() {
+  const el = document.getElementById('savedIndicator');
+  const idEl = document.getElementById('savedFicheId');
+  if (currentFicheId) {
+    el.classList.add('show');
+    idEl.textContent = currentFicheId.slice(0,8) + '…';
+    // Désactiver le bouton "Sauvegarder la fiche" car elle est déjà enregistrée
+    const btnSave = document.getElementById('btnSaveFiche');
+    if (btnSave) {
+      btnSave.textContent = '✅ Déjà sauvegardée';
+      btnSave.disabled = true;
+    }
+    // Changer le texte du bouton fiche médicale
+    const btnMed = document.getElementById('btnOpenMedical');
+    if (btnMed) btnMed.textContent = '🏥 Ajouter une Fiche Médicale';
+  } else {
+    el.classList.remove('show');
+    const btnSave = document.getElementById('btnSaveFiche');
+    if (btnSave) {
+      btnSave.textContent = '💾 Sauvegarder la fiche';
+      btnSave.disabled = false;
+    }
+    const btnMed = document.getElementById('btnOpenMedical');
+    if (btnMed) btnMed.textContent = '🏥 Sauvegarder & Ajouter une Fiche Médicale';
+  }
+}
 
 // ===== YN BUTTONS =====
 function toggleYN(btn, field, value) {
@@ -1159,29 +1201,45 @@ function syncBodyToMedical() {
 }
 
 // ===== SWITCH FORMS =====
-async function saveAndOpenMedical() {
-  if (!currentUser) { showToast('Connectez-vous avant d\'ajouter une fiche médicale', 'error'); return; }
-  if (!navigator.onLine) { showToast('Connexion internet requise pour lier la fiche médicale', 'error'); return; }
 
-  // ============================================================
-  // FIX DOUBLON : si la fiche a déjà été sauvegardée (currentFicheId
-  // non null), on n'en crée pas une nouvelle — on réutilise l'existante.
-  // ============================================================
+/**
+ * saveAndOpenMedical :
+ * - Si la fiche principale n'est pas encore sauvegardée → la sauvegarder d'abord
+ * - Si elle est déjà sauvegardée → passer directement à la fiche médicale
+ * - Jamais de doublon
+ */
+async function saveAndOpenMedical() {
+  if (!currentUser) {
+    showToast('Connectez-vous avant d\'ajouter une fiche médicale', 'error');
+    return;
+  }
+
+  // Fiche principale déjà sauvegardée → on va directement à la médicale
   if (currentFicheId) {
-    // Fiche déjà sauvegardée, on passe directement à la fiche médicale
     switchToMedicalForm();
     return;
   }
 
+  // Pas encore sauvegardée → sauvegarder maintenant
   const data = collectFormData();
   if (!data.patient_nom && !data.patient_prenom) {
-    showToast('Veuillez renseigner le nom ou prénom du patient', 'error'); return;
+    showToast('Veuillez renseigner le nom ou prénom du patient', 'error');
+    return;
+  }
+
+  if (!navigator.onLine) {
+    showToast('Connexion internet requise pour lier la fiche médicale', 'error');
+    return;
   }
 
   showToast('Sauvegarde de la fiche principale...', 'info');
   const ficheId = await saveToSupabase(data);
-  if (!ficheId) { showToast('Erreur lors de la sauvegarde de la fiche principale', 'error'); return; }
-  currentFicheId = ficheId;
+  if (!ficheId) {
+    showToast('Erreur lors de la sauvegarde de la fiche principale', 'error');
+    return;
+  }
+  // currentFicheId est mis à jour dans saveToSupabase
+  updateSavedIndicator();
   switchToMedicalForm();
 }
 
@@ -1203,7 +1261,7 @@ function switchToMedicalForm() {
   syncBodyToMedical();
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  showToast('Fiche principale mise en pause — remplissez la fiche médicale', 'info');
+  showToast('Fiche principale sauvegardée — remplissez la fiche médicale', 'info');
 }
 
 function switchToMainForm() {
@@ -1213,6 +1271,7 @@ function switchToMainForm() {
   document.getElementById('tabForm').className = 'tab active';
   document.getElementById('tabList').className = 'tab';
   document.getElementById('ficheIndicator').classList.remove('show');
+  updateSavedIndicator();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   showToast('Retour à la fiche principale', 'info');
 }
@@ -1419,20 +1478,6 @@ function getBilanTableau() {
       data[zone] = data[zone].map(l => (l === 'Autre' ? `Autre: ${autreTxt}` : l));
     });
   }
-  BILAN_LESIONS.forEach(les => {
-    const lesKey = (LESION_ID_MAP[les] || les).replace(/[^a-zA-Z]/g, '');
-    BILAN_ZONES.forEach(zone => {
-      const zKey = zone.replace(/[^a-zA-Z]/g, '');
-      const id = 'bilan_' + zKey + '_' + lesKey;
-      const cb = document.getElementById(id);
-      if (cb && cb.checked) {
-        if (!data[zone]) data[zone] = [];
-        const autreTxtLocal = document.getElementById('autreLesionText')?.value?.trim();
-        const label = (les === 'Autre' && autreTxtLocal) ? `Autre: ${autreTxtLocal}` : les;
-        if (!data[zone].includes(label) && !data[zone].includes(les)) data[zone].push(label);
-      }
-    });
-  });
   return data;
 }
 
@@ -1698,21 +1743,24 @@ function collectMedicalData() {
 }
 
 // ===== SAVE MAIN FICHE =====
+/**
+ * saveFiche :
+ * - Si currentFicheId existe déjà → la fiche est déjà sauvegardée, on ne crée pas de doublon
+ * - Sinon → créer une nouvelle fiche
+ */
 async function saveFiche() {
-  // ============================================================
-  // FIX DOUBLON : si la fiche a déjà été sauvegardée (via le bouton
-  // "Ajouter une Fiche Médicale"), on ne la recrée pas.
-  // ============================================================
-  if (currentFicheId && currentUser && navigator.onLine) {
-    showToast('✅ Fiche déjà sauvegardée !', 'success');
-    resetForm();
+  // Déjà sauvegardée → ne rien faire
+  if (currentFicheId) {
+    showToast('✅ Cette fiche est déjà sauvegardée. Réinitialisez pour une nouvelle fiche.', 'info');
     return;
   }
 
   const data = collectFormData();
   if (!data.patient_nom && !data.patient_prenom) {
-    showToast('Veuillez renseigner le nom ou prénom du patient', 'error'); return;
+    showToast('Veuillez renseigner le nom ou prénom du patient', 'error');
+    return;
   }
+
   if (!currentUser) {
     const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
     data._localId = Date.now().toString();
@@ -1721,7 +1769,8 @@ async function saveFiche() {
     localStorage.setItem('cr_pending', JSON.stringify(pending));
     updatePendingCount();
     showToast('Non connecté — fiche mise en attente locale.', 'info');
-    resetForm(); return;
+    resetForm();
+    return;
   }
   if (!navigator.onLine) {
     const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
@@ -1731,11 +1780,14 @@ async function saveFiche() {
     localStorage.setItem('cr_pending', JSON.stringify(pending));
     updatePendingCount();
     showToast('Hors ligne — fiche mise en attente.', 'info');
-    resetForm(); return;
+    resetForm();
+    return;
   }
+
   const ficheId = await saveToSupabase(data);
   if (ficheId) {
-    resetForm();
+    updateSavedIndicator();
+    showToast('✅ Fiche sauvegardée ! Vous pouvez réinitialiser pour une nouvelle fiche.', 'success');
   }
 }
 
@@ -1782,8 +1834,10 @@ async function saveToSupabase(rawData) {
     heure_out: rawData.heure_out
   };
   Object.keys(ficheRow).forEach(k => { if (ficheRow[k] === undefined) delete ficheRow[k]; });
+
   const { data: fiche, error } = await sb.from('fiches_croixrouge').insert(ficheRow).select('id').single();
   if (error) { showToast('Erreur: ' + error.message, 'error'); return null; }
+
   if (soignants.length > 0) {
     const rows = soignants.filter(s => s.nom && s.nom.trim()).map(s => ({ ...s, fiche_id: fiche.id }));
     if (rows.length > 0) {
@@ -1791,17 +1845,27 @@ async function saveToSupabase(rawData) {
       if (e2) console.warn('Soignants warning:', e2);
     }
   }
-  // ============================================================
-  // FIX DOUBLON : on met à jour currentFicheId dès la sauvegarde
-  // pour que les appels suivants sachent que la fiche existe déjà.
-  // ============================================================
+
+  // Mettre à jour l'état central — empêche tout doublon futur
   currentFicheId = fiche.id;
-  showToast('✅ Fiche sauvegardée avec succès !', 'success');
   return fiche.id;
 }
 
 // ===== SAVE MEDICAL FICHE =====
+/**
+ * saveMedicalFiche :
+ * - Ne re-sauvegarde JAMAIS la fiche principale
+ * - Utilise currentFicheId (déjà sauvegardé via saveAndOpenMedical)
+ * - Si medicalSaved → propose de revenir sans re-sauvegarder
+ */
 async function saveMedicalFiche() {
+  // Éviter double sauvegarde médicale
+  if (medicalSaved) {
+    showToast('Fiche médicale déjà sauvegardée pour ce patient.', 'info');
+    switchToMainForm();
+    return;
+  }
+
   const medData = collectMedicalData();
 
   if (!currentUser) {
@@ -1816,8 +1880,11 @@ async function saveMedicalFiche() {
     localStorage.setItem('cr_pending_medical', JSON.stringify(pending));
     updatePendingCount();
     showToast('Non connecté — fiche médicale mise en attente.', 'info');
-    switchToMainForm(); return;
+    medicalSaved = true;
+    switchToMainForm();
+    return;
   }
+
   if (!navigator.onLine) {
     const pending = JSON.parse(localStorage.getItem('cr_pending_medical') || '[]');
     medData._localId = Date.now().toString();
@@ -1827,12 +1894,20 @@ async function saveMedicalFiche() {
     localStorage.setItem('cr_pending_medical', JSON.stringify(pending));
     updatePendingCount();
     showToast('Hors ligne — fiche médicale mise en attente.', 'info');
-    switchToMainForm(); return;
+    medicalSaved = true;
+    switchToMainForm();
+    return;
+  }
+
+  // currentFicheId doit exister (on est passé par saveAndOpenMedical)
+  if (!currentFicheId) {
+    showToast('Erreur : aucune fiche principale liée. Revenez à la fiche principale.', 'error');
+    return;
   }
 
   const medRow = {
     user_id: currentUser.id,
-    fiche_id: currentFicheId || null,
+    fiche_id: currentFicheId,
     bilan_clinique: medData.bilan_clinique,
     pupilles: medData.pupilles,
     freq_respiratoire: medData.freq_respiratoire,
@@ -1845,12 +1920,13 @@ async function saveMedicalFiche() {
     materiel_utilise: medData.materiel_utilise
   };
   Object.keys(medRow).forEach(k => { if (medRow[k] === undefined) delete medRow[k]; });
+
   const { error } = await sb.from('fiches_medicales_croixrouge').insert(medRow);
   if (error) { showToast('Erreur: ' + error.message, 'error'); return; }
+
+  medicalSaved = true;
   showToast('✅ Fiche médicale sauvegardée !', 'success');
   switchToMainForm();
-  // Après sauvegarde de la fiche médicale, reset complet pour une nouvelle fiche
-  resetForm();
 }
 
 // ===== SYNC PENDING =====
@@ -1997,11 +2073,9 @@ function renderMedicalModal(f, fromMain) {
     document.getElementById('modalHeader').insertBefore(backBtn, closeBtn);
   }
   const v = (val, fallback = '—') => (val !== null && val !== undefined && val !== '') ? val : `<span class="empty">${fallback}</span>`;
-
   const bc = f.bilan_clinique || {};
   const ynStr = (val) => val === 'oui' ? '✅ OUI' : val === 'non' ? '❌ NON' : '—';
   const boolStr = (val) => val === true ? '✅ OUI' : val === false ? '❌ NON' : '—';
-
   const pupilles = f.pupilles || {};
   const pupList = [];
   if (pupilles.normales) pupList.push('Normales');
@@ -2014,17 +2088,12 @@ function renderMedicalModal(f, fromMain) {
     pupList.push(a);
   }
   if (pupilles.reactives) pupList.push('Réactives');
-
   const glasgow = f.glasgow || {};
   const ary = f.arythmies || {};
   const motifs = f.motifs || [];
   const evolution = f.evolution_traitement || [];
-
   const bilanData = f.lesions_traumatiques || {};
-  const LESION_COLORS_LOCAL = {
-    'Fracture': '#e74c3c', 'Entorse': '#e67e22', 'Contusion': '#9b59b6',
-    'Brûlure': '#e8b800', 'Piqûre': '#1abc9c', 'Autre': '#3498db'
-  };
+  const LESION_COLORS_LOCAL = { 'Fracture': '#e74c3c', 'Entorse': '#e67e22', 'Contusion': '#9b59b6', 'Brûlure': '#e8b800', 'Piqûre': '#1abc9c', 'Autre': '#3498db' };
   let lesionBadgesHtml = '';
   if (Object.keys(bilanData).length > 0) {
     Object.entries(bilanData).forEach(([zone, lesions]) => {
@@ -2036,7 +2105,6 @@ function renderMedicalModal(f, fromMain) {
   } else {
     lesionBadgesHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucune lésion</span>';
   }
-
   let evolutionHtml = '';
   if (evolution.length > 0) {
     const params = ['Saturation O₂', 'Glycémie', 'TA', 'Pulsations', 'Oxygène L/min', 'Médicament', 'Injection', 'Perfusion'];
@@ -2049,9 +2117,7 @@ function renderMedicalModal(f, fromMain) {
   } else {
     evolutionHtml = '<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucune donnée d\'évolution</span>';
   }
-
   const createdAt = f.created_at ? new Date(f.created_at).toLocaleString('fr-BE') : '—';
-
   document.getElementById('modalBody').innerHTML = `
     <div class="modal-section">
       <div class="modal-section-title medical">🩺 Bilan clinique initial</div>
@@ -2322,7 +2388,6 @@ function renderFicheModal(f) {
       </div>
     </div>
   `;
-
   document.getElementById('ficheModal').style.display = 'flex';
 }
 
@@ -2369,11 +2434,29 @@ function resetForm() {
   setActiveLesion('Fracture');
   const chipFracture = document.getElementById('lchip_Fracture');
   if (chipFracture) chipFracture.classList.add('selected');
-  // ============================================================
-  // FIX DOUBLON : reset de currentFicheId pour permettre la création
-  // d'une nouvelle fiche après le reset du formulaire.
-  // ============================================================
+
+  // Reset de l'état central — nouvelle fiche vierge
   currentFicheId = null;
+  medicalSaved = false;
+  updateSavedIndicator();
+
+  // Reset fiche médicale aussi
+  ynValues = {};
+  document.querySelectorAll('#medicalTab input[type="checkbox"]').forEach(el => el.checked = false);
+  document.querySelectorAll('#medicalTab input[type="radio"]').forEach(el => el.checked = false);
+  document.querySelectorAll('#medicalTab textarea').forEach(el => el.value = '');
+  document.querySelectorAll('#medicalTab .yn-btn').forEach(b => b.classList.remove('active'));
+  bodyDataMed = {};
+  updateBodySvgMed();
+  updateMedActiveZonesList();
+  // Reset evolution table
+  const headerRow = document.getElementById('evolutionHeaderRow');
+  while (headerRow.children.length > 1) headerRow.removeChild(headerRow.lastChild);
+  document.querySelectorAll('#evolutionBody tr').forEach(row => {
+    while (row.children.length > 1) row.removeChild(row.lastChild);
+  });
+  evolutionColCount = 0;
+  updateGlasgow();
 }
 
 // ===== INIT =====
@@ -2384,6 +2467,7 @@ window.addEventListener('load', async () => {
   updateOnlineStatus();
   updateActiveZonesList();
   updateMedActiveZonesList();
+  updateSavedIndicator();
   window.addEventListener('online', () => { updateOnlineStatus(); syncPendingFiches(); });
   window.addEventListener('offline', updateOnlineStatus);
   if (localStorage.getItem('cr_dark') === '1') document.body.classList.add('dark');
