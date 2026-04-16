@@ -460,7 +460,10 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
   <div class="modal-box">
     <div class="modal-header" id="modalHeader">
       <h2 id="modalTitle">📋 Fiche Patient</h2>
-      <button class="modal-close" onclick="document.getElementById('ficheModal').style.display='none'">×</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="modalMedBtn" style="display:none;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.5);color:#fff;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:.82em;font-weight:700;font-family:var(--font);transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.38)'" onmouseout="this.style.background='rgba(255,255,255,.22)'" onclick="openMedicalFromModal()">🏥 Fiche médicale</button>
+        <button class="modal-close" onclick="document.getElementById('ficheModal').style.display='none';document.getElementById('modalHeader').className='modal-header';var b=document.getElementById('modalBackToMain');if(b)b.remove();var m=document.getElementById('modalMedBtn');if(m)m.style.display='none';">×</button>
+      </div>
     </div>
     <div class="modal-body" id="modalBody"></div>
   </div>
@@ -1917,17 +1920,35 @@ async function loadFiches() {
 }
 
 // ===== VIEW MEDICAL FICHE =====
-async function viewMedicalFiche(ficheId) {
+async function viewMedicalFiche(ficheId, fromMain) {
   if (!navigator.onLine) { showToast('Hors ligne', 'error'); return; }
   const { data, error } = await sb.from('fiches_medicales_croixrouge')
     .select('*').eq('fiche_id', ficheId).order('created_at', { ascending: false }).limit(1).single();
   if (error) { showToast('Erreur chargement fiche médicale', 'error'); return; }
-  renderMedicalModal(data);
+  renderMedicalModal(data, fromMain);
 }
 
-function renderMedicalModal(f) {
+function renderMedicalModal(f, fromMain) {
   document.getElementById('modalTitle').textContent = '🏥 Fiche Médicale — Bilan Clinique';
   document.getElementById('modalHeader').className = 'modal-header medical';
+  // Hide the medical button (we're already on the medical view), show back btn if from main
+  const medBtn = document.getElementById('modalMedBtn');
+  if (medBtn) medBtn.style.display = 'none';
+  // Inject back-to-main button if navigated from the main fiche modal
+  const backBtnId = 'modalBackToMain';
+  const existingBack = document.getElementById(backBtnId);
+  if (existingBack) existingBack.remove();
+  if (fromMain && _currentModalFicheData) {
+    const backBtn = document.createElement('button');
+    backBtn.id = backBtnId;
+    backBtn.textContent = '← Fiche principale';
+    backBtn.style.cssText = 'background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.5);color:#fff;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:.82em;font-weight:700;font-family:var(--font);transition:background .2s;';
+    backBtn.onmouseover = () => backBtn.style.background = 'rgba(255,255,255,.38)';
+    backBtn.onmouseout  = () => backBtn.style.background = 'rgba(255,255,255,.22)';
+    backBtn.onclick = () => { document.getElementById('ficheModal').style.display = 'none'; renderFicheModal(_currentModalFicheData); document.getElementById('ficheModal').style.display = 'flex'; };
+    const closeBtn = document.querySelector('.modal-close');
+    document.getElementById('modalHeader').insertBefore(backBtn, closeBtn);
+  }
   const v = (val, fallback = '—') => (val !== null && val !== undefined && val !== '') ? val : `<span class="empty">${fallback}</span>`;
 
   const bc = f.bilan_clinique || {};
@@ -2049,6 +2070,10 @@ function closeFicheModal(event) {
   if (event.target === document.getElementById('ficheModal')) {
     document.getElementById('ficheModal').style.display = 'none';
     document.getElementById('modalHeader').className = 'modal-header';
+    const back = document.getElementById('modalBackToMain');
+    if (back) back.remove();
+    const medBtn = document.getElementById('modalMedBtn');
+    if (medBtn) medBtn.style.display = 'none';
   }
 }
 
@@ -2063,6 +2088,15 @@ function viewFiche(jsonStr) {
   const f = JSON.parse(jsonStr);
   document.getElementById('modalHeader').className = 'modal-header';
   renderFicheModal(f);
+}
+
+let _currentModalFicheId = null;
+let _currentModalFicheData = null;
+function openMedicalFromModal() {
+  if (_currentModalFicheId) {
+    document.getElementById('ficheModal').style.display = 'none';
+    viewMedicalFiche(_currentModalFicheId, true);
+  }
 }
 
 function renderFicheModal(f) {
@@ -2159,6 +2193,12 @@ function renderFicheModal(f) {
 
   const hasMedical = f.fiches_medicales_croixrouge && f.fiches_medicales_croixrouge.length > 0;
   const createdAt = f.created_at ? new Date(f.created_at).toLocaleString('fr-BE') : (f._createdAt ? new Date(f._createdAt).toLocaleString('fr-BE') : '—');
+
+  // Show/hide the medical button in the modal header
+  _currentModalFicheId = f.id || null;
+  _currentModalFicheData = f;
+  const medBtn = document.getElementById('modalMedBtn');
+  if (medBtn) medBtn.style.display = (hasMedical && f.id) ? 'inline-block' : 'none';
 
   document.getElementById('modalBody').innerHTML = `
     ${hasMedical ? `<div style="background:var(--medical-light);border:1.5px solid var(--medical);border-radius:var(--radius);padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
