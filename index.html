@@ -1907,9 +1907,7 @@ async function loadFiches() {
     const hasMedical = f.fiches_medicales_croixrouge && f.fiches_medicales_croixrouge.length > 0;
     const medBadge = hasMedical ? '<span class="medical-badge">🏥 Méd.</span>' : '';
     const linkedClass = hasMedical ? ' fiche-linked' : '';
-    const medBtnHtml = hasMedical
-      ? `<button class="btn-view" style="background:#1a5276;border:none;" onclick="viewMedicalFiche('${f.id}')">🏥 Fiche médicale</button>`
-      : `<button class="btn-view" style="background:#aaa;cursor:not-allowed;opacity:.55;border:none;" disabled title="Aucune fiche médicale liée">🏥 Fiche médicale</button>`;
+    const medBtnHtml = `<button class="btn-view" style="background:${hasMedical ? '#1a5276' : '#5a7a8a'};border:none;" onclick="viewMedicalFiche('${f.id}')" title="${hasMedical ? 'Voir la fiche médicale' : 'Chercher une fiche médicale liée'}">🏥 Fiche médicale</button>`;
     html += `<div class="fiche-item${linkedClass}">
       <div class="fiche-info"><strong>${f.patient_nom || '?'} ${f.patient_prenom || ''}</strong> — N°Pat: ${f.numero_patient || 'N/A'} — ${f.in_date || 'N/A'} ${urgLabel}${medBadge}</div>
       <div class="fiche-btns">
@@ -1929,7 +1927,18 @@ async function viewMedicalFiche(ficheId, fromMain) {
   const { data, error } = await sb.from('fiches_medicales_croixrouge')
     .select('*').eq('fiche_id', ficheId).order('created_at', { ascending: false }).limit(1);
   if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
-  if (!data || data.length === 0) { showToast('Aucune fiche médicale trouvée pour cette fiche', 'error'); return; }
+  if (!data || data.length === 0) {
+    showToast('Aucune fiche médicale liée à cette fiche.', 'info');
+    document.getElementById('modalTitle').textContent = '🏥 Fiche Médicale';
+    document.getElementById('modalHeader').className = 'modal-header medical';
+    const medBtn2 = document.getElementById('modalMedBtn');
+    if (medBtn2) medBtn2.style.display = 'none';
+    const existingBack2 = document.getElementById('modalBackToMain');
+    if (existingBack2) existingBack2.remove();
+    document.getElementById('modalBody').innerHTML = '<div style="text-align:center;padding:40px 20px;"><div style="font-size:3em;margin-bottom:16px;">🏥</div><h3 style="color:var(--text2);margin-bottom:12px;">Aucune fiche médicale liée</h3><p style="color:var(--text3);margin-bottom:24px;">Cette fiche patient ne possède pas encore de fiche médicale associée.</p></div>';
+    document.getElementById('ficheModal').style.display = 'flex';
+    return;
+  }
   renderMedicalModal(data[0], fromMain);
 }
 
