@@ -977,8 +977,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let currentUser = null;
 let captchas = { login: {}, register: {} };
-let currentFicheId = null; // ID of the main fiche when medical form is open
-let medicalLinkedFicheId = null; // Used when saving medical fiche
+let currentFicheId = null; // ID de la fiche principale en cours (évite les doublons)
+let medicalLinkedFicheId = null;
 
 // ===== BODY SCHEMA STATE (Main) =====
 const LESION_COLORS = {
@@ -1152,7 +1152,6 @@ function removeBodyZoneMed(zone, lesion) {
   updateMedActiveZonesList();
 }
 
-// Copy main body schema to medical
 function syncBodyToMedical() {
   bodyDataMed = JSON.parse(JSON.stringify(bodyData));
   updateBodySvgMed();
@@ -1163,8 +1162,23 @@ function syncBodyToMedical() {
 async function saveAndOpenMedical() {
   if (!currentUser) { showToast('Connectez-vous avant d\'ajouter une fiche médicale', 'error'); return; }
   if (!navigator.onLine) { showToast('Connexion internet requise pour lier la fiche médicale', 'error'); return; }
-  showToast('Sauvegarde de la fiche principale...', 'info');
+
+  // ============================================================
+  // FIX DOUBLON : si la fiche a déjà été sauvegardée (currentFicheId
+  // non null), on n'en crée pas une nouvelle — on réutilise l'existante.
+  // ============================================================
+  if (currentFicheId) {
+    // Fiche déjà sauvegardée, on passe directement à la fiche médicale
+    switchToMedicalForm();
+    return;
+  }
+
   const data = collectFormData();
+  if (!data.patient_nom && !data.patient_prenom) {
+    showToast('Veuillez renseigner le nom ou prénom du patient', 'error'); return;
+  }
+
+  showToast('Sauvegarde de la fiche principale...', 'info');
   const ficheId = await saveToSupabase(data);
   if (!ficheId) { showToast('Erreur lors de la sauvegarde de la fiche principale', 'error'); return; }
   currentFicheId = ficheId;
@@ -1178,20 +1192,16 @@ function switchToMedicalForm() {
   document.getElementById('medicalPatientLabel').textContent =
     'Patient : ' + (patNom || '?') + ' ' + (patPrenom || '');
 
-  // Show medical tab, hide others
   document.getElementById('formTab').style.display = 'none';
   document.getElementById('medicalTab').style.display = '';
   document.getElementById('listTab').style.display = 'none';
   document.getElementById('tabForm').className = 'tab';
   document.getElementById('tabList').className = 'tab';
 
-  // Show indicator bar
   document.getElementById('ficheIndicator').classList.add('show');
 
-  // Sync body schema
   syncBodyToMedical();
 
-  // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
   showToast('Fiche principale mise en pause — remplissez la fiche médicale', 'info');
 }
@@ -1689,6 +1699,16 @@ function collectMedicalData() {
 
 // ===== SAVE MAIN FICHE =====
 async function saveFiche() {
+  // ============================================================
+  // FIX DOUBLON : si la fiche a déjà été sauvegardée (via le bouton
+  // "Ajouter une Fiche Médicale"), on ne la recrée pas.
+  // ============================================================
+  if (currentFicheId && currentUser && navigator.onLine) {
+    showToast('✅ Fiche déjà sauvegardée !', 'success');
+    resetForm();
+    return;
+  }
+
   const data = collectFormData();
   if (!data.patient_nom && !data.patient_prenom) {
     showToast('Veuillez renseigner le nom ou prénom du patient', 'error'); return;
@@ -1715,7 +1735,6 @@ async function saveFiche() {
   }
   const ficheId = await saveToSupabase(data);
   if (ficheId) {
-    currentFicheId = ficheId;
     resetForm();
   }
 }
@@ -1772,6 +1791,11 @@ async function saveToSupabase(rawData) {
       if (e2) console.warn('Soignants warning:', e2);
     }
   }
+  // ============================================================
+  // FIX DOUBLON : on met à jour currentFicheId dès la sauvegarde
+  // pour que les appels suivants sachent que la fiche existe déjà.
+  // ============================================================
+  currentFicheId = fiche.id;
   showToast('✅ Fiche sauvegardée avec succès !', 'success');
   return fiche.id;
 }
@@ -1825,12 +1849,13 @@ async function saveMedicalFiche() {
   if (error) { showToast('Erreur: ' + error.message, 'error'); return; }
   showToast('✅ Fiche médicale sauvegardée !', 'success');
   switchToMainForm();
+  // Après sauvegarde de la fiche médicale, reset complet pour une nouvelle fiche
+  resetForm();
 }
 
 // ===== SYNC PENDING =====
 async function syncPendingFiches() {
   if (!currentUser || !navigator.onLine) return;
-  // Sync main fiches
   const pending = JSON.parse(localStorage.getItem('cr_pending') || '[]');
   let remaining = [];
   const idMap = {};
@@ -1841,7 +1866,6 @@ async function syncPendingFiches() {
   }
   localStorage.setItem('cr_pending', JSON.stringify(remaining));
 
-  // Sync medical fiches
   const pendingMed = JSON.parse(localStorage.getItem('cr_pending_medical') || '[]');
   let remainingMed = [];
   for (const med of pendingMed) {
@@ -1956,10 +1980,8 @@ async function viewMedicalFiche(ficheId, fromMain) {
 function renderMedicalModal(f, fromMain) {
   document.getElementById('modalTitle').textContent = '🏥 Fiche Médicale — Bilan Clinique';
   document.getElementById('modalHeader').className = 'modal-header medical';
-  // Hide the medical button (we're already on the medical view), show back btn if from main
   const medBtn = document.getElementById('modalMedBtn');
   if (medBtn) medBtn.style.display = 'none';
-  // Inject back-to-main button if navigated from the main fiche modal
   const backBtnId = 'modalBackToMain';
   const existingBack = document.getElementById(backBtnId);
   if (existingBack) existingBack.remove();
@@ -2219,7 +2241,6 @@ function renderFicheModal(f) {
   const hasMedical = f.fiches_medicales_croixrouge && f.fiches_medicales_croixrouge.length > 0;
   const createdAt = f.created_at ? new Date(f.created_at).toLocaleString('fr-BE') : (f._createdAt ? new Date(f._createdAt).toLocaleString('fr-BE') : '—');
 
-  // Show/hide the medical button in the modal header
   _currentModalFicheId = f.id || null;
   _currentModalFicheData = f;
   const medBtn = document.getElementById('modalMedBtn');
@@ -2348,6 +2369,10 @@ function resetForm() {
   setActiveLesion('Fracture');
   const chipFracture = document.getElementById('lchip_Fracture');
   if (chipFracture) chipFracture.classList.add('selected');
+  // ============================================================
+  // FIX DOUBLON : reset de currentFicheId pour permettre la création
+  // d'une nouvelle fiche après le reset du formulaire.
+  // ============================================================
   currentFicheId = null;
 }
 
