@@ -706,7 +706,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
     <!-- ===== BOUTON FICHE MÉDICALE ===== -->
     <div class="medical-fiche-btn-wrapper" id="medicalBtnWrapper">
       <p>Besoin de compléter un bilan médical détaillé pour ce patient ?<br>La fiche principale sera mise en pause et vous pourrez y revenir.</p>
-      <button class="btn btn-medical-main" onclick="switchToMedicalForm()">
+      <button class="btn btn-medical-main" onclick="saveAndOpenMedical()">
         🏥 Ajouter une Fiche Médicale
       </button>
     </div>
@@ -1160,10 +1160,21 @@ function syncBodyToMedical() {
 }
 
 // ===== SWITCH FORMS =====
+async function saveAndOpenMedical() {
+  if (!currentUser) { showToast('Connectez-vous avant d\'ajouter une fiche médicale', 'error'); return; }
+  if (!navigator.onLine) { showToast('Connexion internet requise pour lier la fiche médicale', 'error'); return; }
+  showToast('Sauvegarde de la fiche principale...', 'info');
+  const data = collectFormData();
+  const ficheId = await saveToSupabase(data);
+  if (!ficheId) { showToast('Erreur lors de la sauvegarde de la fiche principale', 'error'); return; }
+  currentFicheId = ficheId;
+  switchToMedicalForm();
+}
+
 function switchToMedicalForm() {
-  // Save current main form state indicator
   const patNom = document.getElementById('patNom').value.trim();
   const patPrenom = document.getElementById('patPrenom').value.trim();
+
   document.getElementById('medicalPatientLabel').textContent =
     'Patient : ' + (patNom || '?') + ' ' + (patPrenom || '');
 
