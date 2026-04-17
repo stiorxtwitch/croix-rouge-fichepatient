@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://sevrfgivcpefyykuffti.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; connect-src 'self' https://sevrfgivcpefyykuffti.supabase.co https://fonts.googleapis.com https://cdn.jsdelivr.net;">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="no-referrer">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Fiches Patients — Secours</title>
+<meta property="og:title" content="Fiches Patients — Secours">
+<meta property="og:description" content="Application sécurisée de gestion des fiches patients.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#d40511">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f8f7f5; --bg2: #eeece8; --bg3: #e0ddd7;
+  --text: #1a1a1a; --text2: #555; --text3: #999;
+  --primary: #d40511; --primary-hover: #b0040e; --primary-light: #fde8e9;
+  --medical: #1a5276; --medical-hover: #154360; --medical-light: #d6eaf8;
+  --border: #d0cdc8; --shadow: rgba(0,0,0,0.08);
+  --success: #1a7a3a; --warning: #d4700a; --danger: #c0392b;
+  --card: #ffffff; --input-bg: #ffffff;
+  --radius: 10px; --radius-sm: 6px;
+  --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
+  --secure: #6d28d9; --secure-hover: #5b21b6; --secure-light: #ede9fe;
+}
+.dark {
+  --bg: #111; --bg2: #1a1a1a; --bg3: #252525;
+  --text: #eee; --text2: #aaa; --text3: #666;
+  --primary: #e8222e; --primary-hover: #ff4455; --primary-light: #2a0a0c;
+  --medical: #2980b9; --medical-hover: #3498db; --medical-light: #1a2a3a;
+  --border: #333; --shadow: rgba(0,0,0,0.5);
+  --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c;
+  --card: #1a1a1a; --input-bg: #222;
+  --secure: #7c3aed; --secure-hover: #6d28d9; --secure-light: #2d1f4a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; transition: background .3s, color .3s; }
+
+/* ====== SECURITY GATE ====== */
+#securityGate {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a0204 50%, #0a0a0a 100%);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+#securityGate::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(212,5,17,.03) 2px, rgba(212,5,17,.03) 4px);
+  pointer-events: none;
+}
+.gate-box {
+  background: rgba(26,26,26,.96); border: 1px solid rgba(212,5,17,.3);
+  border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 440px;
+  box-shadow: 0 0 80px rgba(212,5,17,.15), 0 24px 80px rgba(0,0,0,.8);
+  backdrop-filter: blur(20px); position: relative; animation: gateIn .4s ease;
+}
+@keyframes gateIn { from { opacity:0; transform: translateY(24px) scale(.97); } to { opacity:1; transform: none; } }
+.gate-logo { display: flex; flex-direction: column; align-items: center; margin-bottom: 28px; gap: 10px; }
+.gate-logo svg { width: 48px; height: 48px; filter: drop-shadow(0 0 12px rgba(212,5,17,.5)); }
+.gate-logo h1 { color: #fff; font-size: 1.15em; font-weight: 700; letter-spacing: -.3px; text-align: center; }
+.gate-logo p { color: rgba(255,255,255,.4); font-size: .78em; text-align: center; }
+.gate-security-badge {
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  background: rgba(212,5,17,.1); border: 1px solid rgba(212,5,17,.25);
+  border-radius: 20px; padding: 6px 14px; margin-bottom: 24px; font-size: .75em; color: rgba(255,255,255,.6);
+}
+.gate-security-badge span { color: #d40511; font-weight: 700; }
+.gate-field { margin-bottom: 14px; }
+.gate-field label { display: block; font-size: .78em; font-weight: 700; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+.gate-field input {
+  width: 100%; padding: 12px 14px; background: rgba(255,255,255,.06);
+  border: 1.5px solid rgba(255,255,255,.12); border-radius: var(--radius-sm);
+  color: #fff; font-size: .95em; font-family: var(--font); transition: border-color .2s, background .2s;
+}
+.gate-field input:focus { outline: none; border-color: rgba(212,5,17,.6); background: rgba(255,255,255,.09); }
+.gate-captcha {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+}
+.gate-captcha-q { font-weight: 700; font-family: var(--mono); color: #f39c12; font-size: 1.05em; flex: 1; }
+.gate-captcha input { width: 70px !important; text-align: center; background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.15); border-radius: var(--radius-sm); padding: 6px; color: #fff; font-family: var(--mono); font-size: .95em; }
+.gate-captcha input:focus { outline: none; border-color: rgba(243,156,18,.6); }
+.btn-gate {
+  width: 100%; padding: 13px; background: var(--primary); color: #fff; border: none;
+  border-radius: var(--radius-sm); font-size: 1em; cursor: pointer; font-weight: 700; font-family: var(--font);
+  transition: all .2s; letter-spacing: .3px; margin-bottom: 10px;
+}
+.btn-gate:hover { background: var(--primary-hover); box-shadow: 0 4px 20px rgba(212,5,17,.4); }
+.btn-gate:disabled { background: #444; cursor: not-allowed; box-shadow: none; }
+.gate-links { text-align: center; font-size: .82em; color: rgba(255,255,255,.35); }
+.gate-links a { color: rgba(212,5,17,.8); cursor: pointer; text-decoration: underline; transition: color .2s; }
+.gate-links a:hover { color: #e8222e; }
+.gate-error {
+  background: rgba(192,57,43,.15); border: 1px solid rgba(192,57,43,.4);
+  border-radius: var(--radius-sm); padding: 10px 14px; font-size: .85em; color: #e74c3c;
+  margin-bottom: 12px; display: none; align-items: center; gap: 8px; font-weight: 600;
+}
+.gate-error.show { display: flex; }
+.gate-success {
+  background: rgba(26,122,58,.15); border: 1px solid rgba(26,122,58,.4);
+  border-radius: var(--radius-sm); padding: 10px 14px; font-size: .85em; color: #2ecc71;
+  margin-bottom: 12px; display: none; align-items: center; gap: 8px; font-weight: 600;
+}
+.gate-success.show { display: flex; }
+.lockout-bar {
+  background: rgba(192,57,43,.1); border: 1px solid rgba(192,57,43,.3);
+  border-radius: var(--radius-sm); padding: 8px 14px; font-size: .8em; color: #e74c3c;
+  margin-bottom: 12px; text-align: center; display: none; font-family: var(--mono); font-weight: 700;
+}
+.lockout-bar.show { display: block; }
+.gate-view { display: none; }
+.gate-view.active { display: block; }
+.strength-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.1); margin-top: 6px; overflow: hidden; }
+.strength-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0; }
+.strength-label { font-size: .72em; margin-top: 4px; font-weight: 600; }
+
+/* ====== SECURE FICHE GATE OVERLAY ====== */
+#secureFicheGate {
+  position: fixed; inset: 0; z-index: 7000;
+  background: linear-gradient(135deg, #0d0118 0%, #1a0636 50%, #0d0118 100%);
+  display: none; align-items: center; justify-content: center; padding: 16px;
+  backdrop-filter: blur(10px);
+}
+#secureFicheGate::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(109,40,217,.03) 2px, rgba(109,40,217,.03) 4px);
+  pointer-events: none;
+}
+#secureFicheGate.show { display: flex; }
+.sfgate-box {
+  background: rgba(20,10,40,.97); border: 1px solid rgba(109,40,217,.4);
+  border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 440px;
+  box-shadow: 0 0 80px rgba(109,40,217,.2), 0 24px 80px rgba(0,0,0,.9);
+  backdrop-filter: blur(20px); position: relative; animation: gateIn .4s ease;
+}
+.sfgate-logo { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; gap: 10px; }
+.sfgate-logo .sf-icon { font-size: 2.8em; filter: drop-shadow(0 0 16px rgba(109,40,217,.7)); }
+.sfgate-logo h2 { color: #fff; font-size: 1.1em; font-weight: 700; text-align: center; }
+.sfgate-logo p { color: rgba(255,255,255,.4); font-size: .78em; text-align: center; }
+.sfgate-badge {
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  background: rgba(109,40,217,.15); border: 1px solid rgba(109,40,217,.35);
+  border-radius: 20px; padding: 6px 14px; margin-bottom: 20px; font-size: .75em; color: rgba(255,255,255,.6);
+}
+.sfgate-badge span { color: #a78bfa; font-weight: 700; }
+.sfgate-field { margin-bottom: 14px; }
+.sfgate-field label { display: block; font-size: .78em; font-weight: 700; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+.sfgate-field input {
+  width: 100%; padding: 12px 14px; background: rgba(255,255,255,.06);
+  border: 1.5px solid rgba(255,255,255,.12); border-radius: var(--radius-sm);
+  color: #fff; font-size: .95em; font-family: var(--font); transition: border-color .2s, background .2s;
+}
+.sfgate-field input:focus { outline: none; border-color: rgba(109,40,217,.7); background: rgba(255,255,255,.09); }
+.btn-sfgate {
+  width: 100%; padding: 13px; background: #6d28d9; color: #fff; border: none;
+  border-radius: var(--radius-sm); font-size: 1em; cursor: pointer; font-weight: 700; font-family: var(--font);
+  transition: all .2s; letter-spacing: .3px; margin-bottom: 10px;
+}
+.btn-sfgate:hover { background: #5b21b6; box-shadow: 0 4px 20px rgba(109,40,217,.5); }
+.btn-sfgate:disabled { background: #333; cursor: not-allowed; box-shadow: none; }
+.sfgate-error {
+  background: rgba(192,57,43,.15); border: 1px solid rgba(192,57,43,.4);
+  border-radius: var(--radius-sm); padding: 10px 14px; font-size: .85em; color: #e74c3c;
+  margin-bottom: 12px; display: none; align-items: center; gap: 8px; font-weight: 600;
+}
+.sfgate-error.show { display: flex; }
+.sfgate-success {
+  background: rgba(26,122,58,.15); border: 1px solid rgba(26,122,58,.4);
+  border-radius: var(--radius-sm); padding: 10px 14px; font-size: .85em; color: #2ecc71;
+  margin-bottom: 12px; display: none; align-items: center; gap: 8px; font-weight: 600;
+}
+.sfgate-success.show { display: flex; }
+.sfgate-view { display: none; }
+.sfgate-view.active { display: block; }
+.sfgate-info-box {
+  background: rgba(109,40,217,.1); border: 1px solid rgba(109,40,217,.3);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px; font-size: .82em;
+  color: rgba(255,255,255,.6); line-height: 1.6;
+}
+.sfgate-warn-box {
+  background: rgba(212,112,10,.1); border: 1px solid rgba(212,112,10,.3);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px; font-size: .82em;
+  color: #f39c12; line-height: 1.6; font-weight: 600;
+}
+.sfgate-strength-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.1); margin-top: 6px; overflow: hidden; }
+.sfgate-strength-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0; }
+
+/* ====== SECURE SESSION TIMER BAR ====== */
+#secureSessionBar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 6900;
+  background: linear-gradient(90deg, #3b0764, #6d28d9);
+  color: #fff; padding: 8px 20px; display: none; align-items: center; justify-content: center; gap: 14px;
+  font-size: .82em; font-weight: 700;
+}
+#secureSessionBar.show { display: flex; }
+.ssbar-timer { font-family: var(--mono); font-size: 1.1em; color: #c4b5fd; }
+.ssbar-timer.warning { color: #fbbf24; animation: pulse-warn .8s infinite; }
+.ssbar-timer.critical { color: #f87171; animation: pulse-warn .4s infinite; }
+@keyframes pulse-warn { 0%,100%{opacity:1} 50%{opacity:.5} }
+.btn-ssbar-extend { background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.4); color: #fff; padding: 4px 14px; border-radius: 20px; cursor: pointer; font-size: .85em; font-weight: 700; font-family: var(--font); }
+.btn-ssbar-exit { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.7); padding: 4px 12px; border-radius: 20px; cursor: pointer; font-size: .82em; font-family: var(--font); }
+
+/* ====== INACTIVITY WARNING ====== */
+#inactivityOverlay {
+  position: fixed; inset: 0; z-index: 8000;
+  background: rgba(0,0,0,.82);
+  display: none; align-items: center; justify-content: center; padding: 16px;
+  backdrop-filter: blur(6px);
+}
+#inactivityOverlay.show { display: flex; }
+.inactivity-box {
+  background: #1a1a1a; border: 2px solid #f39c12;
+  border-radius: 20px; padding: 36px 32px; width: 100%; max-width: 400px;
+  text-align: center; animation: gateIn .3s ease;
+}
+.inactivity-box .inact-icon { font-size: 2.8em; margin-bottom: 14px; }
+.inactivity-box h2 { color: #fff; font-size: 1.15em; font-weight: 700; margin-bottom: 8px; }
+.inactivity-box p { color: rgba(255,255,255,.55); font-size: .88em; margin-bottom: 20px; line-height: 1.6; }
+.inactivity-countdown {
+  font-size: 2.2em; font-weight: 700; font-family: var(--mono);
+  color: #f39c12; margin-bottom: 20px;
+  background: rgba(243,156,18,.1); border-radius: 12px; padding: 10px 0;
+}
+.inactivity-box .btn-stay { background: #f39c12; color: #1a1a1a; border: none; border-radius: var(--radius-sm); padding: 12px 28px; font-size: 1em; font-weight: 700; cursor: pointer; font-family: var(--font); transition: background .2s; margin-right: 10px; }
+.inactivity-box .btn-stay:hover { background: #e67e22; }
+.inactivity-box .btn-logout-now { background: rgba(255,255,255,.08); color: rgba(255,255,255,.5); border: 1px solid rgba(255,255,255,.15); border-radius: var(--radius-sm); padding: 12px 20px; font-size: .9em; font-weight: 600; cursor: pointer; font-family: var(--font); }
+
+/* ====== SESSION WARNING ====== */
+#sessionWarning {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+  background: linear-gradient(90deg, #d4700a, #e67e22);
+  color: #fff; padding: 10px 20px; text-align: center; font-size: .85em; font-weight: 700;
+  display: none; align-items: center; justify-content: center; gap: 12px;
+}
+#sessionWarning.show { display: flex; }
+#sessionWarning button { background: rgba(255,255,255,.25); border: 1px solid rgba(255,255,255,.5); color: #fff; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-family: var(--font); font-weight: 700; font-size: .85em; }
+
+/* ====== SECURE DELETE MODAL ====== */
+.secure-delete-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 600;
+  display: none; align-items: center; justify-content: center; padding: 16px;
+  backdrop-filter: blur(6px);
+}
+.secure-delete-overlay.show { display: flex; }
+.secure-delete-box {
+  background: var(--card); border: 2px solid var(--danger); border-radius: 16px;
+  padding: 32px; width: 100%; max-width: 440px;
+  box-shadow: 0 0 40px rgba(192,57,43,.3), 0 24px 60px rgba(0,0,0,.5);
+  animation: shakeIn .3s ease;
+}
+@keyframes shakeIn { 0%{transform:scale(.95)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
+.secure-delete-box h3 { color: var(--danger); font-size: 1.1em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.secure-delete-box p { font-size: .88em; color: var(--text2); margin-bottom: 16px; line-height: 1.6; }
+.secure-delete-box .confirm-phrase { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-family: var(--mono); font-weight: 700; color: var(--danger); font-size: .9em; text-align: center; margin-bottom: 12px; letter-spacing: 1px; }
+.secure-delete-box input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--input-bg); color: var(--text); font-family: var(--font); font-size: .95em; margin-bottom: 14px; }
+.secure-delete-box input:focus { outline: none; border-color: var(--danger); }
+.secure-delete-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.btn-confirm-delete { background: var(--danger); color: #fff; border: none; border-radius: var(--radius-sm); padding: 10px 20px; font-weight: 700; cursor: pointer; font-family: var(--font); transition: background .2s; }
+.btn-confirm-delete:hover { background: #a93226; }
+.btn-confirm-delete:disabled { background: #aaa; cursor: not-allowed; }
+.btn-cancel-delete { background: var(--bg2); color: var(--text); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 20px; font-weight: 700; cursor: pointer; font-family: var(--font); }
+.delete-steps { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.delete-step { display: flex; align-items: center; gap: 8px; font-size: .8em; color: var(--text2); }
+.delete-step .step-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .7em; font-weight: 700; flex-shrink: 0; }
+.step-pending { background: var(--bg3); color: var(--text3); }
+.step-active { background: var(--warning); color: #fff; }
+.step-done { background: var(--success); color: #fff; }
+
+/* ====== SECURE MOVE MODAL ====== */
+.secure-move-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 600;
+  display: none; align-items: center; justify-content: center; padding: 16px;
+  backdrop-filter: blur(6px);
+}
+.secure-move-overlay.show { display: flex; }
+.secure-move-box {
+  background: var(--card); border: 2px solid var(--secure); border-radius: 16px;
+  padding: 32px; width: 100%; max-width: 480px;
+  box-shadow: 0 0 40px rgba(109,40,217,.3), 0 24px 60px rgba(0,0,0,.5);
+  animation: shakeIn .3s ease;
+}
+.secure-move-box h3 { color: var(--secure); font-size: 1.1em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.secure-move-box p { font-size: .88em; color: var(--text2); margin-bottom: 14px; line-height: 1.6; }
+.secure-move-warning {
+  background: rgba(109,40,217,.08); border: 1.5px solid rgba(109,40,217,.3);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px;
+  font-size: .85em; color: var(--secure); font-weight: 700; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+}
+.secure-move-box .confirm-phrase { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-family: var(--mono); font-weight: 700; color: var(--secure); font-size: .9em; text-align: center; margin-bottom: 12px; letter-spacing: 1px; }
+.secure-move-box input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--input-bg); color: var(--text); font-family: var(--font); font-size: .95em; margin-bottom: 14px; }
+.secure-move-box input:focus { outline: none; border-color: var(--secure); }
+.secure-move-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.btn-confirm-move { background: var(--secure); color: #fff; border: none; border-radius: var(--radius-sm); padding: 10px 20px; font-weight: 700; cursor: pointer; font-family: var(--font); transition: background .2s; }
+.btn-confirm-move:hover { background: var(--secure-hover); }
+.btn-confirm-move:disabled { background: #aaa; cursor: not-allowed; }
+.btn-cancel-move { background: var(--bg2); color: var(--text); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 20px; font-weight: 700; cursor: pointer; font-family: var(--font); }
+
+/* ====== HEADER ====== */
+.header {
+  background: var(--primary); color: #fff;
+  padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 8px; position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 12px rgba(212,5,17,.4);
+}
+.header-logo { display: flex; align-items: center; gap: 10px; }
+.header-logo svg { width: 28px; height: 28px; }
+.header h1 { font-size: 1em; font-weight: 700; letter-spacing: -.3px; }
+.header-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.header-btns button, .header-btns select {
+  background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.25);
+  padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: .82em; font-family: var(--font); font-weight: 500;
+  transition: background .2s;
+}
+.header-btns button:hover, .header-btns select:hover { background: rgba(255,255,255,.28); }
+.header-btns select option { color: #000; background: #fff; }
+.security-indicator { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: 4px 10px; font-size: .72em; font-weight: 700; }
+.sec-dot { width: 7px; height: 7px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 6px #2ecc71; animation: pulse-green 2s infinite; }
+@keyframes pulse-green { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* ====== STATUS ====== */
+.status-bar {
+  background: var(--bg2); padding: 6px 20px; text-align: center;
+  font-size: .8em; color: var(--text2); border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+}
+.status-online { color: var(--success); font-weight: 600; }
+.status-offline { color: var(--danger); font-weight: 600; }
+
+/* ====== INACTIVITY STATUS BAR ====== */
+.inactivity-bar {
+  background: linear-gradient(90deg, #1a1a1a, #2a1a00);
+  border-bottom: 1px solid rgba(243,156,18,.3);
+  padding: 4px 20px; text-align: center; font-size: .75em; color: rgba(243,156,18,.8);
+  font-family: var(--mono); display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.inact-timer-val { color: #f39c12; font-weight: 700; }
+
+/* ====== FICHE INDICATOR ====== */
+.fiche-indicator {
+  background: linear-gradient(135deg, #1a5276, #2980b9);
+  color: #fff; padding: 8px 20px; text-align: center; font-size: .85em; font-weight: 600;
+  display: none; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+}
+.fiche-indicator.show { display: flex; }
+.fiche-indicator .btn-back-main {
+  background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.4);
+  color: #fff; padding: 4px 12px; border-radius: 20px; cursor: pointer;
+  font-size: .82em; font-weight: 700; font-family: var(--font); transition: background .2s;
+}
+.fiche-indicator .btn-back-main:hover { background: rgba(255,255,255,.35); }
+
+/* ====== CONTAINER ====== */
+.container { max-width: 920px; margin: 0 auto; padding: 20px 16px; }
+.container.tablet { max-width: 760px; }
+.container.phone { max-width: 480px; font-size: 13px; }
+
+/* ====== TABS ====== */
+.tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; gap: 4px; flex-wrap: wrap; }
+.tab { padding: 10px 22px; cursor: pointer; font-weight: 600; font-size: .9em; border-bottom: 3px solid transparent; color: var(--text2); transition: all .2s; margin-bottom: -2px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.tab:hover { color: var(--text); background: var(--bg2); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light); }
+.tab.active-medical { color: var(--medical); border-bottom-color: var(--medical); background: var(--medical-light); }
+.tab.active-secure { color: var(--secure); border-bottom-color: var(--secure); background: var(--secure-light); }
+.tab.tab-secure { color: var(--secure); }
+.tab.tab-secure:hover { background: var(--secure-light); }
+
+/* ====== SECTION ====== */
+.section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; box-shadow: 0 2px 8px var(--shadow); overflow: hidden; }
+.section-title {
+  background: var(--primary); color: #fff; padding: 10px 16px;
+  font-weight: 700; font-size: .9em; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  letter-spacing: .2px; user-select: none;
+}
+.section-title.medical-title { background: var(--medical); }
+.section-title .chevron { transition: transform .25s; font-size: .7em; }
+.section-title.collapsed .chevron { transform: rotate(-90deg); }
+.section-body { padding: 16px; }
+.section-body.hidden { display: none; }
+
+/* ====== FORM ====== */
+.form-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; align-items: flex-end; }
+.form-group { flex: 1; min-width: 180px; }
+.form-group.small { min-width: 110px; flex: 0.5; }
+.form-group label { display: block; margin-bottom: 4px; font-weight: 600; font-size: .82em; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 8px 11px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--input-bg); color: var(--text); font-size: .92em; font-family: var(--font);
+  transition: border-color .2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+.form-group textarea { resize: vertical; min-height: 64px; }
+.radio-group, .check-group { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; padding: 4px 0; }
+.radio-group label, .check-group label { display: flex; align-items: center; gap: 5px; font-weight: 500; cursor: pointer; font-size: .9em; }
+input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer; }
+
+/* ====== AUTRE LESION ====== */
+.autre-lesion-box { display: none; margin-top: 10px; animation: fadeSlideIn .2s ease; }
+.autre-lesion-box.visible { display: block; }
+@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.autre-lesion-box input { width: 100%; padding: 8px 11px; border: 1.5px solid #3498db; border-radius: var(--radius-sm); background: var(--input-bg); color: var(--text); font-size: .92em; font-family: var(--font); }
+.autre-lesion-box input:focus { outline: none; border-color: #2980b9; }
+.autre-lesion-box label { font-size: .78em; font-weight: 700; color: #3498db; text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 5px; }
+
+/* ====== BILAN TABLE ====== */
+.bilan-table { width: 100%; border-collapse: collapse; font-size: .78em; }
+.bilan-table th, .bilan-table td { border: 1px solid var(--border); padding: 6px 4px; text-align: center; white-space: nowrap; }
+.bilan-table th { background: var(--primary); color: #fff; font-weight: 600; font-size: .8em; }
+.bilan-table td:first-child { background: var(--bg2); font-weight: 600; text-align: left; padding-left: 10px; font-size: .85em; }
+.bilan-table td.cell-checked { background: rgba(212,5,17,.08); }
+
+/* ====== MATERIAL TABLE ====== */
+.mat-table { width: 100%; border-collapse: collapse; }
+.mat-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.mat-table td:first-child { font-size: .88em; font-weight: 500; }
+.mat-table td:last-child { width: 130px; }
+.qty-control { display: flex; align-items: center; gap: 6px; }
+.qty-btn { width: 30px; height: 30px; border: 1.5px solid var(--border); background: var(--bg2); color: var(--text); border-radius: var(--radius-sm); cursor: pointer; font-size: 1.1em; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: all .15s; line-height: 1; padding: 0; font-family: var(--font); }
+.qty-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.qty-val { min-width: 32px; text-align: center; font-weight: 700; font-family: var(--mono); font-size: .95em; color: var(--text); }
+.qty-val.nonzero { color: var(--primary); }
+
+/* ====== BODY SCHEMA ====== */
+.body-schema-wrapper { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; margin-top: 12px; }
+.body-schema-svg-container { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.body-schema-svg-container svg { max-width: 200px; width: 100%; cursor: pointer; }
+.body-legend { flex: 1; min-width: 200px; }
+.body-legend h4 { font-size: .82em; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.legend-items { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: .85em; cursor: pointer; }
+.legend-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(0,0,0,.15); flex-shrink: 0; }
+.zone-selector { margin-top: 10px; }
+.zone-selector label { font-size: .8em; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 6px; }
+.lesion-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.lesion-chip { padding: 4px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg2); color: var(--text2); transition: all .15s; }
+.active-zones-list { margin-top: 12px; }
+.active-zone-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; margin: 3px; color: #fff; }
+.active-zone-badge button { background: none; border: none; color: #fff; cursor: pointer; font-size: .9em; padding: 0 2px; opacity: .8; }
+.active-zone-badge button:hover { opacity: 1; }
+
+/* ====== SOIGNANT ====== */
+.soignant-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; }
+.soignant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.soignant-header strong { font-size: .9em; }
+.btn-remove { background: var(--danger); color: #fff; border: none; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; font-size: 1em; display: flex; align-items: center; justify-content: center; }
+
+/* ====== BUTTONS ====== */
+.btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-size: .9em; transition: all .2s; font-family: var(--font); }
+.btn-primary-main { background: var(--primary); color: #fff; }
+.btn-primary-main:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,5,17,.3); }
+.btn-primary-main:disabled { background: #aaa; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-medical-main { background: var(--medical); color: #fff; font-size: 1em; padding: 12px 28px; }
+.btn-medical-main:hover { background: var(--medical-hover); transform: translateY(-1px); }
+.btn-medical-main:disabled { background: #aaa; cursor: not-allowed; transform: none; }
+.btn-secondary { background: var(--bg2); color: var(--text); border: 1.5px solid var(--border); }
+.btn-secondary:hover { background: var(--bg3); }
+.btn-add { background: var(--primary); color: #fff; padding: 8px 16px; font-size: .85em; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
+.btn-add:hover { background: var(--primary-hover); }
+.btn-add-medical { background: var(--medical); color: #fff; padding: 8px 16px; font-size: .85em; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
+.btn-add-medical:hover { background: var(--medical-hover); }
+.actions-bar { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 24px 0; }
+
+/* ====== MEDICAL FICHE BUTTON ====== */
+.medical-fiche-btn-wrapper { text-align: center; margin: 10px 0 30px; padding: 20px; background: var(--medical-light); border: 2px dashed var(--medical); border-radius: var(--radius); position: relative; }
+.medical-fiche-btn-wrapper p { font-size: .85em; color: var(--text2); margin-bottom: 12px; }
+
+/* ====== FICHES LIST ====== */
+.fiche-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; transition: box-shadow .2s; }
+.fiche-item:hover { box-shadow: 0 4px 16px var(--shadow); }
+.fiche-info { font-size: .88em; }
+.fiche-info strong { color: var(--primary); font-size: 1.05em; }
+.fiche-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.fiche-btns button { padding: 6px 12px; font-size: .8em; }
+.pending-badge { display: inline-block; background: var(--warning); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; }
+.medical-badge { display: inline-block; background: var(--medical); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; margin-left: 4px; }
+.secure-badge { display: inline-block; background: var(--secure); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; margin-left: 4px; }
+.btn-view { background: #2980b9; color: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: .8em; cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
+.btn-view:hover { background: #1a6fa0; }
+.btn-delete-secure { background: var(--danger); color: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: .8em; cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
+.btn-delete-secure:hover { background: #a93226; }
+.btn-move-secure { background: var(--secure); color: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: .8em; cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
+.btn-move-secure:hover { background: var(--secure-hover); }
+.fiche-linked { border-left: 4px solid var(--medical); }
+.fiche-secured { border-left: 4px solid var(--secure); background: rgba(109,40,217,.03); }
+
+/* ====== SECURED FICHE VIEWER ====== */
+.secured-viewer-banner {
+  background: linear-gradient(135deg, var(--secure), #5b21b6);
+  color: #fff; border-radius: var(--radius); padding: 14px 20px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.secured-viewer-banner .sv-icon { font-size: 1.8em; flex-shrink: 0; }
+.secured-viewer-banner h2 { font-size: 1em; font-weight: 700; margin: 0; }
+.secured-viewer-banner p { font-size: .82em; opacity: .85; margin: 2px 0 0; }
+.secured-empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+.secured-empty-state .se-icon { font-size: 3em; margin-bottom: 14px; }
+.secured-empty-state h3 { font-size: 1.05em; color: var(--text2); margin-bottom: 8px; }
+.secured-empty-state p { font-size: .88em; }
+
+/* ====== TOAST ====== */
+.toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: var(--radius); color: #fff; font-weight: 600; z-index: 999; opacity: 0; transition: opacity .3s, transform .3s; font-size: .88em; max-width: 340px; transform: translateY(8px); }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+.toast.info { background: #2980b9; }
+
+/* ====== MSG ====== */
+.msg-box { padding: 16px; border-radius: var(--radius); margin: 12px 0; text-align: center; font-size: .9em; }
+.msg-info { background: #e8f4fd; color: #1a5276; border: 1px solid #aed6f1; }
+.dark .msg-info { background: #1a2a3a; color: #85c1e9; border-color: #2e4f6a; }
+
+/* ====== MODAL ====== */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+.modal-box { background: var(--card); border-radius: 16px; padding: 0; width: 100%; max-width: 820px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(0,0,0,.35); border: 1px solid var(--border); animation: slideUp .25s ease; }
+@keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+.modal-header { background: var(--primary); color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 16px 16px 0 0; position: sticky; top: 0; z-index: 10; }
+.modal-header.medical { background: var(--medical); }
+.modal-header h2 { font-size: 1.05em; font-weight: 700; }
+.modal-close { background: rgba(255,255,255,.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+.modal-close:hover { background: rgba(255,255,255,.4); }
+.modal-body { padding: 20px; }
+.modal-section { margin-bottom: 20px; }
+.modal-section-title { font-weight: 700; font-size: .82em; text-transform: uppercase; letter-spacing: .6px; color: var(--primary); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--primary-light); }
+.modal-section-title.medical { color: var(--medical); border-bottom-color: var(--medical-light); }
+.modal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.modal-field { background: var(--bg2); border-radius: var(--radius-sm); padding: 8px 12px; }
+.modal-field .lbl { font-size: .72em; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+.modal-field .val { font-size: .9em; font-weight: 600; color: var(--text); }
+.modal-field .val.empty { color: var(--text3); font-style: italic; font-weight: 400; }
+.urgence-badge-modal { display: inline-block; padding: 4px 14px; border-radius: 20px; font-weight: 700; font-size: .9em; color: #fff; }
+.modal-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.modal-tag { background: var(--primary-light); color: var(--primary); padding: 3px 10px; border-radius: 12px; font-size: .8em; font-weight: 600; }
+.modal-body-schema { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.modal-body-schema svg { max-width: 130px; width: 100%; }
+.modal-lesions-list { flex: 1; min-width: 160px; }
+.modal-lesion-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; font-size: .78em; font-weight: 600; margin: 3px; color: #fff; }
+.soignants-modal { display: flex; flex-wrap: wrap; gap: 10px; }
+.soignant-modal-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: .85em; min-width: 150px; }
+.soignant-modal-card strong { display: block; color: var(--text); margin-bottom: 4px; }
+.soignant-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.soignant-badge { background: var(--bg3); color: var(--text2); padding: 1px 7px; border-radius: 10px; font-size: .75em; font-weight: 600; }
+.mat-modal-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.mat-modal-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 12px; font-size: .82em; }
+.mat-modal-item span { font-weight: 700; color: var(--primary); margin-left: 6px; font-family: var(--mono); }
+
+/* ====== MEDICAL FORM ====== */
+.medical-header-bar { background: linear-gradient(135deg, #1a5276, #2980b9); color: #fff; padding: 16px 20px; border-radius: var(--radius); margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.medical-header-bar h2 { font-size: 1.1em; font-weight: 700; }
+.medical-header-bar p { font-size: .85em; opacity: .85; margin-top: 4px; }
+.glasgow-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.glasgow-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.glasgow-card h4 { font-size: .82em; font-weight: 700; color: var(--medical); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--medical-light); }
+.glasgow-option { display: flex; align-items: center; justify-content: space-between; padding: 5px 8px; border-radius: var(--radius-sm); cursor: pointer; transition: background .15s; }
+.glasgow-option:hover { background: var(--bg3); }
+.glasgow-option label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: .88em; flex: 1; }
+.glasgow-option .score-badge { background: var(--medical); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: .75em; font-weight: 700; font-family: var(--mono); }
+.glasgow-total { background: linear-gradient(135deg, #1a5276, #2980b9); color: #fff; padding: 12px 20px; border-radius: var(--radius); text-align: center; margin-top: 14px; }
+.glasgow-total .score-num { font-size: 2.5em; font-weight: 700; font-family: var(--mono); }
+.glasgow-total .score-label { font-size: .82em; opacity: .85; }
+.evolution-table-wrapper { overflow-x: auto; margin-top: 10px; }
+.evolution-table { border-collapse: collapse; font-size: .82em; min-width: 600px; }
+.evolution-table th, .evolution-table td { border: 1.5px solid var(--border); padding: 0; vertical-align: middle; }
+.evolution-table th { background: var(--medical); color: #fff; font-weight: 700; font-size: .8em; padding: 6px 10px; white-space: nowrap; text-align: center; }
+.evolution-table th:first-child { background: var(--bg2); color: var(--text2); text-align: left; min-width: 140px; padding: 6px 10px; }
+.evolution-table td:first-child { background: var(--bg2); font-weight: 600; font-size: .85em; padding: 6px 10px; white-space: nowrap; }
+.evolution-table td input { border: none; background: transparent; color: var(--text); font-family: var(--font); font-size: .88em; padding: 5px 8px; width: 100%; min-width: 80px; text-align: center; }
+.evolution-table td input.large-cell { min-width: 160px; }
+.evolution-table td input:focus { outline: none; background: rgba(41,128,185,.08); }
+.yn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.yn-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; }
+.yn-item .yn-label { font-size: .88em; font-weight: 600; }
+.yn-item .yn-btns { display: flex; gap: 6px; }
+.yn-btn { padding: 3px 10px; border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; font-size: .78em; font-weight: 700; background: var(--bg3); color: var(--text2); transition: all .15s; font-family: var(--font); }
+.yn-btn.yes.active { background: var(--success); color: #fff; border-color: var(--success); }
+.yn-btn.no.active { background: var(--danger); color: #fff; border-color: var(--danger); }
+.pupilles-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.pupille-check { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; cursor: pointer; font-size: .88em; font-weight: 600; transition: all .15s; }
+.pupille-check input { accent-color: var(--medical); }
+.anisocorie-side { display: none; gap: 6px; align-items: center; margin-left: 8px; }
+.anisocorie-side.show { display: flex; }
+.anisocorie-side label { font-size: .8em; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+.motifs-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.motif-chip { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: .82em; font-weight: 600; transition: all .15s; }
+.motif-chip input { accent-color: var(--medical); width: 14px; height: 14px; }
+.motif-chip:has(input:checked) { background: var(--medical-light); border-color: var(--medical); color: var(--medical); }
+.arythmie-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.arythmie-chip { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: .82em; font-weight: 600; transition: all .15s; }
+.arythmie-chip input { accent-color: var(--medical); width: 14px; height: 14px; }
+.arythmie-chip:has(input:checked) { background: #fde8e8; border-color: var(--danger); color: var(--danger); }
+.freq-resp-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.freq-chip { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 14px; cursor: pointer; font-size: .88em; font-weight: 700; transition: all .15s; font-family: var(--mono); }
+.freq-chip input { accent-color: var(--medical); width: 14px; height: 14px; }
+.freq-chip:has(input:checked) { background: var(--medical-light); border-color: var(--medical); color: var(--medical); }
+
+/* ====== URGENCE PILLS ====== */
+.urgence-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.urgence-pill { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: .85em; border: 2px solid transparent; transition: all .15s; }
+.urgence-pill input { display: none; }
+.urgence-u1 { background: #fde8e8; color: #c0392b; border-color: #e74c3c; }
+.urgence-u1.checked { background: #e74c3c; color: #fff; }
+.urgence-u2 { background: #fef6e4; color: #d4700a; border-color: #f39c12; }
+.urgence-u2.checked { background: #f39c12; color: #fff; }
+.urgence-u3 { background: #e8f8ef; color: #1a7a3a; border-color: #2ecc71; }
+.urgence-u3.checked { background: #2ecc71; color: #fff; }
+.urgence-impl { background: #eef2ff; color: #3949ab; border-color: #5c6bc0; }
+.urgence-impl.checked { background: #5c6bc0; color: #fff; }
+
+/* ====== SAVED INDICATOR ====== */
+.saved-indicator { background: var(--success); color: #fff; border-radius: var(--radius); padding: 8px 16px; font-size: .85em; font-weight: 700; text-align: center; margin-bottom: 12px; display: none; }
+.saved-indicator.show { display: block; }
+
+@media (max-width: 600px) {
+  .form-group { min-width: 100% !important; }
+  .header { flex-direction: column; text-align: center; }
+  .header-btns { justify-content: center; }
+  .bilan-table { font-size: .68em; }
+  .body-schema-wrapper { flex-direction: column; align-items: center; }
+  .modal-grid { grid-template-columns: 1fr 1fr; }
+  .glasgow-grid { grid-template-columns: 1fr; }
+  .gate-box { padding: 28px 20px; }
+  .tab { padding: 8px 14px; font-size: .8em; }
+  .sfgate-box { padding: 28px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- ========== SECURITY GATE ========== -->
+<div id="securityGate">
+  <div class="gate-box">
+    <div class="gate-logo">
+      <svg viewBox="0 0 40 40" fill="none"><rect x="15" y="2" width="10" height="36" fill="#d40511" rx="2"/><rect x="2" y="15" width="36" height="10" fill="#d40511" rx="2"/></svg>
+      <h1>Fiches Patients — Secours</h1>
+      <p>Système sécurisé de gestion médicale</p>
+    </div>
+    <div class="gate-security-badge">
+      🔒 <span>Accès restreint</span> — Authentification requise
+    </div>
+    <div id="gateLoginView" class="gate-view active">
+      <div id="lockoutBar" class="lockout-bar"></div>
+      <div id="gateLoginError" class="gate-error">⛔ <span id="gateLoginErrorMsg"></span></div>
+      <div id="gateLoginSuccess" class="gate-success">✅ <span id="gateLoginSuccessMsg"></span></div>
+      <div class="gate-field"><label>Adresse e-mail</label><input type="email" id="gateEmail" autocomplete="email" placeholder="votre@email.com"></div>
+      <div class="gate-field"><label>Mot de passe</label><input type="password" id="gatePassword" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doGateLogin()"></div>
+      <div class="gate-captcha">
+        <span class="gate-captcha-q" id="gateCaptchaQ"></span>
+        <span style="color:rgba(255,255,255,.4);font-size:1.2em;">=</span>
+        <input type="number" id="gateCaptchaA" placeholder="?" min="0" max="30" onkeydown="if(event.key==='Enter')doGateLogin()">
+        <span onclick="genGateCaptcha()" style="cursor:pointer;font-size:1.1em;color:rgba(255,255,255,.4);margin-left:4px;" title="Nouveau captcha">🔄</span>
+      </div>
+      <button class="btn-gate" id="gateBtnLogin" onclick="doGateLogin()">🔐 Se connecter</button>
+      <div class="gate-links">
+        <a onclick="switchGateView('register')">Créer un compte</a> &nbsp;|&nbsp; <a onclick="switchGateView('forgot')">Mot de passe oublié ?</a>
+      </div>
+    </div>
+    <div id="gateRegisterView" class="gate-view">
+      <div id="gateRegError" class="gate-error">⛔ <span id="gateRegErrorMsg"></span></div>
+      <div id="gateRegSuccess" class="gate-success">✅ <span id="gateRegSuccessMsg"></span></div>
+      <div class="form-row" style="gap:10px;margin-bottom:0;">
+        <div class="gate-field" style="flex:1;min-width:120px;"><label>Nom</label><input type="text" id="gateRegNom" autocomplete="family-name" placeholder="Dupont"></div>
+        <div class="gate-field" style="flex:1;min-width:120px;"><label>Prénom</label><input type="text" id="gateRegPrenom" autocomplete="given-name" placeholder="Jean"></div>
+      </div>
+      <div class="gate-field"><label>E-mail</label><input type="email" id="gateRegEmail" autocomplete="email" placeholder="votre@email.com"></div>
+      <div class="gate-field">
+        <label>Mot de passe</label>
+        <input type="password" id="gateRegPass1" autocomplete="new-password" placeholder="Min. 8 caractères" oninput="checkGateStrength()">
+        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+        <div class="strength-label" id="strengthLabel" style="color:rgba(255,255,255,.3);"></div>
+      </div>
+      <div class="gate-field"><label>Confirmer le mot de passe</label><input type="password" id="gateRegPass2" autocomplete="new-password" placeholder="Répétez le mot de passe"></div>
+      <div class="gate-captcha">
+        <span class="gate-captcha-q" id="gateRegCaptchaQ"></span>
+        <span style="color:rgba(255,255,255,.4);font-size:1.2em;">=</span>
+        <input type="number" id="gateRegCaptchaA" placeholder="?" min="0" max="30">
+        <span onclick="genGateRegCaptcha()" style="cursor:pointer;font-size:1.1em;color:rgba(255,255,255,.4);margin-left:4px;">🔄</span>
+      </div>
+      <button class="btn-gate" onclick="doGateRegister()">📝 S'inscrire</button>
+      <div class="gate-links"><a onclick="switchGateView('login')">← Retour à la connexion</a></div>
+    </div>
+    <div id="gateForgotView" class="gate-view">
+      <div id="gateForgotSuccess" class="gate-success">✅ <span id="gateForgotSuccessMsg"></span></div>
+      <p style="color:rgba(255,255,255,.4);font-size:.85em;margin-bottom:14px;">Entrez votre e-mail pour recevoir un lien de réinitialisation.</p>
+      <div class="gate-field"><label>E-mail</label><input type="email" id="gateForgotEmail" autocomplete="email" placeholder="votre@email.com"></div>
+      <button class="btn-gate" onclick="doGateForgot()">📧 Envoyer le lien</button>
+      <div class="gate-links"><a onclick="switchGateView('login')">← Retour à la connexion</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SECURE FICHE GATE ========== -->
+<div id="secureFicheGate">
+  <div class="sfgate-box">
+    <div class="sfgate-logo">
+      <div class="sf-icon">🔐</div>
+      <h2>Fiches Sécurisées</h2>
+      <p>Accès protégé par mot de passe dédié</p>
+    </div>
+    <div class="sfgate-badge">
+      🛡️ <span>Zone restreinte</span> — Authentification requise
+    </div>
+
+    <!-- VIEW: LOGIN SECURE -->
+    <div id="sfLoginView" class="sfgate-view active">
+      <div id="sfLoginError" class="sfgate-error">⛔ <span id="sfLoginErrorMsg"></span></div>
+      <div class="sfgate-info-box">
+        Connectez-vous avec votre mot de passe des fiches sécurisées. Ce mot de passe est distinct de votre mot de passe de connexion principal.
+      </div>
+      <div class="sfgate-field">
+        <label>Mot de passe sécurisé</label>
+        <input type="password" id="sfPassword" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')doSfLogin()">
+      </div>
+      <button class="btn-sfgate" onclick="doSfLogin()">🔓 Accéder aux fiches sécurisées</button>
+      <div style="text-align:center;margin-top:8px;">
+        <a onclick="switchSfView('create')" style="color:#a78bfa;font-size:.82em;cursor:pointer;text-decoration:underline;">Pas encore de mot de passe ? En créer un</a>
+      </div>
+      <div style="text-align:center;margin-top:6px;">
+        <a onclick="closeSfGate()" style="color:rgba(255,255,255,.3);font-size:.8em;cursor:pointer;">← Annuler</a>
+      </div>
+    </div>
+
+    <!-- VIEW: CREATE SECURE PASSWORD -->
+    <div id="sfCreateView" class="sfgate-view">
+      <div id="sfCreateError" class="sfgate-error">⛔ <span id="sfCreateErrorMsg"></span></div>
+      <div id="sfCreateSuccess" class="sfgate-success">✅ <span id="sfCreateSuccessMsg"></span></div>
+      <div class="sfgate-warn-box">
+        ⚠️ Ce mot de passe est <strong>définitif</strong>. Une fois défini, il ne peut plus être modifié. En cas d'oubli, contactez le service informatique.
+      </div>
+      <div class="sfgate-info-box">
+        Ce mot de passe est lié à votre compte (<span id="sfCreateEmailLabel" style="color:#a78bfa;font-weight:700;"></span>) et sera utilisé uniquement pour accéder aux fiches sécurisées.
+      </div>
+      <div class="sfgate-field">
+        <label>Nouveau mot de passe sécurisé</label>
+        <input type="password" id="sfNewPass1" placeholder="Min. 8 caractères" oninput="checkSfStrength()">
+        <div class="sfgate-strength-bar"><div class="sfgate-strength-fill" id="sfStrengthFill"></div></div>
+        <div id="sfStrengthLabel" style="font-size:.72em;margin-top:4px;font-weight:600;color:rgba(255,255,255,.3);"></div>
+      </div>
+      <div class="sfgate-field">
+        <label>Confirmer le mot de passe</label>
+        <input type="password" id="sfNewPass2" placeholder="Répétez le mot de passe">
+      </div>
+      <button class="btn-sfgate" onclick="doSfCreate()">🔒 Définir le mot de passe</button>
+      <div style="text-align:center;margin-top:8px;">
+        <a onclick="switchSfView('login')" style="color:rgba(255,255,255,.3);font-size:.8em;cursor:pointer;">← Retour</a>
+      </div>
+    </div>
+
+    <!-- VIEW: ALREADY EXISTS (no-create) -->
+    <div id="sfExistsView" class="sfgate-view">
+      <div class="sfgate-warn-box">
+        🚫 Un mot de passe sécurisé est déjà défini pour ce compte. Il est impossible d'en créer un nouveau. Si vous avez perdu votre mot de passe, veuillez contacter le <strong>service informatique</strong>.
+      </div>
+      <div style="text-align:center;margin-top:16px;">
+        <a onclick="switchSfView('login')" style="color:#a78bfa;font-size:.88em;cursor:pointer;text-decoration:underline;">← Retour à la connexion</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SECURE SESSION BAR ========== -->
+<div id="secureSessionBar">
+  🔒 Session fiches sécurisées — Déconnexion dans <span class="ssbar-timer" id="ssbarTimer">0:30</span>
+  <button class="btn-ssbar-extend" onclick="extendSecureSession()">+30s</button>
+  <button class="btn-ssbar-exit" onclick="exitSecureTab()">Quitter</button>
+</div>
+
+<!-- ========== INACTIVITY WARNING ========== -->
+<div id="inactivityOverlay">
+  <div class="inactivity-box">
+    <div class="inact-icon">⏱️</div>
+    <h2>Session inactive</h2>
+    <p>Vous n'avez pas interagi depuis un moment.<br>Vous serez déconnecté automatiquement dans :</p>
+    <div class="inactivity-countdown" id="inactivityCountdown">0:30</div>
+    <div>
+      <button class="btn-stay" onclick="resetInactivityTimer()">✋ Je suis toujours là</button>
+      <button class="btn-logout-now" onclick="doLogout()">Déconnecter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SESSION WARNING ========== -->
+<div id="sessionWarning">
+  ⚠️ Votre session expire dans <span id="sessionCountdown">5:00</span>
+  <button onclick="renewSession()">Renouveler</button>
+  <button onclick="doLogout()">Déconnecter</button>
+</div>
+
+<!-- ========== SECURE DELETE MODAL ========== -->
+<div class="secure-delete-overlay" id="secureDeleteOverlay">
+  <div class="secure-delete-box">
+    <h3>🗑️ Suppression définitive</h3>
+    <p id="secureDeleteDesc">Cette action est <strong>irréversible</strong>.</p>
+    <div class="delete-steps" id="deleteSteps" style="display:none;">
+      <div class="delete-step"><div class="step-icon step-pending" id="step1icon">1</div><span id="step1text">Suppression des soignants...</span></div>
+      <div class="delete-step"><div class="step-icon step-pending" id="step2icon">2</div><span id="step2text">Suppression de la fiche médicale...</span></div>
+      <div class="delete-step"><div class="step-icon step-pending" id="step3icon">3</div><span id="step3text">Suppression de la fiche principale...</span></div>
+      <div class="delete-step"><div class="step-icon step-pending" id="step4icon">4</div><span id="step4text">Nettoyage et vérification...</span></div>
+    </div>
+    <div class="confirm-phrase" id="confirmPhrase"></div>
+    <p style="font-size:.8em;color:var(--text2);margin-bottom:6px;">Tapez la phrase ci-dessus pour confirmer :</p>
+    <input type="text" id="secureDeleteInput" placeholder="Tapez ici pour confirmer..." oninput="checkDeleteConfirm()">
+    <div class="secure-delete-actions">
+      <button class="btn-cancel-delete" onclick="closeSecureDelete()">Annuler</button>
+      <button class="btn-confirm-delete" id="btnConfirmDelete" disabled onclick="executeSecureDelete()">🗑️ Supprimer définitivement</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SECURE MOVE MODAL ========== -->
+<div class="secure-move-overlay" id="secureMoveOverlay">
+  <div class="secure-move-box">
+    <h3>🔒 Déplacer vers les Fiches Sécurisées</h3>
+    <p id="secureMoveDesc">Vous allez archiver cette fiche dans la section sécurisée.</p>
+    <div class="secure-move-warning">
+      ⚠️ <span>Cette action est <strong>irréversible</strong>. Une fois dans les fiches sécurisées, la fiche sera en lecture seule — aucune modification ni suppression ne sera possible.</span>
+    </div>
+    <div class="confirm-phrase" id="secureMovePhrase"></div>
+    <p style="font-size:.8em;color:var(--text2);margin-bottom:6px;">Tapez la phrase ci-dessus pour confirmer :</p>
+    <input type="text" id="secureMoveInput" placeholder="Tapez ici pour confirmer..." oninput="checkMoveConfirm()">
+    <div class="secure-move-actions">
+      <button class="btn-cancel-move" onclick="closeSecureMove()">Annuler</button>
+      <button class="btn-confirm-move" id="btnConfirmMove" disabled onclick="executeSecureMove()">🔒 Sécuriser cette fiche</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MAIN APP ========== -->
+<div id="appContent" style="display:none;">
+  <div class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 40 40" fill="none"><rect x="15" y="2" width="10" height="36" fill="white" rx="2"/><rect x="2" y="15" width="36" height="10" fill="white" rx="2"/></svg>
+      <h1>Fiches Patients — Secours</h1>
+    </div>
+    <div class="header-btns">
+      <div class="security-indicator"><div class="sec-dot"></div>Session sécurisée</div>
+      <select id="formatSelect" onchange="changeFormat(this.value)">
+        <option value="pc">💻 PC</option>
+        <option value="tablet">📱 Tablette</option>
+        <option value="phone">📲 Téléphone</option>
+      </select>
+      <button onclick="toggleDark()" id="darkBtn">🌙 Mode Nuit</button>
+      <button onclick="doLogout()" id="logoutBtn">🚪 Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="inactivity-bar">
+    ⏱️ Déconnexion automatique après 3 min d'inactivité — <span id="inactTimerDisplay" class="inact-timer-val">3:00</span>
+  </div>
+
+  <div class="status-bar">
+    <span id="onlineStatus"></span> &nbsp;|&nbsp;
+    <span id="pendingCount">0 fiche(s) en attente</span> &nbsp;|&nbsp;
+    <span id="userLabel" style="color:var(--text2);"></span>
+  </div>
+
+  <div class="fiche-indicator" id="ficheIndicator">
+    <span>🔵 Fiche médicale en cours — La fiche principale est mise en pause</span>
+    <button class="btn-back-main" onclick="switchToMainForm()">↩ Retour à la fiche principale</button>
+  </div>
+
+  <!-- Fiche View Modal -->
+  <div id="ficheModal" class="modal-overlay" style="display:none;" onclick="closeFicheModal(event)">
+    <div class="modal-box">
+      <div class="modal-header" id="modalHeader">
+        <h2 id="modalTitle">📋 Fiche Patient</h2>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button id="modalMedBtn" style="display:none;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.5);color:#fff;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:.82em;font-weight:700;font-family:var(--font);" onclick="openMedicalFromModal()">🏥 Fiche médicale</button>
+          <button class="modal-close" onclick="document.getElementById('ficheModal').style.display='none';">×</button>
+        </div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="container" id="mainContainer">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('form')" id="tabForm">📋 Nouvelle Fiche</div>
+      <div class="tab" onclick="switchTab('list')" id="tabList">📁 Mes Fiches</div>
+      <div class="tab tab-secure" onclick="handleSecuredTabClick()" id="tabSecured">🔒 Fiches Sécurisées</div>
+    </div>
+
+    <!-- FORM TAB -->
+    <div id="formTab">
+      <div id="savedIndicator" class="saved-indicator">
+        ✅ Fiche sauvegardée (ID: <span id="savedFicheId"></span>) — Réinitialisez pour une nouvelle fiche.
+      </div>
+
+      <div class="section">
+        <div class="section-title" onclick="toggleSection(this)">📌 TITRE <span class="chevron">▼</span></div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group small"><label>Fiche Médicale</label><div class="radio-group"><label><input type="radio" name="ficheMed" value="oui"> OUI</label><label><input type="radio" name="ficheMed" value="non" checked> NON</label></div></div>
+            <div class="form-group"><label>N° ODIN</label><input type="text" id="numOdin" maxlength="50"></div>
+            <div class="form-group"><label>NOM de l'APS</label><input type="text" id="nomAps" maxlength="100"></div>
+            <div class="form-group small"><label>N° Patient</label><input type="text" id="numPatient" maxlength="30"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" onclick="toggleSection(this)">👤 INFORMATION PATIENT <span class="chevron">▼</span></div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group"><label>NOM / NAAM</label><input type="text" id="patNom" maxlength="100"></div>
+            <div class="form-group"><label>PRÉNOM / VOORNAAM</label><input type="text" id="patPrenom" maxlength="100"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Date de naissance</label><input type="date" id="patDob"></div>
+            <div class="form-group small"><label>&nbsp;</label><div class="check-group"><label><input type="checkbox" id="patMineur"> −18 ans</label></div></div>
+            <div class="form-group small"><label>Sexe</label><div class="radio-group"><label><input type="radio" name="patSexe" value="homme"> Homme</label><label><input type="radio" name="patSexe" value="femme"> Femme</label></div></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Adresse</label><input type="text" id="patAdresse" maxlength="200"></div>
+            <div class="form-group small"><label>Tél</label><input type="tel" id="patTel" maxlength="20"></div>
+            <div class="form-group small"><label>N° Cl</label><input type="text" id="patCl" maxlength="30"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" onclick="toggleSection(this)">🚪 IN <span class="chevron">▼</span></div>
+        <div class="section-body">
+          <div class="check-group" style="margin-bottom:12px;">
+            <label><input type="checkbox" id="inSpontanee"> Spontanée</label>
+            <label><input type="checkbox" id="inEquipe"> Via équipe</label>
+            <label><input type="checkbox" id="inAmbulance" onchange="toggleInAmbulance()"> Via ambulance</label>
+          </div>
+          <div class="form-row" id="inAmbulanceGroup" style="display:none;">
+            <div class="form-group"><label>N° Ambulance</label><input type="text" id="inNumAmbulance" maxlength="30"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Autre moyen</label><input type="text" id="inAutre" maxlength="100"></div>
+            <div class="form-group"><label>Date</label><input type="date" id="inDate"></div>
+            <div class="form-group small"><label>Heure IN</label><input type="time" id="inHeure"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" onclick="toggleSection(this)">👨‍⚕️ SOIGNANT <span class="chevron">▼</span></div>
+        <div class="section-body">
+          <div id="soignantsContainer"></div>
+          <button class="btn-add" onclick="addSoignant()" style="margin-top:8px;">+ Ajouter un soignant</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" onclick="toggleSection(this)">📊 BILAN <span class="chevron">▼</span></div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group small"><label>Conscience</label><div class="radio-group"><label><input type="radio" name="conscience" value="oui"> OUI</label><label><input type="radio" name="conscience" value="non"> NON</label></div></div>
+            <div class="form-group small"><label>Respiration</label><div class="radio-group"><label><input type="radio" name="respiration" value="oui"> OUI</label><label><input type="radio" name="respiration" value="non"> NON</label></div></div>
+            <div class="form-group small"><label>Circulation</label><div class="radio-group"><label><input type="radio" name="circulation" value="oui"> OUI</label><label><input type="radio" name="circulation" value="non"> NON</label></div></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Hémorragie</label><div class="radio-group"><label><input type="radio" name="hemorragie" value="interne"> Interne</label><label><input type="radio" name="hemorragie" value="externe"> Externe</label><label><input type="radio" name="hemorragie" value="exteriorisee"> Extériorisée</label><label><input type="radio" name="hemorragie" value="non"> Non</label></div></div>
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>Urgence</label>
+            <div class="urgence-group" id="urgenceGroup">
+              <label class="urgence-pill urgence-u1" id="pill_U1"><input type="radio" name="urgence" value="U1" onchange="updateUrgencePills()"> 🔴 U1</label>
+              <label class="urgence-pill urgence-u2" id="pill_U2"><input type="radio" name="urgence" value="U2" onchange="updateUrgencePills()"> 🟡 U2</label>
+              <label class="urgence-pill urgence-u3" id="pill_U3"><input type="radio" name="urgence" value="U3" onchange="updateUrgencePills()"> 🟢 U3</label>
+              <label class="urgence-pill urgence-impl" id="pill_implique"><input type="radio" name="urgence" value="implique" onchange="updateUrgencePills()"> 🔵 Impliqué</label>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border); padding-top:16px; margin-top:4px;">
+            <div style="font-weight:700; font-size:.88em; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px;">🧍 Schéma corporel — Zones lésées</div>
+            <div class="body-schema-wrapper">
+              <div class="body-schema-svg-container">
+                <svg id="bodySvg" viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse id="zone_tete" cx="60" cy="20" rx="17" ry="18" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('Tête')" style="cursor:pointer"/>
+                  <rect id="zone_cervical" x="53" y="37" width="14" height="12" rx="3" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('Cervical')" style="cursor:pointer"/>
+                  <rect id="zone_thorax" x="40" y="49" width="40" height="42" rx="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('Thorax')" style="cursor:pointer"/>
+                  <rect id="zone_colonne" x="55" y="49" width="10" height="80" rx="3" fill="rgba(0,0,0,0)" stroke="none" onclick="toggleBodyZone('Colonne')" style="cursor:pointer"/>
+                  <rect id="zone_abdo" x="43" y="91" width="34" height="26" rx="4" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('Abdo')" style="cursor:pointer"/>
+                  <rect id="zone_bassin" x="40" y="117" width="40" height="20" rx="4" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('Bassin')" style="cursor:pointer"/>
+                  <rect id="zone_msd" x="80" y="49" width="18" height="60" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MSD')" style="cursor:pointer"/>
+                  <rect id="zone_msg" x="22" y="49" width="18" height="60" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MSG')" style="cursor:pointer"/>
+                  <rect id="zone_mid" x="60" y="137" width="20" height="70" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MID')" style="cursor:pointer"/>
+                  <rect id="zone_mig" x="40" y="137" width="20" height="70" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MIG')" style="cursor:pointer"/>
+                  <ellipse cx="70" cy="210" rx="10" ry="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MID')" style="cursor:pointer"/>
+                  <ellipse cx="50" cy="210" rx="10" ry="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZone('MIG')" style="cursor:pointer"/>
+                  <text x="60" y="21" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Tête</text>
+                  <text x="60" y="45" text-anchor="middle" font-size="5" fill="#555" pointer-events="none">Cerv.</text>
+                  <text x="60" y="73" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Thorax</text>
+                  <text x="60" y="107" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Abdo</text>
+                  <text x="60" y="130" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">Bassin</text>
+                  <text x="89" y="82" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MSD</text>
+                  <text x="31" y="82" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MSG</text>
+                  <text x="70" y="175" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MID</text>
+                  <text x="50" y="175" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MIG</text>
+                </svg>
+                <div style="font-size:.72em; color:var(--text3); text-align:center;">Cliquez sur une zone</div>
+              </div>
+              <div class="body-legend">
+                <h4>Légende couleurs</h4>
+                <div class="legend-items">
+                  <div class="legend-item" onclick="setActiveLesion('Fracture')"><div class="legend-dot" style="background:#e74c3c;"></div> Fracture</div>
+                  <div class="legend-item" onclick="setActiveLesion('Entorse')"><div class="legend-dot" style="background:#e67e22;"></div> Entorse</div>
+                  <div class="legend-item" onclick="setActiveLesion('Contusion')"><div class="legend-dot" style="background:#9b59b6;"></div> Contusion</div>
+                  <div class="legend-item" onclick="setActiveLesion('Brûlure')"><div class="legend-dot" style="background:#e8b800;"></div> Brûlure</div>
+                  <div class="legend-item" onclick="setActiveLesion('Piqûre')"><div class="legend-dot" style="background:#1abc9c;"></div> Piqûre</div>
+                  <div class="legend-item" onclick="setActiveLesion('Autre')"><div class="legend-dot" style="background:#3498db;"></div> Autre</div>
+                </div>
+                <div class="zone-selector">
+                  <label>Lésion active :</label>
+                  <div class="lesion-chips" id="lesionChips">
+                    <div class="lesion-chip selected" onclick="setActiveLesion('Fracture')" id="lchip_Fracture" style="border-color:#e74c3c;color:#e74c3c;">Fracture</div>
+                    <div class="lesion-chip" onclick="setActiveLesion('Entorse')" id="lchip_Entorse" style="border-color:#e67e22;color:#e67e22;">Entorse</div>
+                    <div class="lesion-chip" onclick="setActiveLesion('Contusion')" id="lchip_Contusion" style="border-color:#9b59b6;color:#9b59b6;">Contusion</div>
+                    <div class="lesion-chip" onclick="setActiveLesion('Brûlure')" id="lchip_Brulure" style="border-color:#e8b800;color:#e8b800;">Brûlure</div>
+                    <div class="lesion-chip" onclick="setActiveLesion('Piqûre')" id="lchip_Piqure" style="border-color:#1abc9c;color:#1abc9c;">Piqûre</div>
+                    <div class="lesion-chip" onclick="setActiveLesion('Autre')" id="lchip_Autre" style="border-color:#3498db;color:#3498db;">Autre</div>
+                  </div>
+                </div>
+                <div class="autre-lesion-box" id="autreLesionBox">
+                  <label>✏️ Précisez la lésion « Autre »</label>
+                  <input type="text" id="autreLesionText" placeholder="Ex: luxation, hématome, plaie…" maxlength="100" oninput="updateActiveZonesList()">
+                </div>
+                <div class="active-zones-list" id="activeZonesList" style="margin-top:14px;"></div>
+              </div>
+            </div>
+          </div>
+          <details style="margin-top:14px;">
+            <summary style="cursor:pointer; font-weight:600; font-size:.85em; color:var(--text2); padding:6px 0;">📋 Tableau détaillé (optionnel)</summary>
+            <div style="overflow-x:auto; margin-top:10px;">
+              <table class="bilan-table" id="bilanTable"><thead><tr><th></th><th>Tête</th><th>Cervical</th><th>Colonne</th><th>MSD</th><th>MSG</th><th>Thorax</th><th>Abdo</th><th>Bassin</th><th>MID</th><th>MIG</th></tr></thead><tbody id="bilanBody"></tbody></table>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" onclick="toggleSection(this)">💊 SOINS <span class="chevron">▼</span></div>
+        <div class="section-body">
+          <div class="check-group" style="flex-wrap:wrap; gap:10px;">
+            <label><input type="checkbox" data-soin="plaies"> Soin de plaies</label>
+            <label><input type="checkbox" data-soin="pansement"> Pansement</label>
+            <label><input type="checkbox" data-soin="attelle"> Attelle</label>
+            <label><input type="checkbox" data-soin="matelas_depression"> Matelas à dépression</label>
+            <label><input type="checkbox" data-soin="compression"> Compression</label>
+            <label><input type="checkbox" data-soin="bandage"> Bandage</label>
+            <label><input type="checkbox" data-soin="collier_cervical"> Collier Cervical</label>
+            <label><input type="checkbox" data-soin="repos_surveillance"> Repos / Surveillance</label>
+          </div>
+          <div class="form-group" style="margin-top:12px;"><label>Autres soins</label><textarea id="autresSoins" maxlength="500"></textarea></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" onclick="toggleSection(this)">🧰 MATÉRIEL <span class="chevron">▼</span></div>
+        <div class="section-body"><div style="overflow-x:auto;"><table class="mat-table"><tbody id="matBody"></tbody></table></div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" onclick="toggleSection(this)">🚶 OUT <span class="chevron">▼</span></div>
+        <div class="section-body">
+          <div class="check-group" style="margin-bottom:12px;">
+            <label><input type="checkbox" id="outNormal"> Retour à la vie normale</label>
+            <label><input type="checkbox" id="outRefus"> Refus de soins</label>
+            <label><input type="checkbox" id="outVsl"> Évacuation VSL</label>
+            <label><input type="checkbox" id="outAmbulanceCheck" onchange="toggleOutAmbulance()"> Ambulance</label>
+          </div>
+          <div id="outAmbulanceGroup" style="display:none; margin-bottom:12px;">
+            <div class="form-row">
+              <div class="form-group"><label>N° Ambulance</label><input type="text" id="outNumAmbulance" maxlength="30"></div>
+              <div class="form-group"><label>Vecteur / Hôpital</label><input type="text" id="outVecteur" maxlength="100"></div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Autre moyen</label><input type="text" id="outAutreMoyen" maxlength="100"></div>
+            <div class="form-group small"><label>Heure OUT</label><input type="time" id="outHeure"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="medical-fiche-btn-wrapper" id="medicalBtnWrapper">
+        <p>Besoin d'un bilan médical détaillé ? La fiche principale sera d'abord sauvegardée.</p>
+        <button class="btn btn-medical-main" id="btnOpenMedical" onclick="saveAndOpenMedical()">🏥 Sauvegarder & Ajouter une Fiche Médicale</button>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-primary-main" id="btnSaveFiche" onclick="saveFiche()">💾 Sauvegarder la fiche</button>
+        <button class="btn btn-secondary" onclick="resetForm()">🗑️ Réinitialiser</button>
+      </div>
+    </div>
+
+    <!-- FICHE MÉDICALE TAB -->
+    <div id="medicalTab" style="display:none;">
+      <div class="medical-header-bar">
+        <div>
+          <h2>🏥 Fiche Médicale — Bilan Clinique</h2>
+          <p id="medicalPatientLabel">Patient : —</p>
+        </div>
+        <button class="btn-back-main" onclick="switchToMainForm()" style="font-size:.9em; padding:8px 18px;">↩ Retour à la fiche principale</button>
+      </div>
+      <div class="section"><div class="section-title medical-title" onclick="toggleSection(this)">🩺 BILAN CLINIQUE INITIAL <span class="chevron">▼</span></div><div class="section-body">
+        <div class="yn-grid">
+          <div class="yn-item"><span class="yn-label">Agité</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_agite','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_agite','non')">NON</button></div></div>
+          <div class="yn-item"><span class="yn-label">Convulsion</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_convulsion','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_convulsion','non')">NON</button></div></div>
+          <div class="yn-item"><span class="yn-label">Cyanosé</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_cyanose','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_cyanose','non')">NON</button></div></div>
+          <div class="yn-item"><span class="yn-label">Déficit moteur</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_deficit_moteur','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_deficit_moteur','non')">NON</button></div></div>
+          <div class="yn-item"><span class="yn-label">Inconscient</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_inconscient','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_inconscient','non')">NON</button></div></div>
+          <div class="yn-item"><span class="yn-label">Resp. anormale</span><div class="yn-btns"><button class="yn-btn yes" onclick="toggleYN(this,'med_resp_anormale','oui')">OUI</button><button class="yn-btn no" onclick="toggleYN(this,'med_resp_anormale','non')">NON</button></div></div>
+        </div>
+      </div></div>
+      <div class="section"><div class="section-title medical-title" onclick="toggleSection(this)">👁️ PUPILLES <span class="chevron">▼</span></div><div class="section-body">
+        <div class="pupilles-grid">
+          <label class="pupille-check"><input type="checkbox" id="pup_normales"> Normales</label>
+          <label class="pupille-check"><input type="checkbox" id="pup_myosis"> Myosis</label>
+          <label class="pupille-check"><input type="checkbox" id="pup_mydriase"> Mydriase</label>
+          <label class="pupille-check"><input type="checkbox" id="pup_anisocorie" onchange="toggleAnisocorie()"> Anisocorie <span class="anisocorie-side" id="anisocorieSide"><label><input type="checkbox" id="aniso_g"> G</label><label><input type="checkbox" id="aniso_d"> D</label></span></label>
+          <label class="pupille-check"><input type="checkbox" id="pup_reactives"> Réactives</label>
+        </div>
+      </div></div>
+      <div class="section"><div class="section-title medical-title" onclick="toggleSection(this)">🫁 FRÉQUENCE RESPIRATOIRE <span class="chevron">▼</span></div><div class="section-body">
+        <div class="freq-resp-grid">
+          <label class="freq-chip"><input type="radio" name="freq_resp" value=">25"> &gt; 25 /min</label>
+          <label class="freq-chip"><input type="radio" name="freq_resp" value="24-10"> 24 – 10 /min</label>
+          <label class="freq-chip"><input type="radio" name="freq_resp" value="<10"> &lt; 10 /min</label>
+          <label class="freq-chip"><input type="radio" name="freq_resp" value="0"> 0 (Arrêt)</label>
+        </div>
+      </div></div>
+      <div class="section"><div class="section-title medical-title" onclick="toggleSection(this)">🧠 GLASGOW <span class="chevron">▼</span></div><div class="section-body">
+        <div class="glasgow-grid">
+          <div class="glasgow-card"><h4>Ouverture des yeux</h4>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_yeux" value="4" onchange="updateGlasgow()"> Spontanée</label><span class="score-badge">4</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_yeux" value="3" onchange="updateGlasgow()"> À la voix</label><span class="score-badge">3</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_yeux" value="2" onchange="updateGlasgow()"> À la douleur</label><span class="score-badge">2</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_yeux" value="1" onchange="updateGlasgow()"> Aucune</label><span class="score-badge">1</span></div>
+          </div>
+          <div class="glasgow-card"><h4>Réponse verbale</h4>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_verbal" value="5" onchange="updateGlasgow()"> Orientée</label><span class="score-badge">5</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_verbal" value="4" onchange="updateGlasgow()"> Confuse</label><span class="score-badge">4</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_verbal" value="3" onchange="updateGlasgow()"> Inappropriée</label><span class="score-badge">3</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_verbal" value="2" onchange="updateGlasgow()"> Incompréhension</label><span class="score-badge">2</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_verbal" value="1" onchange="updateGlasgow()"> Nulle</label><span class="score-badge">1</span></div>
+          </div>
+          <div class="glasgow-card"><h4>Réponse motrice</h4>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="6" onchange="updateGlasgow()"> Obéit</label><span class="score-badge">6</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="5" onchange="updateGlasgow()"> Orientée</label><span class="score-badge">5</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="4" onchange="updateGlasgow()"> Évitement</label><span class="score-badge">4</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="3" onchange="updateGlasgow()"> Flexion</label><span class="score-badge">3</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="2" onchange="updateGlasgow()"> Extension</label><span class="score-badge">2</span></div>
+            <div class="glasgow-option"><label><input type="radio" name="gcs_moteur" value="1" onchange="updateGlasgow()"> Nulle</label><span class="score-badge">1</span></div>
+          </div>
+        </div>
+        <div class="glasgow-total"><div class="score-num" id="glasgowTotal">—</div><div class="score-label">Score Glasgow / 15</div></div>
+      </div></div>
+      <div class="section"><div class="section-title medical-title" onclick="toggleSection(this)">📋 MOTIFS CONSTATÉS <span class="chevron">▼</span></div><div class="section-body">
+        <div class="motifs-grid">
+          <label class="motif-chip"><input type="checkbox" id="motif_acc_circ"> Accidents de la circulation</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_bagarre"> Bagarre</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_brulure"> Brûlure</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_chute"> Chute</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_electro"> Électrocution</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_alcool"> Intox. alcool</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_alim"> Intox. alimentaire</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_co"> Intox. CO</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_drogue"> Intox. drogue</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_medic"> Intox. médicamenteuse</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_noyade"> Noyade</label>
+          <label class="motif-chip"><input type="checkbox" id="motif_plaie_pen"> Plaie pénétrante</label>
+        </div>
+        <div class="form-group" style="margin-top:12px;"><label>Autre motif</label><input type="text" id="motif_autre" placeholder="Préciser..." maxlength="100"></div>
+      </div></div>
+      <div class="section"><div class="section-title medical-title" onclick="toggleSection(this)">💓 ARYTHMIES <span class="chevron">▼</span></div><div class="section-body">
+        <div class="arythmie-grid">
+          <label class="arythmie-chip"><input type="checkbox" id="ary_brady"> Bradycardie &lt; 50/min</label>
+          <label class="arythmie-chip"><input type="checkbox" id="ary_tachy"> Tachycardie &gt; 140/min</label>
+          <label class="arythmie-chip"><input type="checkbox" id="ary_asystolie"> Asystolie</label>
+        </div>
+        <div class="form-group"><label>Autre arythmie</label><input type="text" id="ary_autre" placeholder="Préciser..." maxlength="100"></div>
+      </div></div>
+      <div class="section"><div class="section-title medical-title" onclick="toggleSection(this)">📝 BILAN ET REMARQUES <span class="chevron">▼</span></div><div class="section-body">
+        <div class="form-group"><textarea id="med_bilan_remarque" style="min-height:100px;" placeholder="Bilan clinique, observations..." maxlength="2000"></textarea></div>
+      </div></div>
+      <div class="section"><div class="section-title medical-title" onclick="toggleSection(this)">🧍 LÉSIONS TRAUMATIQUES <span class="chevron">▼</span></div><div class="section-body">
+        <p style="font-size:.85em; color:var(--text2); margin-bottom:12px;">Schéma repris depuis la fiche principale</p>
+        <div class="body-schema-wrapper">
+          <div class="body-schema-svg-container">
+            <svg id="bodySvgMedical" viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg">
+              <ellipse id="med_zone_tete" cx="60" cy="20" rx="17" ry="18" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('Tête')" style="cursor:pointer"/>
+              <rect id="med_zone_cervical" x="53" y="37" width="14" height="12" rx="3" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('Cervical')" style="cursor:pointer"/>
+              <rect id="med_zone_thorax" x="40" y="49" width="40" height="42" rx="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('Thorax')" style="cursor:pointer"/>
+              <rect id="med_zone_abdo" x="43" y="91" width="34" height="26" rx="4" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('Abdo')" style="cursor:pointer"/>
+              <rect id="med_zone_bassin" x="40" y="117" width="40" height="20" rx="4" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('Bassin')" style="cursor:pointer"/>
+              <rect id="med_zone_msd" x="80" y="49" width="18" height="60" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MSD')" style="cursor:pointer"/>
+              <rect id="med_zone_msg" x="22" y="49" width="18" height="60" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MSG')" style="cursor:pointer"/>
+              <rect id="med_zone_mid" x="60" y="137" width="20" height="70" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MID')" style="cursor:pointer"/>
+              <rect id="med_zone_mig" x="40" y="137" width="20" height="70" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MIG')" style="cursor:pointer"/>
+              <ellipse cx="70" cy="210" rx="10" ry="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MID')" style="cursor:pointer"/>
+              <ellipse cx="50" cy="210" rx="10" ry="5" fill="#e8e8e8" stroke="#999" stroke-width="1.5" onclick="toggleBodyZoneMed('MIG')" style="cursor:pointer"/>
+              <text x="60" y="21" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Tête</text>
+              <text x="60" y="45" text-anchor="middle" font-size="5" fill="#555" pointer-events="none">Cerv.</text>
+              <text x="60" y="73" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Thorax</text>
+              <text x="60" y="107" text-anchor="middle" font-size="6" fill="#555" pointer-events="none">Abdo</text>
+              <text x="60" y="130" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">Bassin</text>
+              <text x="89" y="82" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MSD</text>
+              <text x="31" y="82" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MSG</text>
+              <text x="70" y="175" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MID</text>
+              <text x="50" y="175" text-anchor="middle" font-size="5.5" fill="#555" pointer-events="none">MIG</text>
+            </svg>
+          </div>
+          <div class="body-legend">
+            <h4>Zones marquées</h4>
+            <div class="active-zones-list" id="medActiveZonesList"></div>
+            <div style="margin-top:10px;">
+              <div class="lesion-chips" id="medLesionChips">
+                <div class="lesion-chip selected" onclick="setActiveLesionMed('Fracture')" id="mlchip_Fracture" style="border-color:#e74c3c;color:#e74c3c;">Fracture</div>
+                <div class="lesion-chip" onclick="setActiveLesionMed('Entorse')" id="mlchip_Entorse" style="border-color:#e67e22;color:#e67e22;">Entorse</div>
+                <div class="lesion-chip" onclick="setActiveLesionMed('Contusion')" id="mlchip_Contusion" style="border-color:#9b59b6;color:#9b59b6;">Contusion</div>
+                <div class="lesion-chip" onclick="setActiveLesionMed('Brûlure')" id="mlchip_Brulure" style="border-color:#e8b800;color:#e8b800;">Brûlure</div>
+                <div class="lesion-chip" onclick="setActiveLesionMed('Piqûre')" id="mlchip_Piqure" style="border-color:#1abc9c;color:#1abc9c;">Piqûre</div>
+                <div class="lesion-chip" onclick="setActiveLesionMed('Autre')" id="mlchip_Autre" style="border-color:#3498db;color:#3498db;">Autre</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <div class="section"><div class="section-title medical-title" onclick="toggleSection(this)">📈 ÉVOLUTION DU TRAITEMENT <span class="chevron">▼</span></div><div class="section-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+          <span style="font-size:.85em;color:var(--text2);">Tableau de suivi — ajoutez des colonnes horaires</span>
+          <button class="btn-add-medical" onclick="addEvolutionColumn()">+ Ajouter une heure</button>
+        </div>
+        <div class="evolution-table-wrapper">
+          <table class="evolution-table" id="evolutionTable">
+            <thead><tr id="evolutionHeaderRow"><th>Paramètre</th></tr></thead>
+            <tbody id="evolutionBody">
+              <tr><td>Saturation O₂</td></tr><tr><td>Glycémie</td></tr><tr><td>TA (Tension artérielle)</td></tr>
+              <tr><td>Pulsations</td></tr><tr><td>Oxygène (L/min)</td></tr><tr><td>Médicament</td></tr>
+              <tr><td>Injection</td></tr><tr><td>Perfusion</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div></div>
+      <div class="section"><div class="section-title medical-title" onclick="toggleSection(this)">🧰 MATÉRIEL UTILISÉ <span class="chevron">▼</span></div><div class="section-body">
+        <div class="form-group"><textarea id="med_materiel" style="min-height:80px;" placeholder="Lister le matériel médical utilisé..." maxlength="500"></textarea></div>
+      </div></div>
+      <div class="actions-bar">
+        <button class="btn btn-medical-main" id="btnSaveMedical" onclick="saveMedicalFiche()">💾 Sauvegarder la fiche médicale</button>
+        <button class="btn btn-secondary" onclick="switchToMainForm()">↩ Retour à la fiche principale</button>
+      </div>
+    </div>
+
+    <!-- LIST TAB -->
+    <div id="listTab" style="display:none;">
+      <div id="fichesList"></div>
+    </div>
+
+    <!-- SECURED TAB -->
+    <div id="securedTab" style="display:none;">
+      <div id="securedList"></div>
+    </div>
+  </div>
+</div><!-- /appContent -->
+
+<script>
+const SUPABASE_URL = 'https://sevrfgivcpefyykuffti.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNldnJmZ2l2Y3BlZnl5a3VmZnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NDI1NTMsImV4cCI6MjA3ODUxODU1M30.YZnkSHsVWKQEhfU7xYfWyTFmtkM28Zuzdu7Y1sjBXQc';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const MAX_LOGIN_ATTEMPTS   = 5;
+const LOCKOUT_DURATION_MS  = 15 * 60 * 1000;
+const SESSION_TIMEOUT_MS   = 60 * 60 * 1000;
+const SESSION_WARNING_MS   = 5 * 60 * 1000;
+const MIN_PASSWORD_LENGTH  = 8;
+const INACTIVITY_TIMEOUT_MS = 3 * 60 * 1000;
+const INACTIVITY_WARNING_MS = 30 * 1000;
+
+// Secure fiche session: 30s inactivity
+const SF_SESSION_DURATION_MS = 30 * 1000;
+
+let currentUser = null;
+let sessionTimer = null, sessionWarningTimer = null, sessionExpiry = null;
+let _appInitialized = false;
+let _inactivityTimer = null, _inactivityWarningTimer = null, _inactivityWarningInterval = null;
+let _inactivityOverlayShown = false, _inactTimerBarInterval = null, _inactTimerBarStart = null;
+
+// Secure fiche session state
+let _sfAuthenticated = false;
+let _sfSessionTimer = null;
+let _sfSessionInterval = null;
+let _sfSessionEnd = null;
+let _sfActivityEvents = ['click','keydown','mousemove','touchstart','scroll','mousedown','pointerdown'];
+
+// ====== UTILS ======
+function sanitize(str) {
+  if (!str) return '';
+  return String(str).replace(/[<>"'`;&]/g, c => ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;','`':'&#x60;',';':'&#x3B;','&':'&amp;'}[c]));
+}
+
+// ====== HASH (SHA-256 via Web Crypto) ======
+async function hashPassword(password) {
+  const enc = new TextEncoder();
+  const data = enc.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ====== SECURE FICHE GATE ======
+function openSfGate() {
+  document.getElementById('secureFicheGate').classList.add('show');
+  switchSfView('login');
+  if (currentUser) document.getElementById('sfCreateEmailLabel').textContent = currentUser.email || '';
+  document.getElementById('sfPassword').value = '';
+  document.getElementById('sfNewPass1').value = '';
+  document.getElementById('sfNewPass2').value = '';
+  hideSfErrors();
+}
+function closeSfGate() {
+  document.getElementById('secureFicheGate').classList.remove('show');
+}
+function switchSfView(v) {
+  ['login','create','exists'].forEach(id => {
+    const el = document.getElementById('sf' + id.charAt(0).toUpperCase() + id.slice(1) + 'View');
+    if (el) el.classList.remove('active');
+  });
+  const target = document.getElementById('sf' + v.charAt(0).toUpperCase() + v.slice(1) + 'View');
+  if (target) target.classList.add('active');
+  hideSfErrors();
+}
+function hideSfErrors() {
+  ['sfLoginError','sfCreateError','sfCreateSuccess'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.classList.remove('show');
+  });
+}
+function showSfError(divId, msg) {
+  const el = document.getElementById(divId); if (!el) return;
+  el.classList.add('show');
+  const span = el.querySelector('span'); if (span) span.textContent = msg; else el.textContent = '⛔ ' + msg;
+}
+function showSfSuccess(divId, msg) {
+  const el = document.getElementById(divId); if (!el) return;
+  el.classList.add('show');
+  const span = el.querySelector('span'); if (span) span.textContent = msg; else el.textContent = '✅ ' + msg;
+}
+
+function checkSfStrength() {
+  const pw = document.getElementById('sfNewPass1').value;
+  const fill = document.getElementById('sfStrengthFill');
+  const label = document.getElementById('sfStrengthLabel');
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [{pct:'20%',bg:'#e74c3c',txt:'Très faible'},{pct:'40%',bg:'#e67e22',txt:'Faible'},{pct:'60%',bg:'#f39c12',txt:'Moyen'},{pct:'80%',bg:'#2ecc71',txt:'Fort'},{pct:'100%',bg:'#1a7a3a',txt:'Très fort'}];
+  const l = levels[Math.max(0,score-1)] || levels[0];
+  fill.style.width = pw.length ? l.pct : '0';
+  fill.style.background = l.bg;
+  label.textContent = pw.length ? l.txt : '';
+  label.style.color = l.bg;
+}
+
+async function handleSecuredTabClick() {
+  if (_sfAuthenticated) {
+    // Already authenticated, just show the tab
+    _showSecuredTab();
+    return;
+  }
+  // Check if user has a secure password set
+  if (!currentUser) return;
+  openSfGate();
+}
+
+async function doSfLogin() {
+  hideSfErrors();
+  const password = document.getElementById('sfPassword').value;
+  if (!password) { showSfError('sfLoginError', 'Veuillez saisir votre mot de passe.'); return; }
+  if (!currentUser) return;
+
+  const { data, error } = await sb.from('secure_fiche').select('secure_password').eq('email', currentUser.email).maybeSingle();
+  if (error) { showSfError('sfLoginError', 'Erreur de vérification : ' + error.message); return; }
+  if (!data) {
+    showSfError('sfLoginError', 'Aucun mot de passe sécurisé défini. Créez-en un ci-dessous.');
+    return;
+  }
+
+  const hash = await hashPassword(password);
+  if (hash !== data.secure_password) {
+    showSfError('sfLoginError', 'Mot de passe incorrect.');
+    document.getElementById('sfPassword').value = '';
+    return;
+  }
+
+  // Success
+  closeSfGate();
+  _sfAuthenticated = true;
+  startSfSession();
+  _showSecuredTab();
+  showToast('🔒 Accès autorisé aux fiches sécurisées', 'success');
+}
+
+async function doSfCreate() {
+  hideSfErrors();
+  if (!currentUser) return;
+  const p1 = document.getElementById('sfNewPass1').value;
+  const p2 = document.getElementById('sfNewPass2').value;
+  if (!p1) { showSfError('sfCreateError', 'Veuillez saisir un mot de passe.'); return; }
+  if (p1.length < MIN_PASSWORD_LENGTH) { showSfError('sfCreateError', `Minimum ${MIN_PASSWORD_LENGTH} caractères requis.`); return; }
+  if (p1 !== p2) { showSfError('sfCreateError', 'Les mots de passe ne correspondent pas.'); return; }
+
+  // Check if already exists
+  const { data: existing, error: checkErr } = await sb.from('secure_fiche').select('email').eq('email', currentUser.email).maybeSingle();
+  if (checkErr) { showSfError('sfCreateError', 'Erreur : ' + checkErr.message); return; }
+  if (existing) {
+    switchSfView('exists');
+    return;
+  }
+
+  const hash = await hashPassword(p1);
+  const { error: insertErr } = await sb.from('secure_fiche').insert({ email: currentUser.email, secure_password: hash });
+  if (insertErr) { showSfError('sfCreateError', 'Erreur lors de la sauvegarde : ' + insertErr.message); return; }
+
+  showSfSuccess('sfCreateSuccess', 'Mot de passe sécurisé défini avec succès ! Vous pouvez maintenant vous connecter.');
+  document.getElementById('sfNewPass1').value = '';
+  document.getElementById('sfNewPass2').value = '';
+  setTimeout(() => switchSfView('login'), 1800);
+}
+
+// ====== SECURE FICHE SESSION (30s inactivity) ======
+function startSfSession() {
+  stopSfSession();
+  _sfSessionEnd = Date.now() + SF_SESSION_DURATION_MS;
+  updateSfSessionBar();
+  document.getElementById('secureSessionBar').classList.add('show');
+
+  _sfSessionInterval = setInterval(() => {
+    if (!_sfAuthenticated) { stopSfSession(); return; }
+    const remaining = Math.max(0, _sfSessionEnd - Date.now());
+    updateSfSessionBar(remaining);
+    if (remaining <= 0) {
+      expireSfSession();
+    }
+  }, 500);
+
+  // Listen for activity inside securedTab only
+  _sfActivityEvents.forEach(ev => {
+    document.getElementById('securedTab').addEventListener(ev, resetSfSession, { passive: true });
+  });
+}
+
+function resetSfSession() {
+  if (!_sfAuthenticated) return;
+  _sfSessionEnd = Date.now() + SF_SESSION_DURATION_MS;
+}
+
+function extendSecureSession() {
+  if (!_sfAuthenticated) return;
+  _sfSessionEnd = Date.now() + SF_SESSION_DURATION_MS;
+  showToast('⏱️ Session étendue de 30 secondes', 'info');
+}
+
+function updateSfSessionBar(remaining) {
+  const rem = remaining !== undefined ? remaining : Math.max(0, _sfSessionEnd - Date.now());
+  const s = Math.ceil(rem / 1000);
+  const el = document.getElementById('ssbarTimer');
+  if (!el) return;
+  el.textContent = '0:' + s.toString().padStart(2,'0');
+  el.className = 'ssbar-timer' + (s <= 10 ? ' critical' : s <= 20 ? ' warning' : '');
+}
+
+function stopSfSession() {
+  clearInterval(_sfSessionInterval);
+  _sfSessionInterval = null;
+  document.getElementById('secureSessionBar').classList.remove('show');
+  _sfActivityEvents.forEach(ev => {
+    const el = document.getElementById('securedTab');
+    if (el) el.removeEventListener(ev, resetSfSession);
+  });
+}
+
+function expireSfSession() {
+  _sfAuthenticated = false;
+  stopSfSession();
+  showToast('🔒 Session fiches sécurisées expirée — inactivité de 30 secondes', 'error');
+  // Switch back to form tab
+  switchTab('form');
+  document.getElementById('tabSecured').className = 'tab tab-secure';
+}
+
+function exitSecureTab() {
+  _sfAuthenticated = false;
+  stopSfSession();
+  switchTab('form');
+}
+
+function _showSecuredTab() {
+  document.getElementById('formTab').style.display = 'none';
+  document.getElementById('medicalTab').style.display = 'none';
+  document.getElementById('listTab').style.display = 'none';
+  document.getElementById('securedTab').style.display = '';
+  document.getElementById('tabForm').className = 'tab';
+  document.getElementById('tabList').className = 'tab';
+  document.getElementById('tabSecured').className = 'tab tab-secure active-secure';
+  document.getElementById('ficheIndicator').classList.remove('show');
+  loadSecuredFiches();
+}
+
+// ====== INACTIVITY TIMER ======
+function startInactivityTimer() {
+  clearTimeout(_inactivityTimer); clearTimeout(_inactivityWarningTimer);
+  clearInterval(_inactivityWarningInterval); clearInterval(_inactTimerBarInterval);
+  _inactivityOverlayShown = false; hideInactivityOverlay();
+  _inactTimerBarStart = Date.now();
+  _inactTimerBarInterval = setInterval(() => {
+    if (!currentUser) { clearInterval(_inactTimerBarInterval); return; }
+    const elapsed = Date.now() - _inactTimerBarStart;
+    const remaining = Math.max(0, INACTIVITY_TIMEOUT_MS - elapsed);
+    const m = Math.floor(remaining / 60000), s = Math.floor((remaining % 60000) / 1000);
+    const el = document.getElementById('inactTimerDisplay');
+    if (el) el.textContent = m + ':' + s.toString().padStart(2,'0');
+  }, 1000);
+  _inactivityWarningTimer = setTimeout(() => { _inactivityOverlayShown = true; showInactivityOverlay(); }, INACTIVITY_TIMEOUT_MS - INACTIVITY_WARNING_MS);
+  _inactivityTimer = setTimeout(() => { showToast('⏱️ Déconnecté automatiquement — inactivité de 3 minutes', 'error'); doLogout(); }, INACTIVITY_TIMEOUT_MS);
+}
+function showInactivityOverlay() {
+  document.getElementById('inactivityOverlay').classList.add('show');
+  let remaining = INACTIVITY_WARNING_MS;
+  clearInterval(_inactivityWarningInterval);
+  _inactivityWarningInterval = setInterval(() => {
+    remaining -= 1000;
+    const m = Math.floor(remaining / 60000), s = Math.floor((remaining % 60000) / 1000);
+    const el = document.getElementById('inactivityCountdown');
+    if (el) el.textContent = m + ':' + s.toString().padStart(2,'0');
+    if (remaining <= 0) clearInterval(_inactivityWarningInterval);
+  }, 1000);
+}
+function hideInactivityOverlay() {
+  document.getElementById('inactivityOverlay').classList.remove('show');
+  clearInterval(_inactivityWarningInterval);
+}
+function resetInactivityTimer() { if (!currentUser) return; hideInactivityOverlay(); startInactivityTimer(); }
+function stopInactivityTimer() {
+  clearTimeout(_inactivityTimer); clearTimeout(_inactivityWarningTimer);
+  clearInterval(_inactivityWarningInterval); clearInterval(_inactTimerBarInterval);
+  hideInactivityOverlay();
+}
+const ACTIVITY_EVENTS = ['click','keydown','mousemove','touchstart','scroll','mousedown','pointerdown'];
+function _onUserActivity() { if (currentUser && !_inactivityOverlayShown) startInactivityTimer(); }
+ACTIVITY_EVENTS.forEach(ev => document.addEventListener(ev, _onUserActivity, { passive: true }));
+
+// ====== BRUTE FORCE PROTECTION ======
+function getLoginAttempts() { try { return JSON.parse(localStorage.getItem('sec_attempts') || '{"count":0,"ts":0}'); } catch { return {count:0,ts:0}; } }
+function incLoginAttempts() { const a = getLoginAttempts(); a.count++; a.ts = Date.now(); localStorage.setItem('sec_attempts', JSON.stringify(a)); }
+function resetLoginAttempts() { localStorage.removeItem('sec_attempts'); }
+function isLockedOut() { const a = getLoginAttempts(); if (a.count < MAX_LOGIN_ATTEMPTS) return false; if (Date.now() - a.ts > LOCKOUT_DURATION_MS) { resetLoginAttempts(); return false; } return true; }
+function getLockoutRemaining() { const a = getLoginAttempts(); return Math.max(0, LOCKOUT_DURATION_MS - (Date.now() - a.ts)); }
+function showLockout() {
+  const bar = document.getElementById('lockoutBar'), remaining = getLockoutRemaining();
+  const min = Math.floor(remaining / 60000), sec = Math.floor((remaining % 60000) / 1000);
+  bar.textContent = `🔒 Trop de tentatives — Réessayez dans ${min}:${sec.toString().padStart(2,'0')}`;
+  bar.classList.add('show');
+  document.getElementById('gateBtnLogin').disabled = true;
+  setTimeout(() => { bar.classList.remove('show'); document.getElementById('gateBtnLogin').disabled = false; }, remaining);
+}
+
+// ====== SESSION MANAGEMENT ======
+function startSessionTimer() {
+  clearTimeout(sessionTimer); clearTimeout(sessionWarningTimer);
+  sessionExpiry = Date.now() + SESSION_TIMEOUT_MS;
+  sessionWarningTimer = setTimeout(showSessionWarning, SESSION_TIMEOUT_MS - SESSION_WARNING_MS);
+  sessionTimer = setTimeout(() => { showToast('Session expirée — déconnexion automatique', 'error'); doLogout(); }, SESSION_TIMEOUT_MS);
+}
+function renewSession() { document.getElementById('sessionWarning').classList.remove('show'); startSessionTimer(); showToast('Session renouvelée ✅', 'success'); }
+function showSessionWarning() {
+  document.getElementById('sessionWarning').classList.add('show');
+  const countdown = document.getElementById('sessionCountdown');
+  let remaining = SESSION_WARNING_MS;
+  const interval = setInterval(() => {
+    remaining -= 1000; if (remaining <= 0) { clearInterval(interval); return; }
+    const m = Math.floor(remaining / 60000), s = Math.floor((remaining % 60000) / 1000);
+    countdown.textContent = m + ':' + s.toString().padStart(2,'0');
+  }, 1000);
+}
+
+// ====== CAPTCHA ======
+let gateCaptcha = {}, gateRegCaptcha = {};
+function genGateCaptcha() { const a=Math.floor(Math.random()*10)+1,b=Math.floor(Math.random()*10)+1; gateCaptcha={a,b,answer:a+b}; document.getElementById('gateCaptchaQ').textContent=a+' + '+b; document.getElementById('gateCaptchaA').value=''; }
+function genGateRegCaptcha() { const a=Math.floor(Math.random()*10)+1,b=Math.floor(Math.random()*10)+1; gateRegCaptcha={a,b,answer:a+b}; document.getElementById('gateRegCaptchaQ').textContent=a+' + '+b; document.getElementById('gateRegCaptchaA').value=''; }
+function checkGateCaptcha() { return parseInt(document.getElementById('gateCaptchaA').value) === gateCaptcha.answer; }
+function checkGateRegCaptcha() { return parseInt(document.getElementById('gateRegCaptchaA').value) === gateRegCaptcha.answer; }
+function checkGateStrength() {
+  const pw=document.getElementById('gateRegPass1').value, fill=document.getElementById('strengthFill'), label=document.getElementById('strengthLabel');
+  let score=0; if(pw.length>=8)score++; if(pw.length>=12)score++; if(/[A-Z]/.test(pw))score++; if(/[0-9]/.test(pw))score++; if(/[^A-Za-z0-9]/.test(pw))score++;
+  const levels=[{pct:'20%',bg:'#e74c3c',txt:'Très faible'},{pct:'40%',bg:'#e67e22',txt:'Faible'},{pct:'60%',bg:'#f39c12',txt:'Moyen'},{pct:'80%',bg:'#2ecc71',txt:'Fort'},{pct:'100%',bg:'#1a7a3a',txt:'Très fort'}];
+  const l=levels[Math.max(0,score-1)]||levels[0]; fill.style.width=pw.length?l.pct:'0'; fill.style.background=l.bg; label.textContent=pw.length?l.txt:''; label.style.color=l.bg;
+}
+function switchGateView(v) {
+  ['login','register','forgot'].forEach(id => document.getElementById('gate'+id.charAt(0).toUpperCase()+id.slice(1)+'View').classList.remove('active'));
+  document.getElementById('gate'+v.charAt(0).toUpperCase()+v.slice(1)+'View').classList.add('active');
+  hideGateErrors();
+}
+function hideGateErrors() { ['gateLoginError','gateLoginSuccess','gateRegError','gateRegSuccess','gateForgotSuccess'].forEach(id => { const el=document.getElementById(id); if(el)el.classList.remove('show'); }); }
+function showGateError(divId,msg) { const el=document.getElementById(divId); if(!el)return; el.classList.add('show'); const span=el.querySelector('span'); if(span)span.textContent=msg; else el.textContent='⛔ '+msg; }
+function showGateSuccess(divId,msg) { const el=document.getElementById(divId); if(!el)return; el.classList.add('show'); const span=el.querySelector('span'); if(span)span.textContent=msg; else el.textContent='✅ '+msg; }
+
+async function doGateLogin() {
+  hideGateErrors();
+  if (isLockedOut()) { showLockout(); return; }
+  if (!checkGateCaptcha()) { showGateError('gateLoginError','Captcha incorrect. Réessayez.'); genGateCaptcha(); incLoginAttempts(); return; }
+  const email=document.getElementById('gateEmail').value.trim(), pass=document.getElementById('gatePassword').value;
+  if (!email||!pass) { showGateError('gateLoginError','Veuillez remplir tous les champs.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showGateError('gateLoginError','Adresse e-mail invalide.'); return; }
+  const btn=document.getElementById('gateBtnLogin'); btn.disabled=true; btn.textContent='⏳ Connexion...';
+  const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+  btn.disabled=false; btn.textContent='🔐 Se connecter';
+  if (error) { incLoginAttempts(); const attempts=getLoginAttempts(); const remaining=MAX_LOGIN_ATTEMPTS-attempts.count; if(isLockedOut()){showLockout();return;} showGateError('gateLoginError',`Identifiants incorrects. ${remaining>0?remaining+' tentative(s) restante(s).':''}`); genGateCaptcha(); return; }
+  resetLoginAttempts(); currentUser=data.user; unlockApp();
+}
+async function doGateRegister() {
+  hideGateErrors();
+  const nom=document.getElementById('gateRegNom').value.trim(),prenom=document.getElementById('gateRegPrenom').value.trim(),email=document.getElementById('gateRegEmail').value.trim(),p1=document.getElementById('gateRegPass1').value,p2=document.getElementById('gateRegPass2').value;
+  if(!nom||!prenom||!email||!p1){showGateError('gateRegError','Remplissez tous les champs.');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showGateError('gateRegError','E-mail invalide.');return;}
+  if(p1.length<MIN_PASSWORD_LENGTH){showGateError('gateRegError',`Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`);return;}
+  if(p1!==p2){showGateError('gateRegError','Les mots de passe ne correspondent pas.');return;}
+  if(!checkGateRegCaptcha()){showGateError('gateRegError','Captcha incorrect.');genGateRegCaptcha();return;}
+  const{error}=await sb.auth.signUp({email,password:p1,options:{data:{nom:sanitize(nom),prenom:sanitize(prenom)},emailRedirectTo:window.location.href}});
+  if(error){showGateError('gateRegError',error.message);return;}
+  showGateSuccess('gateRegSuccess','Inscription réussie ! Vérifiez votre e-mail pour confirmer votre compte.');
+}
+async function doGateForgot() {
+  const email=document.getElementById('gateForgotEmail').value.trim(); if(!email)return;
+  const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+  if(error){showToast(error.message,'error');return;}
+  showGateSuccess('gateForgotSuccess','Lien de réinitialisation envoyé à '+email);
+}
+
+function unlockApp() {
+  document.getElementById('securityGate').style.display='none';
+  document.getElementById('appContent').style.display='';
+  startSessionTimer(); startInactivityTimer();
+  if(!_appInitialized){buildBilanTable();buildMaterielTable();addSoignant();_appInitialized=true;}
+  updateOnlineStatus();updatePendingCount();updateActiveZonesList();updateMedActiveZonesList();updateSavedIndicator();updateUserLabel();
+  showToast('Bienvenue, '+(currentUser.user_metadata?.prenom||currentUser.email)+' 👋','success');
+}
+function updateUserLabel() { if(!currentUser)return; const prenom=currentUser.user_metadata?.prenom||'',nom=currentUser.user_metadata?.nom||''; document.getElementById('userLabel').textContent='👤 '+(prenom?prenom+' '+nom:currentUser.email); }
+
+async function doLogout() {
+  clearTimeout(sessionTimer); clearTimeout(sessionWarningTimer);
+  stopInactivityTimer(); stopSfSession();
+  _sfAuthenticated = false;
+  document.getElementById('sessionWarning').classList.remove('show');
+  await sb.auth.signOut(); currentUser=null; _appInitialized=false;
+  ['cr_pending','cr_pending_medical'].forEach(k=>localStorage.removeItem(k));
+  document.getElementById('appContent').style.display='none';
+  document.getElementById('securityGate').style.display='flex';
+  genGateCaptcha(); showToast('Déconnecté avec succès 🔒','info');
+}
+
+// ====== SECURE DELETE ======
+let _deleteTarget = null;
+const DELETE_CONFIRM_PHRASES = ['SUPPRIMER','EFFACER','CONFIRMER'];
+function openSecureDelete(ficheId, patientName) {
+  _deleteTarget=ficheId; const phrase=DELETE_CONFIRM_PHRASES[Math.floor(Math.random()*DELETE_CONFIRM_PHRASES.length)];
+  document.getElementById('confirmPhrase').textContent=phrase; document.getElementById('confirmPhrase').dataset.phrase=phrase;
+  document.getElementById('secureDeleteInput').value=''; document.getElementById('btnConfirmDelete').disabled=true;
+  document.getElementById('deleteSteps').style.display='none';
+  document.getElementById('secureDeleteDesc').innerHTML=`Vous allez supprimer définitivement la fiche de <strong>${sanitize(patientName)}</strong>. Cette action est <strong>irréversible</strong>.`;
+  document.getElementById('secureDeleteOverlay').classList.add('show');
+}
+function closeSecureDelete() { _deleteTarget=null; document.getElementById('secureDeleteOverlay').classList.remove('show'); }
+function checkDeleteConfirm() { const val=document.getElementById('secureDeleteInput').value,phrase=document.getElementById('confirmPhrase').dataset.phrase; document.getElementById('btnConfirmDelete').disabled=val!==phrase; }
+async function executeSecureDelete() {
+  if(!_deleteTarget||!currentUser)return; const ficheId=_deleteTarget;
+  document.getElementById('btnConfirmDelete').disabled=true; document.getElementById('deleteSteps').style.display='flex';
+  function setStep(n,state){const icon=document.getElementById('step'+n+'icon');icon.className='step-icon step-'+state;icon.textContent=state==='done'?'✓':n;}
+  try {
+    setStep(1,'active'); const{error:e1}=await sb.from('soignants_croixrouge').delete().eq('fiche_id',ficheId); if(e1)throw new Error(e1.message);
+    setStep(1,'done');setStep(2,'active'); const{error:e2}=await sb.from('fiches_medicales_croixrouge').delete().eq('fiche_id',ficheId); if(e2)throw new Error(e2.message);
+    setStep(2,'done');setStep(3,'active'); const{error:e3}=await sb.from('fiches_croixrouge').delete().eq('id',ficheId).eq('user_id',currentUser.id); if(e3)throw new Error(e3.message);
+    setStep(3,'done');setStep(4,'active'); const{data:check}=await sb.from('fiches_croixrouge').select('id').eq('id',ficheId).maybeSingle(); if(check)throw new Error('La fiche existe encore.');
+    setStep(4,'done'); await new Promise(r=>setTimeout(r,600)); closeSecureDelete(); showToast('✅ Fiche définitivement supprimée.','success'); loadFiches();
+  } catch(err) { showToast('❌ '+err.message,'error'); document.getElementById('btnConfirmDelete').disabled=false; [1,2,3,4].forEach(n=>{const icon=document.getElementById('step'+n+'icon');if(icon.className.includes('active'))icon.className='step-icon step-pending';}); }
+}
+
+// ====== SECURE MOVE ======
+let _moveTarget = null;
+const MOVE_CONFIRM_PHRASES = ['SÉCURISER','ARCHIVER','VERROUILLER'];
+function openSecureMove(ficheId, patientName) {
+  _moveTarget=ficheId; const phrase=MOVE_CONFIRM_PHRASES[Math.floor(Math.random()*MOVE_CONFIRM_PHRASES.length)];
+  document.getElementById('secureMovePhrase').textContent=phrase; document.getElementById('secureMovePhrase').dataset.phrase=phrase;
+  document.getElementById('secureMoveInput').value=''; document.getElementById('btnConfirmMove').disabled=true;
+  document.getElementById('secureMoveDesc').innerHTML=`Vous allez déplacer la fiche de <strong>${sanitize(patientName)}</strong> dans la section sécurisée.`;
+  document.getElementById('secureMoveOverlay').classList.add('show');
+}
+function closeSecureMove() { _moveTarget=null; document.getElementById('secureMoveOverlay').classList.remove('show'); }
+function checkMoveConfirm() { const val=document.getElementById('secureMoveInput').value,phrase=document.getElementById('secureMovePhrase').dataset.phrase; document.getElementById('btnConfirmMove').disabled=val!==phrase; }
+async function executeSecureMove() {
+  if(!_moveTarget||!currentUser)return; document.getElementById('btnConfirmMove').disabled=true;
+  const{error}=await sb.from('fiches_croixrouge').update({est_securisee:true}).eq('id',_moveTarget).eq('user_id',currentUser.id);
+  if(error){showToast('❌ Erreur : '+error.message,'error');document.getElementById('btnConfirmMove').disabled=false;return;}
+  closeSecureMove(); showToast('🔒 Fiche déplacée dans les fiches sécurisées.','success'); loadFiches();
+}
+
+// ====== APP STATE ======
+let currentFicheId=null, medicalSaved=false;
+const LESION_COLORS={'Fracture':'#e74c3c','Entorse':'#e67e22','Contusion':'#9b59b6','Brûlure':'#e8b800','Piqûre':'#1abc9c','Autre':'#3498db'};
+const ZONE_IDS={'Tête':'zone_tete','Cervical':'zone_cervical','Colonne':'zone_colonne','MSD':'zone_msd','MSG':'zone_msg','Thorax':'zone_thorax','Abdo':'zone_abdo','Bassin':'zone_bassin','MID':'zone_mid','MIG':'zone_mig'};
+const MED_ZONE_IDS={'Tête':'med_zone_tete','Cervical':'med_zone_cervical','Thorax':'med_zone_thorax','Abdo':'med_zone_abdo','Bassin':'med_zone_bassin','MSD':'med_zone_msd','MSG':'med_zone_msg','MID':'med_zone_mid','MIG':'med_zone_mig'};
+const LESION_ID_MAP={'Fracture':'Fracture','Entorse':'Entorse','Contusion':'Contusion','Brûlure':'Brulure','Piqûre':'Piqure','Autre':'Autre'};
+let activeLesion='Fracture', bodyData={}, _syncingFromTable=false, _syncingFromSchema=false;
+let activeLesionMed='Fracture', bodyDataMed={}, ynValues={}, evolutionColCount=0;
+
+function updateSavedIndicator() {
+  const el=document.getElementById('savedIndicator'),idEl=document.getElementById('savedFicheId');
+  if(currentFicheId){el.classList.add('show');idEl.textContent=currentFicheId.slice(0,8)+'…';const btnSave=document.getElementById('btnSaveFiche');if(btnSave){btnSave.textContent='✅ Déjà sauvegardée';btnSave.disabled=true;}const btnMed=document.getElementById('btnOpenMedical');if(btnMed)btnMed.textContent='🏥 Ajouter une Fiche Médicale';}
+  else{el.classList.remove('show');const btnSave=document.getElementById('btnSaveFiche');if(btnSave){btnSave.textContent='💾 Sauvegarder la fiche';btnSave.disabled=false;}const btnMed=document.getElementById('btnOpenMedical');if(btnMed)btnMed.textContent='🏥 Sauvegarder & Ajouter une Fiche Médicale';}
+}
+function toggleYN(btn,field,value){btn.closest('.yn-item').querySelectorAll('.yn-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');ynValues[field]=value;}
+function updateGlasgow(){const e=parseInt(getRadio('gcs_yeux')||0),v=parseInt(getRadio('gcs_verbal')||0),m=parseInt(getRadio('gcs_moteur')||0);const total=(e||0)+(v||0)+(m||0),el=document.getElementById('glasgowTotal');if(e&&v&&m){el.textContent=total+' / 15';el.style.color=total<=8?'#e74c3c':total<=12?'#f39c12':'#2ecc71';}else{el.textContent='—';el.style.color='#fff';}}
+function toggleAnisocorie(){const cb=document.getElementById('pup_anisocorie'),side=document.getElementById('anisocorieSide');cb.checked?side.classList.add('show'):side.classList.remove('show');}
+function addEvolutionColumn(){evolutionColCount++;const col=evolutionColCount,header=document.getElementById('evolutionHeaderRow'),th=document.createElement('th');th.innerHTML=`<input type="time" id="evo_heure_${col}">`;header.appendChild(th);const rows=['sat_o2','glycemie','ta','pulsations','oxygene','medicament','injection','perfusion'];const isLarge=['medicament','injection','perfusion'];document.querySelectorAll('#evolutionBody tr').forEach((row,i)=>{const td=document.createElement('td');td.innerHTML=`<input type="text" id="evo_${rows[i]}_${col}" ${isLarge.includes(rows[i])?'class="large-cell"':''} maxlength="50">`;row.appendChild(td);});}
+function getEvolutionData(){if(!evolutionColCount)return[];const rows=['sat_o2','glycemie','ta','pulsations','oxygene','medicament','injection','perfusion'];const labels=['Saturation O₂','Glycémie','TA','Pulsations','Oxygène L/min','Médicament','Injection','Perfusion'];const result=[];for(let c=1;c<=evolutionColCount;c++){const heureEl=document.getElementById('evo_heure_'+c);const col={heure:heureEl?heureEl.value:''};rows.forEach((r,i)=>{const el=document.getElementById('evo_'+r+'_'+c);col[labels[i]]=el?el.value:'';});result.push(col);}return result;}
+
+function setActiveLesion(lesion){activeLesion=lesion;document.querySelectorAll('#lesionChips .lesion-chip').forEach(c=>c.classList.remove('selected'));const chipMap={'Fracture':'Fracture','Entorse':'Entorse','Contusion':'Contusion','Brûlure':'Brulure','Piqûre':'Piqure','Autre':'Autre'};const chip=document.getElementById('lchip_'+(chipMap[lesion]||lesion));if(chip)chip.classList.add('selected');const box=document.getElementById('autreLesionBox');if(box){lesion==='Autre'?box.classList.add('visible'):box.classList.remove('visible');}}
+function toggleBodyZone(zone){if(!bodyData[zone])bodyData[zone]=[];const arr=bodyData[zone],idx=arr.indexOf(activeLesion);idx===-1?arr.push(activeLesion):arr.splice(idx,1);if(!arr.length)delete bodyData[zone];updateBodySvg();updateActiveZonesList();if(!_syncingFromTable){_syncingFromSchema=true;syncBodyToTable();_syncingFromSchema=false;}}
+function updateBodySvg(){Object.entries(ZONE_IDS).forEach(([zone,svgId])=>{const el=document.getElementById(svgId);if(!el)return;if(bodyData[zone]&&bodyData[zone].length>0){const colors=bodyData[zone].map(l=>LESION_COLORS[l]||'#ccc');el.setAttribute('fill',colors[0]);el.setAttribute('opacity','0.85');el.setAttribute('stroke',colors.length>1?colors[1]:'#999');el.setAttribute('stroke-width',colors.length>1?'3':'1.5');}else{el.setAttribute('fill','#e8e8e8');el.setAttribute('opacity','1');el.setAttribute('stroke','#999');el.setAttribute('stroke-width','1.5');}});}
+function updateActiveZonesList(){const container=document.getElementById('activeZonesList');if(!container)return;if(Object.keys(bodyData).length===0){container.innerHTML='<div style="font-size:.8em;color:var(--text3);font-style:italic;">Aucune zone sélectionnée</div>';return;}const autreTxt=document.getElementById('autreLesionText')?.value?.trim();let html='<div style="font-size:.8em;font-weight:700;color:var(--text2);margin-bottom:6px;">Zones marquées :</div>';Object.entries(bodyData).forEach(([zone,lesions])=>{lesions.forEach(lesion=>{const color=LESION_COLORS[lesion]||'#999';const displayLabel=(lesion==='Autre'&&autreTxt)?`Autre (${sanitize(autreTxt)})`:lesion;html+=`<span class="active-zone-badge" style="background:${color};">${zone} — ${displayLabel}<button onclick="removeBodyZone('${zone}','${lesion}')">×</button></span>`;});});container.innerHTML=html;}
+function removeBodyZone(zone,lesion){if(bodyData[zone]){bodyData[zone]=bodyData[zone].filter(l=>l!==lesion);if(!bodyData[zone].length)delete bodyData[zone];}updateBodySvg();updateActiveZonesList();if(!_syncingFromTable){_syncingFromSchema=true;syncBodyToTable();_syncingFromSchema=false;}}
+function syncBodyToTable(){document.querySelectorAll('#bilanBody input[type="checkbox"]').forEach(cb=>{cb.checked=false;if(cb.parentElement)cb.parentElement.classList.remove('cell-checked');});Object.entries(bodyData).forEach(([zone,lesions])=>{lesions.forEach(lesion=>{const zKey=zone.replace(/[^a-zA-Z]/g,''),lKey=(LESION_ID_MAP[lesion]||lesion).replace(/[^a-zA-Z]/g,'');const el=document.getElementById('bilan_'+zKey+'_'+lKey);if(el){el.checked=true;if(el.parentElement)el.parentElement.classList.add('cell-checked');}});});}
+function onBilanCheckboxChange(checkbox,zone,lesionKey){if(_syncingFromSchema)return;const lesionDisplay=Object.keys(LESION_ID_MAP).find(k=>LESION_ID_MAP[k]===lesionKey)||lesionKey;_syncingFromTable=true;if(checkbox.checked){if(!bodyData[zone])bodyData[zone]=[];if(!bodyData[zone].includes(lesionDisplay))bodyData[zone].push(lesionDisplay);if(checkbox.parentElement)checkbox.parentElement.classList.add('cell-checked');if(lesionDisplay==='Autre')setActiveLesion('Autre');}else{if(bodyData[zone]){bodyData[zone]=bodyData[zone].filter(l=>l!==lesionDisplay);if(!bodyData[zone].length)delete bodyData[zone];}if(checkbox.parentElement)checkbox.parentElement.classList.remove('cell-checked');}updateBodySvg();updateActiveZonesList();_syncingFromTable=false;}
+
+function setActiveLesionMed(lesion){activeLesionMed=lesion;document.querySelectorAll('#medLesionChips .lesion-chip').forEach(c=>c.classList.remove('selected'));const chipMap={'Fracture':'Fracture','Entorse':'Entorse','Contusion':'Contusion','Brûlure':'Brulure','Piqûre':'Piqure','Autre':'Autre'};const chip=document.getElementById('mlchip_'+(chipMap[lesion]||lesion));if(chip)chip.classList.add('selected');}
+function toggleBodyZoneMed(zone){if(!bodyDataMed[zone])bodyDataMed[zone]=[];const arr=bodyDataMed[zone],idx=arr.indexOf(activeLesionMed);idx===-1?arr.push(activeLesionMed):arr.splice(idx,1);if(!arr.length)delete bodyDataMed[zone];updateBodySvgMed();updateMedActiveZonesList();}
+function updateBodySvgMed(){Object.entries(MED_ZONE_IDS).forEach(([zone,svgId])=>{const el=document.getElementById(svgId);if(!el)return;if(bodyDataMed[zone]&&bodyDataMed[zone].length>0){const colors=bodyDataMed[zone].map(l=>LESION_COLORS[l]||'#ccc');el.setAttribute('fill',colors[0]);el.setAttribute('opacity','0.85');el.setAttribute('stroke',colors.length>1?colors[1]:'#999');el.setAttribute('stroke-width',colors.length>1?'3':'1.5');}else{el.setAttribute('fill','#e8e8e8');el.setAttribute('opacity','1');el.setAttribute('stroke','#999');el.setAttribute('stroke-width','1.5');}});}
+function updateMedActiveZonesList(){const container=document.getElementById('medActiveZonesList');if(!container)return;if(!Object.keys(bodyDataMed).length){container.innerHTML='<div style="font-size:.8em;color:var(--text3);font-style:italic;">Aucune zone</div>';return;}let html='';Object.entries(bodyDataMed).forEach(([zone,lesions])=>{lesions.forEach(lesion=>{const color=LESION_COLORS[lesion]||'#999';html+=`<span class="active-zone-badge" style="background:${color};">${zone} — ${lesion}<button onclick="removeBodyZoneMed('${zone}','${lesion}')">×</button></span>`;});});container.innerHTML=html;}
+function removeBodyZoneMed(zone,lesion){if(bodyDataMed[zone]){bodyDataMed[zone]=bodyDataMed[zone].filter(l=>l!==lesion);if(!bodyDataMed[zone].length)delete bodyDataMed[zone];}updateBodySvgMed();updateMedActiveZonesList();}
+function syncBodyToMedical(){bodyDataMed=JSON.parse(JSON.stringify(bodyData));updateBodySvgMed();updateMedActiveZonesList();}
+function updateUrgencePills(){const pills={U1:'pill_U1',U2:'pill_U2',U3:'pill_U3',implique:'pill_implique'};const val=getRadio('urgence');Object.entries(pills).forEach(([v,id])=>{const el=document.getElementById(id);if(el){val===v?el.classList.add('checked'):el.classList.remove('checked');}});}
+
+const MATERIEL_ITEMS=['Attelle Zimmer','Attelle MI','Attelle MS','Bandage Triangulaire','Bandage crêpe 5cm','Bandage crêpe 7cm','Bandage crêpe 10cm','Bassin réuniforme','Coldpack','Collier Cervical','Compresse 5x5','Compresse 10x10','Compresse','Couverture Alu','Crème antihistaminique','Crème anti-inflammatoire','Crème antiseptique','Flapulle antiseptique','Flapulle LP','Gant d\'examen (paire)','Pansement individuel','Pansement à découper','Paracétamol 500mg','Patch DEA','Pocket Mask','Sparadrap par cm'];
+let matValues={}, _materielBuilt=false;
+function buildMaterielTable(){if(_materielBuilt)return;_materielBuilt=true;const body=document.getElementById('matBody');body.innerHTML='';MATERIEL_ITEMS.forEach(item=>{const id='mat_'+item.replace(/[^a-z0-9]/gi,'_');matValues[id]=0;body.insertAdjacentHTML('beforeend',`<tr><td>${sanitize(item)}</td><td><div class="qty-control"><button class="qty-btn" onclick="changeQty('${id}',-1)">−</button><span class="qty-val" id="${id}_display">0</span><button class="qty-btn" onclick="changeQty('${id}',1)">+</button></div></td></tr>`);});body.insertAdjacentHTML('beforeend',`<tr><td>Canulle — Taille</td><td><input type="text" id="mat_canulle_taille" placeholder="cm" maxlength="10" style="width:80px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--input-bg);color:var(--text);font-family:var(--font);"></td></tr><tr><td>Autre matériel</td><td><input type="text" id="mat_autre" placeholder="Préciser..." maxlength="100" style="width:180px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--input-bg);color:var(--text);font-family:var(--font);"></td></tr>`);}
+function changeQty(id,delta){matValues[id]=Math.max(0,(matValues[id]||0)+delta);const display=document.getElementById(id+'_display');if(display){display.textContent=matValues[id];display.className='qty-val'+(matValues[id]>0?' nonzero':'');}}
+function getMateriel(){const data={};MATERIEL_ITEMS.forEach(item=>{const id='mat_'+item.replace(/[^a-z0-9]/gi,'_');if((matValues[id]||0)>0)data[item]=matValues[id];});const canulle=document.getElementById('mat_canulle_taille')?.value||'';const autre=document.getElementById('mat_autre')?.value||'';if(canulle)data['Canulle_taille']=sanitize(canulle);if(autre)data['Autre']=sanitize(autre);return data;}
+
+const BILAN_ZONES=['Tête','Cervical','Colonne','MSD','MSG','Thorax','Abdo','Bassin','MID','MIG'];
+const BILAN_LESIONS=['Fracture','Entorse','Contusion','Brûlure','Piqûre','Autre'];
+let _bilanBuilt=false;
+function buildBilanTable(){if(_bilanBuilt)return;_bilanBuilt=true;const body=document.getElementById('bilanBody');body.innerHTML='';BILAN_LESIONS.forEach(les=>{const lesKey=(LESION_ID_MAP[les]||les).replace(/[^a-zA-Z]/g,'');let row='<tr><td>'+les+'</td>';BILAN_ZONES.forEach(zone=>{const zKey=zone.replace(/[^a-zA-Z]/g,''),id='bilan_'+zKey+'_'+lesKey;row+=`<td id="cell_${zKey}_${lesKey}"><input type="checkbox" id="${id}" onchange="onBilanCheckboxChange(this,'${zone}','${lesKey}')"></td>`;});row+='</tr>';body.insertAdjacentHTML('beforeend',row);});}
+function getBilanTableau(){const data=JSON.parse(JSON.stringify(bodyData));const autreTxt=document.getElementById('autreLesionText')?.value?.trim();if(autreTxt&&data){Object.keys(data).forEach(zone=>{data[zone]=data[zone].map(l=>l==='Autre'?`Autre: ${sanitize(autreTxt)}`:l);});}return data;}
+
+let soignantCount=0;
+function addSoignant(){const id=soignantCount++;document.getElementById('soignantsContainer').insertAdjacentHTML('beforeend',`<div class="soignant-card" id="soignant_${id}"><div class="soignant-header"><strong>Soignant #${id+1}</strong><button class="btn-remove" onclick="document.getElementById('soignant_${id}').remove()">×</button></div><div class="form-row"><div class="form-group"><label>NOM</label><input type="text" class="sg-nom" maxlength="100"></div><div class="form-group small" style="display:none;" id="inami_${id}"><label>N° INAMI</label><input type="text" class="sg-inami" maxlength="20"></div></div><div class="check-group"><label><input type="checkbox" class="sg-sec"> SEC</label><label><input type="checkbox" class="sg-es"> ES</label><label><input type="checkbox" class="sg-eps"> EPS</label><label><input type="checkbox" class="sg-tms"> TMS</label><label><input type="checkbox" class="sg-amu"> AMU</label><label><input type="checkbox" class="sg-infirmier" onchange="toggleInami(this,'${id}')"> Infirmier</label><label><input type="checkbox" class="sg-medecin" onchange="toggleInami(this,'${id}')"> Médecin</label></div></div>`);}
+function toggleInami(checkbox,id){const card=document.getElementById('soignant_'+id);if(!card)return;const isInfOrMed=card.querySelector('.sg-infirmier').checked||card.querySelector('.sg-medecin').checked;document.getElementById('inami_'+id).style.display=isInfOrMed?'':'none';}
+function getSoignants(){return Array.from(document.querySelectorAll('.soignant-card')).map(c=>({nom:sanitize(c.querySelector('.sg-nom')?.value||''),is_sec:c.querySelector('.sg-sec')?.checked||false,is_es:c.querySelector('.sg-es')?.checked||false,is_eps:c.querySelector('.sg-eps')?.checked||false,is_tms:c.querySelector('.sg-tms')?.checked||false,is_amu:c.querySelector('.sg-amu')?.checked||false,is_infirmier:c.querySelector('.sg-infirmier')?.checked||false,is_medecin:c.querySelector('.sg-medecin')?.checked||false,numero_inami:sanitize(c.querySelector('.sg-inami')?.value||'')}));}
+
+function getRadio(name){const el=document.querySelector('input[name="'+name+'"]:checked');return el?el.value:'';}
+function getChecked(id){return document.getElementById(id)?.checked||false;}
+function toggleInAmbulance(){document.getElementById('inAmbulanceGroup').style.display=document.getElementById('inAmbulance').checked?'flex':'none';}
+function toggleOutAmbulance(){document.getElementById('outAmbulanceGroup').style.display=document.getElementById('outAmbulanceCheck').checked?'flex':'none';}
+function toggleSection(el){el.classList.toggle('collapsed');el.nextElementSibling.classList.toggle('hidden');}
+
+function switchTab(tab){
+  document.getElementById('formTab').style.display=tab==='form'?'':'none';
+  document.getElementById('medicalTab').style.display='none';
+  document.getElementById('listTab').style.display=tab==='list'?'':'none';
+  document.getElementById('securedTab').style.display=tab==='secured'?'':'none';
+  document.getElementById('tabForm').className='tab'+(tab==='form'?' active':'');
+  document.getElementById('tabList').className='tab'+(tab==='list'?' active':'');
+  document.getElementById('tabSecured').className='tab tab-secure'+(tab==='secured'?' active-secure':'');
+  document.getElementById('ficheIndicator').classList.remove('show');
+  if(tab==='list')loadFiches();
+  // Note: 'secured' tab is handled by handleSecuredTabClick
+}
+
+function showToast(msg,type='info'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),3500);}
+function changeFormat(f){const c=document.getElementById('mainContainer');c.classList.remove('tablet','phone');if(f==='tablet')c.classList.add('tablet');else if(f==='phone')c.classList.add('phone');localStorage.setItem('cr_format',f);}
+function toggleDark(){document.body.classList.toggle('dark');localStorage.setItem('cr_dark',document.body.classList.contains('dark')?'1':'0');document.getElementById('darkBtn').textContent=document.body.classList.contains('dark')?'☀️ Mode Jour':'🌙 Mode Nuit';}
+function updateOnlineStatus(){const el=document.getElementById('onlineStatus');el.innerHTML=navigator.onLine?'🟢 <span class="status-online">En ligne</span>':'🔴 <span class="status-offline">Hors ligne</span>';}
+function updatePendingCount(){const p=JSON.parse(localStorage.getItem('cr_pending')||'[]');const pm=JSON.parse(localStorage.getItem('cr_pending_medical')||'[]');document.getElementById('pendingCount').textContent=(p.length+pm.length)+' fiche(s) en attente';}
+
+function collectFormData(){
+  const soins={};document.querySelectorAll('[data-soin]').forEach(cb=>{if(cb.checked)soins[cb.dataset.soin]=true;});
+  return {fiche_medicale:getRadio('ficheMed')==='oui',numero_odin:sanitize(document.getElementById('numOdin').value.trim())||null,nom_aps:sanitize(document.getElementById('nomAps').value.trim())||null,numero_patient:sanitize(document.getElementById('numPatient').value.trim())||null,patient_nom:sanitize(document.getElementById('patNom').value.trim())||null,patient_prenom:sanitize(document.getElementById('patPrenom').value.trim())||null,date_naissance:document.getElementById('patDob').value||null,est_mineur:document.getElementById('patMineur').checked,sexe:getRadio('patSexe')||null,adresse:sanitize(document.getElementById('patAdresse').value.trim())||null,telephone:sanitize(document.getElementById('patTel').value.trim())||null,numero_cl:sanitize(document.getElementById('patCl').value.trim())||null,in_spontanee:document.getElementById('inSpontanee').checked,in_via_equipe:document.getElementById('inEquipe').checked,in_via_ambulance:document.getElementById('inAmbulance').checked,in_num_ambulance:sanitize(document.getElementById('inNumAmbulance').value.trim())||null,in_autre_moyen:sanitize(document.getElementById('inAutre').value.trim())||null,in_date:document.getElementById('inDate').value||null,heure_in:document.getElementById('inHeure').value||null,conscience:getRadio('conscience')==='oui'?true:getRadio('conscience')==='non'?false:null,respiration:getRadio('respiration')==='oui'?true:getRadio('respiration')==='non'?false:null,circulation:getRadio('circulation')==='oui'?true:getRadio('circulation')==='non'?false:null,hemorragie:getRadio('hemorragie')||null,urgence:getRadio('urgence')||null,bilan_tableau:getBilanTableau(),autre_lesion_precision:sanitize(document.getElementById('autreLesionText')?.value?.trim())||null,soins:soins,autres_soins:sanitize(document.getElementById('autresSoins').value.trim())||null,materiel:getMateriel(),out_retour_normal:document.getElementById('outNormal').checked,out_refus_soins:document.getElementById('outRefus').checked,out_evacuation_vsl:document.getElementById('outVsl').checked,out_evacuation_ambulance:document.getElementById('outAmbulanceCheck').checked,out_num_ambulance:sanitize(document.getElementById('outNumAmbulance').value.trim())||null,out_vecteur:sanitize(document.getElementById('outVecteur').value.trim())||null,out_autre_moyen:sanitize(document.getElementById('outAutreMoyen').value.trim())||null,heure_out:document.getElementById('outHeure').value||null,soignants:getSoignants()};
+}
+
+function collectMedicalData(){
+  const motifs=[],motifIds=['acc_circ','bagarre','brulure','chute','electro','alcool','alim','co','drogue','medic','noyade','plaie_pen'];
+  const motifLabels=['Accidents de la circulation','Bagarre','Brûlure','Chute','Électrocution','Intox. alcool','Intox. alimentaire','Intox. CO','Intox. drogue','Intox. médicamenteuse','Noyade','Plaie pénétrante'];
+  motifIds.forEach((m,i)=>{if(document.getElementById('motif_'+m)?.checked)motifs.push(motifLabels[i]);});
+  const motifAutre=sanitize(document.getElementById('motif_autre')?.value?.trim());if(motifAutre)motifs.push('Autre: '+motifAutre);
+  return {bilan_clinique:{agite:ynValues['med_agite']||null,convulsion:ynValues['med_convulsion']||null,cyanose:ynValues['med_cyanose']||null,deficit_moteur:ynValues['med_deficit_moteur']||null,inconscient:ynValues['med_inconscient']||null,resp_anormale:ynValues['med_resp_anormale']||null},pupilles:{normales:getChecked('pup_normales'),myosis:getChecked('pup_myosis'),mydriase:getChecked('pup_mydriase'),anisocorie:getChecked('pup_anisocorie'),anisocorie_g:getChecked('aniso_g'),anisocorie_d:getChecked('aniso_d'),reactives:getChecked('pup_reactives')},freq_respiratoire:getRadio('freq_resp')||null,glasgow:{yeux:parseInt(getRadio('gcs_yeux')||0)||null,verbal:parseInt(getRadio('gcs_verbal')||0)||null,moteur:parseInt(getRadio('gcs_moteur')||0)||null,total:(()=>{const e=parseInt(getRadio('gcs_yeux')||0),v=parseInt(getRadio('gcs_verbal')||0),m=parseInt(getRadio('gcs_moteur')||0);return(e&&v&&m)?e+v+m:null;})()},motifs:motifs,arythmies:{bradycardie:getChecked('ary_brady'),tachycardie:getChecked('ary_tachy'),asystolie:getChecked('ary_asystolie'),autre:sanitize(document.getElementById('ary_autre')?.value?.trim())||null},bilan_remarque:sanitize(document.getElementById('med_bilan_remarque')?.value?.trim())||null,lesions_traumatiques:bodyDataMed,evolution_traitement:getEvolutionData(),materiel_utilise:sanitize(document.getElementById('med_materiel')?.value?.trim())||null};
+}
+
+async function saveFiche(){
+  if(!currentUser){showToast('Session invalide — reconnectez-vous','error');return;}
+  if(currentFicheId){showToast('✅ Déjà sauvegardée. Réinitialisez pour une nouvelle fiche.','info');return;}
+  const data=collectFormData();
+  if(!data.patient_nom&&!data.patient_prenom){showToast('Veuillez renseigner le nom ou prénom du patient','error');return;}
+  if(!navigator.onLine){const pending=JSON.parse(localStorage.getItem('cr_pending')||'[]');data._localId=Date.now().toString();data._createdAt=new Date().toISOString();pending.push(data);localStorage.setItem('cr_pending',JSON.stringify(pending));updatePendingCount();showToast('Hors ligne — fiche mise en attente.','info');return;}
+  const ficheId=await saveToSupabase(data);
+  if(ficheId){updateSavedIndicator();showToast('✅ Fiche sauvegardée !','success');}
+}
+
+async function saveToSupabase(rawData){
+  if(!currentUser)return null;
+  const soignants=rawData.soignants||[];
+  const ficheRow={user_id:currentUser.id,fiche_medicale:rawData.fiche_medicale,numero_odin:rawData.numero_odin,nom_aps:rawData.nom_aps,numero_patient:rawData.numero_patient,patient_nom:rawData.patient_nom,patient_prenom:rawData.patient_prenom,date_naissance:rawData.date_naissance,est_mineur:rawData.est_mineur,sexe:rawData.sexe,adresse:rawData.adresse,telephone:rawData.telephone,numero_cl:rawData.numero_cl,in_spontanee:rawData.in_spontanee,in_via_equipe:rawData.in_via_equipe,in_via_ambulance:rawData.in_via_ambulance,in_num_ambulance:rawData.in_num_ambulance,in_autre_moyen:rawData.in_autre_moyen,in_date:rawData.in_date,heure_in:rawData.heure_in,conscience:rawData.conscience,respiration:rawData.respiration,circulation:rawData.circulation,hemorragie:rawData.hemorragie,urgence:rawData.urgence,bilan_tableau:rawData.bilan_tableau,autre_lesion_precision:rawData.autre_lesion_precision,soins:rawData.soins,autres_soins:rawData.autres_soins,materiel:rawData.materiel,out_retour_normal:rawData.out_retour_normal,out_refus_soins:rawData.out_refus_soins,out_evacuation_vsl:rawData.out_evacuation_vsl,out_evacuation_ambulance:rawData.out_evacuation_ambulance,out_num_ambulance:rawData.out_num_ambulance,out_vecteur:rawData.out_vecteur,out_autre_moyen:rawData.out_autre_moyen,heure_out:rawData.heure_out,est_securisee:false};
+  Object.keys(ficheRow).forEach(k=>{if(ficheRow[k]===undefined)delete ficheRow[k];});
+  const{data:fiche,error}=await sb.from('fiches_croixrouge').insert(ficheRow).select('id').single();
+  if(error){showToast('Erreur: '+error.message,'error');return null;}
+  if(soignants.length>0){const rows=soignants.filter(s=>s.nom&&s.nom.trim()).map(s=>({...s,fiche_id:fiche.id}));if(rows.length>0)await sb.from('soignants_croixrouge').insert(rows);}
+  currentFicheId=fiche.id;return fiche.id;
+}
+
+async function saveAndOpenMedical(){
+  if(!currentUser){showToast('Session invalide — reconnectez-vous','error');return;}
+  if(currentFicheId){switchToMedicalForm();return;}
+  const data=collectFormData();
+  if(!data.patient_nom&&!data.patient_prenom){showToast('Veuillez renseigner le nom ou prénom','error');return;}
+  if(!navigator.onLine){showToast('Connexion internet requise','error');return;}
+  showToast('Sauvegarde en cours...','info');
+  const ficheId=await saveToSupabase(data);
+  if(!ficheId)return;
+  updateSavedIndicator();switchToMedicalForm();
+}
+function switchToMedicalForm(){const patNom=sanitize(document.getElementById('patNom').value.trim()),patPrenom=sanitize(document.getElementById('patPrenom').value.trim());document.getElementById('medicalPatientLabel').textContent='Patient : '+(patNom||'?')+' '+(patPrenom||'');document.getElementById('formTab').style.display='none';document.getElementById('medicalTab').style.display='';document.getElementById('listTab').style.display='none';document.getElementById('securedTab').style.display='none';document.getElementById('tabForm').className='tab';document.getElementById('tabList').className='tab';document.getElementById('tabSecured').className='tab tab-secure';document.getElementById('ficheIndicator').classList.add('show');syncBodyToMedical();window.scrollTo({top:0,behavior:'smooth'});}
+function switchToMainForm(){document.getElementById('formTab').style.display='';document.getElementById('medicalTab').style.display='none';document.getElementById('listTab').style.display='none';document.getElementById('securedTab').style.display='none';document.getElementById('tabForm').className='tab active';document.getElementById('tabList').className='tab';document.getElementById('tabSecured').className='tab tab-secure';document.getElementById('ficheIndicator').classList.remove('show');updateSavedIndicator();window.scrollTo({top:0,behavior:'smooth'});}
+async function saveMedicalFiche(){
+  if(!currentUser){showToast('Session invalide','error');return;}
+  if(medicalSaved){showToast('Fiche médicale déjà sauvegardée.','info');switchToMainForm();return;}
+  const medData=collectMedicalData();if(!currentFicheId){showToast('Erreur : aucune fiche principale liée.','error');return;}
+  if(!navigator.onLine){const pending=JSON.parse(localStorage.getItem('cr_pending_medical')||'[]');medData._localId=Date.now().toString();medData._createdAt=new Date().toISOString();medData._ficheId=currentFicheId;pending.push(medData);localStorage.setItem('cr_pending_medical',JSON.stringify(pending));updatePendingCount();showToast('Hors ligne — fiche médicale mise en attente.','info');medicalSaved=true;switchToMainForm();return;}
+  const medRow={user_id:currentUser.id,fiche_id:currentFicheId,bilan_clinique:medData.bilan_clinique,pupilles:medData.pupilles,freq_respiratoire:medData.freq_respiratoire,glasgow:medData.glasgow,motifs:medData.motifs,arythmies:medData.arythmies,bilan_remarque:medData.bilan_remarque,lesions_traumatiques:medData.lesions_traumatiques,evolution_traitement:medData.evolution_traitement,materiel_utilise:medData.materiel_utilise};
+  Object.keys(medRow).forEach(k=>{if(medRow[k]===undefined)delete medRow[k];});
+  const{error}=await sb.from('fiches_medicales_croixrouge').insert(medRow);
+  if(error){showToast('Erreur: '+error.message,'error');return;}
+  medicalSaved=true;showToast('✅ Fiche médicale sauvegardée !','success');switchToMainForm();
+}
+
+async function syncPendingFiches(){
+  if(!currentUser||!navigator.onLine)return;
+  const pending=JSON.parse(localStorage.getItem('cr_pending')||'[]');let remaining=[],idMap={};
+  for(const fiche of pending){const id=await saveToSupabase({...fiche});if(id)idMap[fiche._localId]=id;else remaining.push(fiche);}
+  localStorage.setItem('cr_pending',JSON.stringify(remaining));
+  const pendingMed=JSON.parse(localStorage.getItem('cr_pending_medical')||'[]');let remainingMed=[];
+  for(const med of pendingMed){const ficheId=(med._ficheId&&idMap[med._ficheId])?idMap[med._ficheId]:med._ficheId;const medRow={user_id:currentUser.id,fiche_id:ficheId||null,bilan_clinique:med.bilan_clinique,pupilles:med.pupilles,freq_respiratoire:med.freq_respiratoire,glasgow:med.glasgow,motifs:med.motifs,arythmies:med.arythmies,bilan_remarque:med.bilan_remarque,lesions_traumatiques:med.lesions_traumatiques,evolution_traitement:med.evolution_traitement,materiel_utilise:med.materiel_utilise};const{error}=await sb.from('fiches_medicales_croixrouge').insert(medRow);if(error)remainingMed.push(med);}
+  localStorage.setItem('cr_pending_medical',JSON.stringify(remainingMed));updatePendingCount();
+  if(!remaining.length&&!remainingMed.length&&(pending.length+pendingMed.length>0))showToast((pending.length+pendingMed.length)+' fiche(s) synchronisée(s) !','success');
+}
+
+async function loadFiches(){
+  if(!currentUser){document.getElementById('fichesList').innerHTML='<div class="msg-box msg-info">Connectez-vous pour voir vos fiches.</div>';return;}
+  if(!navigator.onLine){document.getElementById('fichesList').innerHTML='<div class="msg-box msg-info">Hors ligne.</div>';return;}
+  document.getElementById('fichesList').innerHTML='<p style="text-align:center;color:var(--text3);">Chargement...</p>';
+  const{data,error}=await sb.from('fiches_croixrouge').select('*,fiches_medicales_croixrouge(id)').eq('user_id',currentUser.id).eq('est_securisee',false).order('created_at',{ascending:false});
+  if(error){document.getElementById('fichesList').innerHTML='<div class="msg-box msg-info">Erreur: '+sanitize(error.message)+'</div>';return;}
+  const URGENCE_COLORS={U1:'#e74c3c',U2:'#f39c12',U3:'#2ecc71',implique:'#5c6bc0'};
+  const pending=JSON.parse(localStorage.getItem('cr_pending')||'[]');
+  let html='';
+  if(pending.length>0){html+='<h3 style="margin-bottom:12px;">⏳ En attente ('+pending.length+')</h3>';pending.forEach((f,i)=>{html+=`<div class="fiche-item"><div class="fiche-info"><strong>${sanitize(f.patient_nom||'?')} ${sanitize(f.patient_prenom||'')}</strong> — ${sanitize(f.in_date||'N/A')} <span class="pending-badge">En attente</span></div><div class="fiche-btns"><button class="btn-view" onclick="viewPendingFiche(${i})">👁️ Voir</button><button class="btn btn-secondary" onclick="deletePending(${i})">🗑️</button></div></div>`;});}
+  html+='<h3 style="margin:16px 0 12px;">📁 Fiches sauvegardées ('+data.length+')</h3>';
+  if(!data.length)html+='<p style="color:var(--text3);text-align:center;">Aucune fiche.</p>';
+  data.forEach(f=>{
+    const urg=f.urgence,urgColor=urg?(URGENCE_COLORS[urg]||'#999'):'transparent';
+    const urgLabel=urg?`<span style="background:${urgColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:.72em;font-weight:700;">${sanitize(urg)}</span>`:'';
+    const hasMedical=f.fiches_medicales_croixrouge&&f.fiches_medicales_croixrouge.length>0;
+    const medBadge=hasMedical?'<span class="medical-badge">🏥 Méd.</span>':'';
+    const linkedClass=hasMedical?' fiche-linked':'';
+    const patNom=sanitize(f.patient_nom||'?'),patPrenom=sanitize(f.patient_prenom||'');
+    html+=`<div class="fiche-item${linkedClass}"><div class="fiche-info"><strong>${patNom} ${patPrenom}</strong> — N°Pat: ${sanitize(f.numero_patient||'N/A')} — ${sanitize(f.in_date||'N/A')} ${urgLabel}${medBadge}</div><div class="fiche-btns"><button class="btn-view" onclick='viewFiche(${JSON.stringify(JSON.stringify(f))})'>👁️ Voir</button><button class="btn-view" style="background:${hasMedical?'#1a5276':'#5a7a8a'};" onclick="viewMedicalFiche('${f.id}')">🏥 Médicale</button><button class="btn-move-secure" onclick="openSecureMove('${f.id}','${patNom} ${patPrenom}')">🔒 Sécuriser</button><button class="btn-delete-secure" onclick="openSecureDelete('${f.id}','${patNom} ${patPrenom}')">🗑️ Supprimer</button></div></div>`;
+  });
+  document.getElementById('fichesList').innerHTML=html;
+}
+
+async function loadSecuredFiches(){
+  if(!currentUser){document.getElementById('securedList').innerHTML='<div class="msg-box msg-info">Connectez-vous.</div>';return;}
+  if(!navigator.onLine){document.getElementById('securedList').innerHTML='<div class="msg-box msg-info">Hors ligne.</div>';return;}
+  document.getElementById('securedList').innerHTML='<p style="text-align:center;color:var(--text3);">Chargement...</p>';
+  const{data,error}=await sb.from('fiches_croixrouge').select('*,fiches_medicales_croixrouge(id)').eq('user_id',currentUser.id).eq('est_securisee',true).order('created_at',{ascending:false});
+  if(error){document.getElementById('securedList').innerHTML='<div class="msg-box msg-info">Erreur: '+sanitize(error.message)+'</div>';return;}
+  const URGENCE_COLORS={U1:'#e74c3c',U2:'#f39c12',U3:'#2ecc71',implique:'#5c6bc0'};
+  let html=`<div class="secured-viewer-banner"><div class="sv-icon">🔒</div><div><h2>Fiches Sécurisées — Lecture seule</h2><p>Ces fiches sont archivées et protégées. Aucune modification ni suppression n'est possible.</p></div></div>`;
+  if(!data.length){html+=`<div class="secured-empty-state"><div class="se-icon">🔒</div><h3>Aucune fiche sécurisée</h3><p>Déplacez une fiche depuis l'onglet « Mes Fiches » pour l'archiver ici.</p></div>`;document.getElementById('securedList').innerHTML=html;return;}
+  html+=`<div style="margin-bottom:12px;font-size:.85em;color:var(--text2);">📁 ${data.length} fiche(s) archivée(s)</div>`;
+  data.forEach(f=>{
+    const urg=f.urgence,urgColor=urg?(URGENCE_COLORS[urg]||'#999'):'transparent';
+    const urgLabel=urg?`<span style="background:${urgColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:.72em;font-weight:700;">${sanitize(urg)}</span>`:'';
+    const hasMedical=f.fiches_medicales_croixrouge&&f.fiches_medicales_croixrouge.length>0;
+    const medBadge=hasMedical?'<span class="medical-badge">🏥 Méd.</span>':'';
+    const patNom=sanitize(f.patient_nom||'?'),patPrenom=sanitize(f.patient_prenom||'');
+    const createdAt=f.created_at?new Date(f.created_at).toLocaleDateString('fr-BE'):'—';
+    html+=`<div class="fiche-item fiche-secured"><div class="fiche-info"><strong>${patNom} ${patPrenom}</strong> — N°Pat: ${sanitize(f.numero_patient||'N/A')} — ${sanitize(f.in_date||'N/A')} ${urgLabel}${medBadge}<span class="secure-badge">🔒 Sécurisée</span><div style="font-size:.75em;color:var(--text3);margin-top:3px;">Archivée le ${createdAt}</div></div><div class="fiche-btns"><button class="btn-view" onclick='viewFiche(${JSON.stringify(JSON.stringify(f))})'>👁️ Consulter</button>${hasMedical?`<button class="btn-view" style="background:#1a5276;" onclick="viewMedicalFiche('${f.id}')">🏥 Médicale</button>`:''}</div></div>`;
+  });
+  document.getElementById('securedList').innerHTML=html;
+}
+
+// ====== VIEW MODALS ======
+function closeFicheModal(event){if(event.target===document.getElementById('ficheModal')){document.getElementById('ficheModal').style.display='none';document.getElementById('modalHeader').className='modal-header';const m=document.getElementById('modalMedBtn');if(m)m.style.display='none';}}
+function viewPendingFiche(index){const pending=JSON.parse(localStorage.getItem('cr_pending')||'[]');const f=pending[index];if(!f)return;renderFicheModal(f);}
+function viewFiche(jsonStr){const f=JSON.parse(jsonStr);renderFicheModal(f);}
+let _currentModalFicheId=null,_currentModalFicheData=null;
+function openMedicalFromModal(){if(_currentModalFicheId){document.getElementById('ficheModal').style.display='none';viewMedicalFiche(_currentModalFicheId,true);}}
+
+async function viewMedicalFiche(ficheId,fromMain){
+  if(!navigator.onLine){showToast('Hors ligne','error');return;}
+  const{data,error}=await sb.from('fiches_medicales_croixrouge').select('*').eq('fiche_id',ficheId).order('created_at',{ascending:false}).limit(1);
+  if(error){showToast('Erreur: '+error.message,'error');return;}
+  if(!data||!data.length){document.getElementById('modalTitle').textContent='🏥 Fiche Médicale';document.getElementById('modalHeader').className='modal-header medical';document.getElementById('modalMedBtn').style.display='none';document.getElementById('modalBody').innerHTML='<div style="text-align:center;padding:40px 20px;"><div style="font-size:3em;margin-bottom:16px;">🏥</div><h3 style="color:var(--text2);">Aucune fiche médicale liée</h3></div>';document.getElementById('ficheModal').style.display='flex';return;}
+  renderMedicalModal(data[0],fromMain);
+}
+
+function renderMedicalModal(f,fromMain){
+  document.getElementById('modalTitle').textContent='🏥 Fiche Médicale — Bilan Clinique';
+  document.getElementById('modalHeader').className='modal-header medical';
+  document.getElementById('modalMedBtn').style.display='none';
+  const v=(val,fallback='—')=>(val!==null&&val!==undefined&&val!=='')?(typeof val==='string'?sanitize(val):val):`<span class="empty">${fallback}</span>`;
+  const bc=f.bilan_clinique||{},ynStr=(val)=>val==='oui'?'✅ OUI':val==='non'?'❌ NON':'—';
+  const pupilles=f.pupilles||{},pupList=[];
+  if(pupilles.normales)pupList.push('Normales');if(pupilles.myosis)pupList.push('Myosis');if(pupilles.mydriase)pupList.push('Mydriase');
+  if(pupilles.anisocorie){let a='Anisocorie';const sides=[pupilles.anisocorie_g?'G':null,pupilles.anisocorie_d?'D':null].filter(Boolean);if(sides.length)a+=' ('+sides.join('+')+ ')';pupList.push(a);}
+  if(pupilles.reactives)pupList.push('Réactives');
+  const glasgow=f.glasgow||{},ary=f.arythmies||{},motifs=f.motifs||[],evolution=f.evolution_traitement||[],bilanData=f.lesions_traumatiques||{};
+  let lesionBadgesHtml='';
+  if(Object.keys(bilanData).length>0){Object.entries(bilanData).forEach(([zone,lesions])=>{(lesions||[]).forEach(lesion=>{const color=LESION_COLORS[lesion]||'#999';lesionBadgesHtml+=`<span class="modal-lesion-badge" style="background:${color};">${sanitize(zone)} — ${sanitize(lesion)}</span>`;});});}
+  else lesionBadgesHtml='<span style="color:var(--text3);font-size:.85em;font-style:italic;">Aucune lésion</span>';
+  let evolutionHtml='<span style="color:var(--text3);font-size:.85em;">Aucune donnée</span>';
+  if(evolution.length>0){const params=['Saturation O₂','Glycémie','TA','Pulsations','Oxygène L/min','Médicament','Injection','Perfusion'];evolutionHtml='<div style="overflow-x:auto;"><table class="evolution-table" style="font-size:.78em;"><thead><tr><th>Paramètre</th>'+evolution.map(c=>`<th>${sanitize(c.heure||'—')}</th>`).join('')+'</tr></thead><tbody>';params.forEach(p=>{evolutionHtml+='<tr><td>'+p+'</td>'+evolution.map(c=>`<td style="padding:6px 10px;">${sanitize(c[p]||'—')}</td>`).join('')+'</tr>';});evolutionHtml+='</tbody></table></div>';}
+  document.getElementById('modalBody').innerHTML=`<div class="modal-section"><div class="modal-section-title medical">🩺 Bilan clinique initial</div><div class="modal-grid"><div class="modal-field"><div class="lbl">Agité</div><div class="val">${ynStr(bc.agite)}</div></div><div class="modal-field"><div class="lbl">Convulsion</div><div class="val">${ynStr(bc.convulsion)}</div></div><div class="modal-field"><div class="lbl">Cyanosé</div><div class="val">${ynStr(bc.cyanose)}</div></div><div class="modal-field"><div class="lbl">Déficit moteur</div><div class="val">${ynStr(bc.deficit_moteur)}</div></div><div class="modal-field"><div class="lbl">Inconscient</div><div class="val">${ynStr(bc.inconscient)}</div></div><div class="modal-field"><div class="lbl">Resp. anormale</div><div class="val">${ynStr(bc.resp_anormale)}</div></div></div></div><div class="modal-section"><div class="modal-section-title medical">👁️ Pupilles</div><div class="modal-tags">${pupList.length?pupList.map(p=>`<span class="modal-tag" style="background:var(--medical-light);color:var(--medical);">${p}</span>`).join(''):'<span style="color:var(--text3);">—</span>'}</div></div><div class="modal-section"><div class="modal-section-title medical">🫁 Fréquence respiratoire</div><div class="modal-field" style="display:inline-block;"><div class="val">${v(f.freq_respiratoire)}</div></div></div><div class="modal-section"><div class="modal-section-title medical">🧠 Glasgow</div><div class="modal-grid"><div class="modal-field"><div class="lbl">Yeux</div><div class="val">${glasgow.yeux||'—'}</div></div><div class="modal-field"><div class="lbl">Verbal</div><div class="val">${glasgow.verbal||'—'}</div></div><div class="modal-field"><div class="lbl">Moteur</div><div class="val">${glasgow.moteur||'—'}</div></div><div class="modal-field" style="background:${glasgow.total?(glasgow.total<=8?'#fde8e8':glasgow.total<=12?'#fef6e4':'#e8f8ef'):'var(--bg2)'};"><div class="lbl">Total</div><div class="val" style="font-size:1.3em;color:${glasgow.total?(glasgow.total<=8?'#c0392b':glasgow.total<=12?'#d4700a':'#1a7a3a'):'var(--text)'};">${glasgow.total?glasgow.total+' / 15':'—'}</div></div></div></div><div class="modal-section"><div class="modal-section-title medical">📋 Motifs</div><div class="modal-tags">${motifs.length?motifs.map(m=>`<span class="modal-tag" style="background:var(--medical-light);color:var(--medical);">${sanitize(m)}</span>`).join(''):'<span style="color:var(--text3);">Aucun</span>'}</div></div><div class="modal-section"><div class="modal-section-title medical">💓 Arythmies</div><div class="modal-grid"><div class="modal-field"><div class="lbl">Bradycardie</div><div class="val">${ary.bradycardie?'✅':'❌'}</div></div><div class="modal-field"><div class="lbl">Tachycardie</div><div class="val">${ary.tachycardie?'✅':'❌'}</div></div><div class="modal-field"><div class="lbl">Asystolie</div><div class="val">${ary.asystolie?'✅':'❌'}</div></div>${ary.autre?`<div class="modal-field"><div class="lbl">Autre</div><div class="val">${sanitize(ary.autre)}</div></div>`:''}</div></div>${f.bilan_remarque?`<div class="modal-section"><div class="modal-section-title medical">📝 Bilan & Remarques</div><div class="modal-field"><div class="val">${sanitize(f.bilan_remarque)}</div></div></div>`:''}<div class="modal-section"><div class="modal-section-title medical">🧍 Lésions</div><div class="modal-tags">${lesionBadgesHtml}</div></div><div class="modal-section"><div class="modal-section-title medical">📈 Évolution</div>${evolutionHtml}</div>${f.materiel_utilise?`<div class="modal-section"><div class="modal-section-title medical">🧰 Matériel</div><div class="modal-field"><div class="val">${sanitize(f.materiel_utilise)}</div></div></div>`:''}`;
+  document.getElementById('ficheModal').style.display='flex';
+}
+
+function renderFicheModal(f){
+  const URGENCE_COLORS={U1:'#e74c3c',U2:'#f39c12',U3:'#2ecc71',implique:'#5c6bc0'};
+  const v=(val,fallback='—')=>(val!==null&&val!==undefined&&val!=='')?(typeof val==='string'?sanitize(val):val):`<span class="empty">${fallback}</span>`;
+  const bool2str=(val)=>val===true?'✅ Oui':val===false?'❌ Non':'—';
+  document.getElementById('modalTitle').textContent=`📋 ${sanitize(f.patient_nom||'?')} ${sanitize(f.patient_prenom||'')} — Fiche Patient`;
+  document.getElementById('modalHeader').className='modal-header';
+  const bilanData=f.bilan_tableau||{};
+  const LESION_COLORS_LOCAL={'Fracture':'#e74c3c','Entorse':'#e67e22','Contusion':'#9b59b6','Brûlure':'#e8b800','Piqûre':'#1abc9c','Autre':'#3498db'};
+  let lesionBadgesHtml='';
+  if(Object.keys(bilanData).length>0){Object.entries(bilanData).forEach(([zone,lesions])=>{(lesions||[]).forEach(lesion=>{const baseLesion=lesion.split(':')[0].trim();const color=LESION_COLORS_LOCAL[baseLesion]||'#999';lesionBadgesHtml+=`<span class="modal-lesion-badge" style="background:${color};">${sanitize(zone)} — ${sanitize(lesion)}</span>`;});});}
+  else lesionBadgesHtml='<span style="color:var(--text3);font-style:italic;">Aucune lésion</span>';
+  const soinsData=f.soins||{};
+  const SOINS_LABELS={plaies:'Soin de plaies',pansement:'Pansement',attelle:'Attelle',matelas_depression:'Matelas à dépression',compression:'Compression',bandage:'Bandage',collier_cervical:'Collier Cervical',repos_surveillance:'Repos / Surveillance'};
+  const soinsActifs=Object.keys(soinsData).filter(k=>soinsData[k]).map(k=>SOINS_LABELS[k]||k);
+  const soinsHtml=soinsActifs.length>0?soinsActifs.map(s=>`<span class="modal-tag">${sanitize(s)}</span>`).join(''):'<span style="color:var(--text3);font-style:italic;">Aucun soin</span>';
+  const matData=f.materiel||{};
+  const matHtml=Object.keys(matData).length>0?Object.keys(matData).map(k=>`<div class="mat-modal-item">${sanitize(k)}<span>×${matData[k]}</span></div>`).join(''):'<span style="color:var(--text3);font-style:italic;">Aucun matériel</span>';
+  const urg=f.urgence,urgColor=urg?(URGENCE_COLORS[urg]||'#999'):null;
+  const urgHtml=urg?`<span class="urgence-badge-modal" style="background:${urgColor};">${sanitize(urg)}</span>`:'<span style="color:var(--text3);">—</span>';
+  const inModes=[];if(f.in_spontanee)inModes.push('Spontanée');if(f.in_via_equipe)inModes.push('Via équipe');if(f.in_via_ambulance)inModes.push('Via ambulance'+(f.in_num_ambulance?` (${sanitize(f.in_num_ambulance)})`:'' ));
+  const outModes=[];if(f.out_retour_normal)outModes.push('Retour à la vie normale');if(f.out_refus_soins)outModes.push('Refus de soins');if(f.out_evacuation_vsl)outModes.push('VSL');if(f.out_evacuation_ambulance)outModes.push('Ambulance'+(f.out_num_ambulance?` (${sanitize(f.out_num_ambulance)})`:'' ));
+  let soignantsHtml='<span style="color:var(--text3);font-style:italic;">Non disponible</span>';
+  if(f.soignants&&Array.isArray(f.soignants)){const validSoignants=f.soignants.filter(s=>s.nom&&s.nom.trim());if(validSoignants.length>0){soignantsHtml='<div class="soignants-modal">'+validSoignants.map(s=>{const roles=['SEC','ES','EPS','TMS','AMU','Infirmier','Médecin'].filter((r,i)=>[s.is_sec,s.is_es,s.is_eps,s.is_tms,s.is_amu,s.is_infirmier,s.is_medecin][i]);return `<div class="soignant-modal-card"><strong>${sanitize(s.nom)}</strong>${s.numero_inami?`<span style="font-size:.78em;color:var(--text3);">INAMI: ${sanitize(s.numero_inami)}</span>`:''}<div class="soignant-badges">${roles.map(r=>`<span class="soignant-badge">${r}</span>`).join('')}</div></div>`;}).join('')+'</div>';}else soignantsHtml='<span style="color:var(--text3);font-style:italic;">Aucun soignant</span>';}
+  const hasMedical=f.fiches_medicales_croixrouge&&f.fiches_medicales_croixrouge.length>0;
+  const isSecured=f.est_securisee===true;
+  const createdAt=f.created_at?new Date(f.created_at).toLocaleString('fr-BE'):(f._createdAt?new Date(f._createdAt).toLocaleString('fr-BE'):'—');
+  _currentModalFicheId=f.id||null;_currentModalFicheData=f;
+  const medBtn=document.getElementById('modalMedBtn');if(medBtn)medBtn.style.display=(hasMedical&&f.id)?'inline-block':'none';
+  document.getElementById('modalBody').innerHTML=`${isSecured?`<div style="background:var(--secure-light);border:2px solid var(--secure);border-radius:var(--radius);padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;"><span style="font-size:1.2em;">🔒</span><span style="color:var(--secure);font-weight:700;font-size:.88em;">Fiche sécurisée — Lecture seule. Aucune modification possible.</span></div>`:''}<div class="modal-section"><div class="modal-section-title">📌 Identification</div><div class="modal-grid"><div class="modal-field"><div class="lbl">N° Patient</div><div class="val">${v(f.numero_patient)}</div></div><div class="modal-field"><div class="lbl">N° ODIN</div><div class="val">${v(f.numero_odin)}</div></div><div class="modal-field"><div class="lbl">APS</div><div class="val">${v(f.nom_aps)}</div></div><div class="modal-field"><div class="lbl">Créée le</div><div class="val">${createdAt}</div></div></div></div><div class="modal-section"><div class="modal-section-title">👤 Patient</div><div class="modal-grid"><div class="modal-field"><div class="lbl">Nom</div><div class="val">${v(f.patient_nom)}</div></div><div class="modal-field"><div class="lbl">Prénom</div><div class="val">${v(f.patient_prenom)}</div></div><div class="modal-field"><div class="lbl">Naissance</div><div class="val">${v(f.date_naissance)}</div></div><div class="modal-field"><div class="lbl">Sexe</div><div class="val">${v(f.sexe)}</div></div><div class="modal-field"><div class="lbl">Mineur</div><div class="val">${f.est_mineur?'✅ Oui':'❌ Non'}</div></div><div class="modal-field"><div class="lbl">Adresse</div><div class="val">${v(f.adresse)}</div></div><div class="modal-field"><div class="lbl">Téléphone</div><div class="val">${v(f.telephone)}</div></div></div></div><div class="modal-section"><div class="modal-section-title">🚪 Arrivée</div><div class="modal-grid"><div class="modal-field"><div class="lbl">Date</div><div class="val">${v(f.in_date)}</div></div><div class="modal-field"><div class="lbl">Heure</div><div class="val">${v(f.heure_in)}</div></div><div class="modal-field" style="grid-column:span 2;"><div class="lbl">Mode</div><div class="val">${inModes.length?inModes.join(', '):'—'}</div></div></div></div><div class="modal-section"><div class="modal-section-title">📊 Bilan</div><div class="modal-grid" style="margin-bottom:14px;"><div class="modal-field"><div class="lbl">Conscience</div><div class="val">${bool2str(f.conscience)}</div></div><div class="modal-field"><div class="lbl">Respiration</div><div class="val">${bool2str(f.respiration)}</div></div><div class="modal-field"><div class="lbl">Circulation</div><div class="val">${bool2str(f.circulation)}</div></div><div class="modal-field"><div class="lbl">Hémorragie</div><div class="val">${v(f.hemorragie)}</div></div><div class="modal-field"><div class="lbl">Urgence</div><div class="val">${urgHtml}</div></div></div><div style="font-weight:700;font-size:.8em;color:var(--text2);text-transform:uppercase;margin-bottom:10px;">🧍 Zones lésées</div><div class="modal-tags">${lesionBadgesHtml}</div></div><div class="modal-section"><div class="modal-section-title">👨‍⚕️ Soignants</div>${soignantsHtml}</div><div class="modal-section"><div class="modal-section-title">💊 Soins</div><div class="modal-tags" style="margin-bottom:10px;">${soinsHtml}</div>${f.autres_soins?`<div class="modal-field"><div class="lbl">Autres soins</div><div class="val">${sanitize(f.autres_soins)}</div></div>`:''}</div><div class="modal-section"><div class="modal-section-title">🧰 Matériel</div><div class="mat-modal-list">${matHtml}</div></div><div class="modal-section"><div class="modal-section-title">🚶 Sortie</div><div class="modal-grid"><div class="modal-field" style="grid-column:span 2;"><div class="lbl">Mode</div><div class="val">${outModes.length?outModes.join(', '):'—'}</div></div>${f.out_vecteur?`<div class="modal-field"><div class="lbl">Vecteur / Hôpital</div><div class="val">${sanitize(f.out_vecteur)}</div></div>`:''}<div class="modal-field"><div class="lbl">Heure OUT</div><div class="val">${v(f.heure_out)}</div></div></div></div>`;
+  document.getElementById('ficheModal').style.display='flex';
+}
+
+function deletePending(index){if(!confirm('Supprimer cette fiche en attente ?'))return;const pending=JSON.parse(localStorage.getItem('cr_pending')||'[]');pending.splice(index,1);localStorage.setItem('cr_pending',JSON.stringify(pending));updatePendingCount();loadFiches();showToast('Fiche supprimée','info');}
+
+function resetForm(){
+  document.querySelectorAll('#formTab input[type="text"],#formTab input[type="tel"],#formTab input[type="date"],#formTab input[type="time"],#formTab textarea').forEach(el=>el.value='');
+  document.querySelectorAll('#formTab input[type="checkbox"]').forEach(el=>el.checked=false);
+  document.querySelectorAll('#formTab input[type="radio"]').forEach(el=>el.checked=false);
+  document.querySelector('input[name="ficheMed"][value="non"]').checked=true;
+  MATERIEL_ITEMS.forEach(item=>{const id='mat_'+item.replace(/[^a-z0-9]/gi,'_');matValues[id]=0;const display=document.getElementById(id+'_display');if(display){display.textContent='0';display.className='qty-val';}});
+  document.querySelectorAll('#bilanBody td').forEach(td=>td.classList.remove('cell-checked'));
+  const autreLesionBox=document.getElementById('autreLesionBox');if(autreLesionBox)autreLesionBox.classList.remove('visible');
+  const autreLesionText=document.getElementById('autreLesionText');if(autreLesionText)autreLesionText.value='';
+  bodyData={};updateBodySvg();updateActiveZonesList();updateUrgencePills();
+  document.getElementById('soignantsContainer').innerHTML='';soignantCount=0;addSoignant();
+  setActiveLesion('Fracture');
+  currentFicheId=null;medicalSaved=false;updateSavedIndicator();
+  ynValues={};
+  document.querySelectorAll('#medicalTab input[type="checkbox"]').forEach(el=>el.checked=false);
+  document.querySelectorAll('#medicalTab input[type="radio"]').forEach(el=>el.checked=false);
+  document.querySelectorAll('#medicalTab textarea').forEach(el=>el.value='');
+  document.querySelectorAll('#medicalTab .yn-btn').forEach(b=>b.classList.remove('active'));
+  bodyDataMed={};updateBodySvgMed();updateMedActiveZonesList();
+  const headerRow=document.getElementById('evolutionHeaderRow');while(headerRow.children.length>1)headerRow.removeChild(headerRow.lastChild);
+  document.querySelectorAll('#evolutionBody tr').forEach(row=>{while(row.children.length>1)row.removeChild(row.lastChild);});
+  evolutionColCount=0;updateGlasgow();
+  showToast('Formulaire réinitialisé','info');
+}
+
+// ====== INIT ======
+window.addEventListener('load', async () => {
+  genGateCaptcha(); genGateRegCaptcha();
+  if(localStorage.getItem('cr_dark')==='1')document.body.classList.add('dark');
+  const darkBtn=document.getElementById('darkBtn');if(darkBtn)darkBtn.textContent=document.body.classList.contains('dark')?'☀️ Mode Jour':'🌙 Mode Nuit';
+  window.addEventListener('online',()=>{updateOnlineStatus();syncPendingFiches();});
+  window.addEventListener('offline',updateOnlineStatus);
+  const{data:{session}}=await sb.auth.getSession();
+  if(session&&session.user){currentUser=session.user;unlockApp();syncPendingFiches();}
+  sb.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_IN'&&session&&!currentUser){currentUser=session.user;unlockApp();syncPendingFiches();}
+    else if(event==='SIGNED_OUT'){currentUser=null;_appInitialized=false;_sfAuthenticated=false;stopSfSession();document.getElementById('appContent').style.display='none';document.getElementById('securityGate').style.display='flex';genGateCaptcha();}
+    else if(event==='TOKEN_REFRESHED'&&session){currentUser=session.user;}
+  });
+  const fmt=localStorage.getItem('cr_format')||'pc';
+  const formatSelect=document.getElementById('formatSelect');if(formatSelect)formatSelect.value=fmt;
+  changeFormat(fmt);
+});
+</script>
+</body>
+</html>
