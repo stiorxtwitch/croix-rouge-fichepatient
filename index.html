@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- CSP CORRIGÉ : cdn.jsdelivr.net ajouté dans connect-src, X-Frame-Options retiré (doit être header HTTP) -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://sevrfgivcpefyykuffti.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; connect-src 'self' https://sevrfgivcpefyykuffti.supabase.co https://fonts.googleapis.com https://cdn.jsdelivr.net;">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="no-referrer">
@@ -27,6 +26,7 @@
   --card: #ffffff; --input-bg: #ffffff;
   --radius: 10px; --radius-sm: 6px;
   --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
+  --secure: #6d28d9; --secure-hover: #5b21b6; --secure-light: #ede9fe;
 }
 .dark {
   --bg: #111; --bg2: #1a1a1a; --bg3: #252525;
@@ -36,6 +36,7 @@
   --border: #333; --shadow: rgba(0,0,0,0.5);
   --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c;
   --card: #1a1a1a; --input-bg: #222;
+  --secure: #7c3aed; --secure-hover: #6d28d9; --secure-light: #2d1f4a;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; transition: background .3s, color .3s; }
@@ -118,6 +119,31 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .strength-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0; }
 .strength-label { font-size: .72em; margin-top: 4px; font-weight: 600; }
 
+/* ====== INACTIVITY WARNING ====== */
+#inactivityOverlay {
+  position: fixed; inset: 0; z-index: 8000;
+  background: rgba(0,0,0,.82);
+  display: none; align-items: center; justify-content: center; padding: 16px;
+  backdrop-filter: blur(6px);
+}
+#inactivityOverlay.show { display: flex; }
+.inactivity-box {
+  background: #1a1a1a; border: 2px solid #f39c12;
+  border-radius: 20px; padding: 36px 32px; width: 100%; max-width: 400px;
+  text-align: center; animation: gateIn .3s ease;
+}
+.inactivity-box .inact-icon { font-size: 2.8em; margin-bottom: 14px; }
+.inactivity-box h2 { color: #fff; font-size: 1.15em; font-weight: 700; margin-bottom: 8px; }
+.inactivity-box p { color: rgba(255,255,255,.55); font-size: .88em; margin-bottom: 20px; line-height: 1.6; }
+.inactivity-countdown {
+  font-size: 2.2em; font-weight: 700; font-family: var(--mono);
+  color: #f39c12; margin-bottom: 20px;
+  background: rgba(243,156,18,.1); border-radius: 12px; padding: 10px 0;
+}
+.inactivity-box .btn-stay { background: #f39c12; color: #1a1a1a; border: none; border-radius: var(--radius-sm); padding: 12px 28px; font-size: 1em; font-weight: 700; cursor: pointer; font-family: var(--font); transition: background .2s; margin-right: 10px; }
+.inactivity-box .btn-stay:hover { background: #e67e22; }
+.inactivity-box .btn-logout-now { background: rgba(255,255,255,.08); color: rgba(255,255,255,.5); border: 1px solid rgba(255,255,255,.15); border-radius: var(--radius-sm); padding: 12px 20px; font-size: .9em; font-weight: 600; cursor: pointer; font-family: var(--font); }
+
 /* ====== SESSION WARNING ====== */
 #sessionWarning {
   position: fixed; top: 0; left: 0; right: 0; z-index: 500;
@@ -159,6 +185,35 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .step-active { background: var(--warning); color: #fff; }
 .step-done { background: var(--success); color: #fff; }
 
+/* ====== SECURE MOVE MODAL ====== */
+.secure-move-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 600;
+  display: none; align-items: center; justify-content: center; padding: 16px;
+  backdrop-filter: blur(6px);
+}
+.secure-move-overlay.show { display: flex; }
+.secure-move-box {
+  background: var(--card); border: 2px solid var(--secure); border-radius: 16px;
+  padding: 32px; width: 100%; max-width: 480px;
+  box-shadow: 0 0 40px rgba(109,40,217,.3), 0 24px 60px rgba(0,0,0,.5);
+  animation: shakeIn .3s ease;
+}
+.secure-move-box h3 { color: var(--secure); font-size: 1.1em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.secure-move-box p { font-size: .88em; color: var(--text2); margin-bottom: 14px; line-height: 1.6; }
+.secure-move-warning {
+  background: rgba(109,40,217,.08); border: 1.5px solid rgba(109,40,217,.3);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px;
+  font-size: .85em; color: var(--secure); font-weight: 700; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+}
+.secure-move-box .confirm-phrase { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-family: var(--mono); font-weight: 700; color: var(--secure); font-size: .9em; text-align: center; margin-bottom: 12px; letter-spacing: 1px; }
+.secure-move-box input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--input-bg); color: var(--text); font-family: var(--font); font-size: .95em; margin-bottom: 14px; }
+.secure-move-box input:focus { outline: none; border-color: var(--secure); }
+.secure-move-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.btn-confirm-move { background: var(--secure); color: #fff; border: none; border-radius: var(--radius-sm); padding: 10px 20px; font-weight: 700; cursor: pointer; font-family: var(--font); transition: background .2s; }
+.btn-confirm-move:hover { background: var(--secure-hover); }
+.btn-confirm-move:disabled { background: #aaa; cursor: not-allowed; }
+.btn-cancel-move { background: var(--bg2); color: var(--text); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 20px; font-weight: 700; cursor: pointer; font-family: var(--font); }
+
 /* ====== HEADER ====== */
 .header {
   background: var(--primary); color: #fff;
@@ -190,6 +245,15 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .status-online { color: var(--success); font-weight: 600; }
 .status-offline { color: var(--danger); font-weight: 600; }
 
+/* ====== INACTIVITY STATUS BAR ====== */
+.inactivity-bar {
+  background: linear-gradient(90deg, #1a1a1a, #2a1a00);
+  border-bottom: 1px solid rgba(243,156,18,.3);
+  padding: 4px 20px; text-align: center; font-size: .75em; color: rgba(243,156,18,.8);
+  font-family: var(--mono); display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.inact-timer-val { color: #f39c12; font-weight: 700; }
+
 /* ====== FICHE INDICATOR ====== */
 .fiche-indicator {
   background: linear-gradient(135deg, #1a5276, #2980b9);
@@ -210,11 +274,14 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .container.phone { max-width: 480px; font-size: 13px; }
 
 /* ====== TABS ====== */
-.tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; gap: 4px; }
+.tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; gap: 4px; flex-wrap: wrap; }
 .tab { padding: 10px 22px; cursor: pointer; font-weight: 600; font-size: .9em; border-bottom: 3px solid transparent; color: var(--text2); transition: all .2s; margin-bottom: -2px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
 .tab:hover { color: var(--text); background: var(--bg2); }
 .tab.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light); }
 .tab.active-medical { color: var(--medical); border-bottom-color: var(--medical); background: var(--medical-light); }
+.tab.active-secure { color: var(--secure); border-bottom-color: var(--secure); background: var(--secure-light); }
+.tab.tab-secure { color: var(--secure); }
+.tab.tab-secure:hover { background: var(--secure-light); }
 
 /* ====== SECTION ====== */
 .section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; box-shadow: 0 2px 8px var(--shadow); overflow: hidden; }
@@ -325,11 +392,39 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
 .fiche-btns button { padding: 6px 12px; font-size: .8em; }
 .pending-badge { display: inline-block; background: var(--warning); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; }
 .medical-badge { display: inline-block; background: var(--medical); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; margin-left: 4px; }
+.secure-badge { display: inline-block; background: var(--secure); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: .72em; font-weight: 700; margin-left: 4px; }
 .btn-view { background: #2980b9; color: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: .8em; cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
 .btn-view:hover { background: #1a6fa0; }
 .btn-delete-secure { background: var(--danger); color: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: .8em; cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
 .btn-delete-secure:hover { background: #a93226; }
+.btn-move-secure { background: var(--secure); color: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: .8em; cursor: pointer; font-weight: 700; font-family: var(--font); transition: background .2s; }
+.btn-move-secure:hover { background: var(--secure-hover); }
 .fiche-linked { border-left: 4px solid var(--medical); }
+.fiche-secured { border-left: 4px solid var(--secure); background: rgba(109,40,217,.03); }
+
+/* ====== SECURED FICHE VIEWER ====== */
+.secured-viewer-banner {
+  background: linear-gradient(135deg, var(--secure), #5b21b6);
+  color: #fff; border-radius: var(--radius); padding: 14px 20px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.secured-viewer-banner .sv-icon { font-size: 1.8em; flex-shrink: 0; }
+.secured-viewer-banner h2 { font-size: 1em; font-weight: 700; margin: 0; }
+.secured-viewer-banner p { font-size: .82em; opacity: .85; margin: 2px 0 0; }
+.secured-field-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.secured-field { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; }
+.secured-field .sf-label { font-size: .72em; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+.secured-field .sf-val { font-size: .9em; font-weight: 600; color: var(--text); }
+.secured-field .sf-val.empty { color: var(--text3); font-style: italic; font-weight: 400; }
+.secured-section-title { font-weight: 700; font-size: .82em; text-transform: uppercase; letter-spacing: .6px; color: var(--secure); margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--secure-light); display: flex; align-items: center; gap: 6px; }
+.secured-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.secured-tag { background: var(--secure-light); color: var(--secure); padding: 3px 10px; border-radius: 12px; font-size: .8em; font-weight: 600; }
+.secured-no-interact { pointer-events: none; user-select: none; opacity: .9; }
+.secured-no-interact input, .secured-no-interact button, .secured-no-interact select, .secured-no-interact textarea { pointer-events: none; cursor: not-allowed; }
+.secured-empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+.secured-empty-state .se-icon { font-size: 3em; margin-bottom: 14px; }
+.secured-empty-state h3 { font-size: 1.05em; color: var(--text2); margin-bottom: 8px; }
+.secured-empty-state p { font-size: .88em; }
 
 /* ====== TOAST ====== */
 .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: var(--radius); color: #fff; font-weight: 600; z-index: 999; opacity: 0; transition: opacity .3s, transform .3s; font-size: .88em; max-width: 340px; transform: translateY(8px); }
@@ -453,6 +548,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
   .modal-grid { grid-template-columns: 1fr 1fr; }
   .glasgow-grid { grid-template-columns: 1fr; }
   .gate-box { padding: 28px 20px; }
+  .tab { padding: 8px 14px; font-size: .8em; }
 }
 </style>
 </head>
@@ -528,6 +624,20 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
   </div>
 </div>
 
+<!-- ========== INACTIVITY WARNING ========== -->
+<div id="inactivityOverlay">
+  <div class="inactivity-box">
+    <div class="inact-icon">⏱️</div>
+    <h2>Session inactive</h2>
+    <p>Vous n'avez pas interagi depuis un moment.<br>Vous serez déconnecté automatiquement dans :</p>
+    <div class="inactivity-countdown" id="inactivityCountdown">0:30</div>
+    <div>
+      <button class="btn-stay" onclick="resetInactivityTimer()">✋ Je suis toujours là</button>
+      <button class="btn-logout-now" onclick="doLogout()">Déconnecter</button>
+    </div>
+  </div>
+</div>
+
 <!-- ========== SESSION WARNING ========== -->
 <div id="sessionWarning">
   ⚠️ Votre session expire dans <span id="sessionCountdown">5:00</span>
@@ -556,6 +666,24 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
   </div>
 </div>
 
+<!-- ========== SECURE MOVE MODAL ========== -->
+<div class="secure-move-overlay" id="secureMoveOverlay">
+  <div class="secure-move-box">
+    <h3>🔒 Déplacer vers les Fiches Sécurisées</h3>
+    <p id="secureMoveDesc">Vous allez archiver cette fiche dans la section sécurisée.</p>
+    <div class="secure-move-warning">
+      ⚠️ <span>Cette action est <strong>irréversible</strong>. Une fois dans les fiches sécurisées, la fiche sera en lecture seule — aucune modification ni suppression ne sera possible.</span>
+    </div>
+    <div class="confirm-phrase" id="secureMovePhrase"></div>
+    <p style="font-size:.8em;color:var(--text2);margin-bottom:6px;">Tapez la phrase ci-dessus pour confirmer :</p>
+    <input type="text" id="secureMoveInput" placeholder="Tapez ici pour confirmer..." oninput="checkMoveConfirm()">
+    <div class="secure-move-actions">
+      <button class="btn-cancel-move" onclick="closeSecureMove()">Annuler</button>
+      <button class="btn-confirm-move" id="btnConfirmMove" disabled onclick="executeSecureMove()">🔒 Sécuriser cette fiche</button>
+    </div>
+  </div>
+</div>
+
 <!-- ========== MAIN APP ========== -->
 <div id="appContent" style="display:none;">
   <div class="header">
@@ -573,6 +701,10 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
       <button onclick="toggleDark()" id="darkBtn">🌙 Mode Nuit</button>
       <button onclick="doLogout()" id="logoutBtn">🚪 Déconnexion</button>
     </div>
+  </div>
+
+  <div class="inactivity-bar">
+    ⏱️ Déconnexion automatique après 3 min d'inactivité — <span id="inactTimerDisplay" class="inact-timer-val">3:00</span>
   </div>
 
   <div class="status-bar">
@@ -604,6 +736,7 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
     <div class="tabs">
       <div class="tab active" onclick="switchTab('form')" id="tabForm">📋 Nouvelle Fiche</div>
       <div class="tab" onclick="switchTab('list')" id="tabList">📁 Mes Fiches</div>
+      <div class="tab tab-secure" onclick="switchTab('secured')" id="tabSecured">🔒 Fiches Sécurisées</div>
     </div>
 
     <!-- FORM TAB -->
@@ -975,31 +1108,44 @@ input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; accent-
     <div id="listTab" style="display:none;">
       <div id="fichesList"></div>
     </div>
+
+    <!-- SECURED TAB -->
+    <div id="securedTab" style="display:none;">
+      <div id="securedList"></div>
+    </div>
+
   </div>
 </div><!-- /appContent -->
 
 <script>
-// ========== CONFIG ==========
 const SUPABASE_URL = 'https://sevrfgivcpefyykuffti.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNldnJmZ2l2Y3BlZnl5a3VmZnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NDI1NTMsImV4cCI6MjA3ODUxODU1M30.YZnkSHsVWKQEhfU7xYfWyTFmtkM28Zuzdu7Y1sjBXQc';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-// ========== SECURITY CONSTANTS ==========
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 const SESSION_TIMEOUT_MS  = 60 * 60 * 1000;
 const SESSION_WARNING_MS  = 5 * 60 * 1000;
 const MIN_PASSWORD_LENGTH = 8;
 
-// ========== STATE ==========
+// ====== INACTIVITY CONSTANTS ======
+const INACTIVITY_TIMEOUT_MS = 3 * 60 * 1000;     // 3 minutes → déconnexion
+const INACTIVITY_WARNING_MS = 30 * 1000;           // 30 secondes → avertissement avant déco
+
 let currentUser = null;
 let sessionTimer = null;
 let sessionWarningTimer = null;
 let sessionExpiry = null;
-// FIX: flag pour éviter double initialisation lors du refresh
 let _appInitialized = false;
 
-// ========== SANITIZE ==========
+// ====== INACTIVITY STATE ======
+let _inactivityTimer = null;
+let _inactivityWarningTimer = null;
+let _inactivityWarningInterval = null;
+let _inactivityOverlayShown = false;
+let _inactTimerBarInterval = null;
+let _inactTimerBarStart = null;
+
 function sanitize(str) {
   if (!str) return '';
   return String(str).replace(/[<>"'`;&]/g, c => ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;','`':'&#x60;',';':'&#x3B;','&':'&amp;'}[c]));
@@ -1016,7 +1162,82 @@ function sanitizeObj(obj) {
   return out;
 }
 
-// ========== BRUTE FORCE PROTECTION ==========
+// ====== INACTIVITY TIMER ======
+function startInactivityTimer() {
+  clearTimeout(_inactivityTimer);
+  clearTimeout(_inactivityWarningTimer);
+  clearInterval(_inactivityWarningInterval);
+  clearInterval(_inactTimerBarInterval);
+  _inactivityOverlayShown = false;
+  hideInactivityOverlay();
+  _inactTimerBarStart = Date.now();
+
+  // Barre de statut — mise à jour chaque seconde
+  _inactTimerBarInterval = setInterval(() => {
+    if (!currentUser) { clearInterval(_inactTimerBarInterval); return; }
+    const elapsed = Date.now() - _inactTimerBarStart;
+    const remaining = Math.max(0, INACTIVITY_TIMEOUT_MS - elapsed);
+    const m = Math.floor(remaining / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    const el = document.getElementById('inactTimerDisplay');
+    if (el) el.textContent = m + ':' + s.toString().padStart(2,'0');
+  }, 1000);
+
+  // Avertissement 30s avant la déco
+  _inactivityWarningTimer = setTimeout(() => {
+    _inactivityOverlayShown = true;
+    showInactivityOverlay();
+  }, INACTIVITY_TIMEOUT_MS - INACTIVITY_WARNING_MS);
+
+  // Déconnexion effective
+  _inactivityTimer = setTimeout(() => {
+    showToast('⏱️ Déconnecté automatiquement — inactivité de 3 minutes', 'error');
+    doLogout();
+  }, INACTIVITY_TIMEOUT_MS);
+}
+
+function showInactivityOverlay() {
+  const overlay = document.getElementById('inactivityOverlay');
+  overlay.classList.add('show');
+  let remaining = INACTIVITY_WARNING_MS;
+  clearInterval(_inactivityWarningInterval);
+  _inactivityWarningInterval = setInterval(() => {
+    remaining -= 1000;
+    const m = Math.floor(remaining / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    const el = document.getElementById('inactivityCountdown');
+    if (el) el.textContent = m + ':' + s.toString().padStart(2,'0');
+    if (remaining <= 0) clearInterval(_inactivityWarningInterval);
+  }, 1000);
+}
+
+function hideInactivityOverlay() {
+  document.getElementById('inactivityOverlay').classList.remove('show');
+  clearInterval(_inactivityWarningInterval);
+}
+
+function resetInactivityTimer() {
+  if (!currentUser) return;
+  hideInactivityOverlay();
+  startInactivityTimer();
+}
+
+function stopInactivityTimer() {
+  clearTimeout(_inactivityTimer);
+  clearTimeout(_inactivityWarningTimer);
+  clearInterval(_inactivityWarningInterval);
+  clearInterval(_inactTimerBarInterval);
+  hideInactivityOverlay();
+}
+
+// Écouter toutes les interactions utilisateur
+const ACTIVITY_EVENTS = ['click','keydown','mousemove','touchstart','scroll','mousedown','pointerdown'];
+function _onUserActivity() {
+  if (currentUser && !_inactivityOverlayShown) startInactivityTimer();
+}
+ACTIVITY_EVENTS.forEach(ev => document.addEventListener(ev, _onUserActivity, { passive: true }));
+
+// ====== BRUTE FORCE PROTECTION ======
 function getLoginAttempts() {
   try { return JSON.parse(localStorage.getItem('sec_attempts') || '{"count":0,"ts":0}'); } catch { return {count:0,ts:0}; }
 }
@@ -1046,7 +1267,7 @@ function showLockout() {
   setTimeout(() => { bar.classList.remove('show'); document.getElementById('gateBtnLogin').disabled = false; }, remaining);
 }
 
-// ========== SESSION MANAGEMENT ==========
+// ====== SESSION MANAGEMENT ======
 function startSessionTimer() {
   clearTimeout(sessionTimer);
   clearTimeout(sessionWarningTimer);
@@ -1072,11 +1293,8 @@ function showSessionWarning() {
     countdown.textContent = m + ':' + s.toString().padStart(2,'0');
   }, 1000);
 }
-['click','keydown','mousemove','touchstart'].forEach(ev => {
-  document.addEventListener(ev, () => { if (currentUser) startSessionTimer(); }, { passive: true });
-});
 
-// ========== CAPTCHA ==========
+// ====== CAPTCHA ======
 let gateCaptcha = {}, gateRegCaptcha = {};
 function genGateCaptcha() {
   const a = Math.floor(Math.random()*10)+1, b = Math.floor(Math.random()*10)+1;
@@ -1093,7 +1311,6 @@ function genGateRegCaptcha() {
 function checkGateCaptcha() { return parseInt(document.getElementById('gateCaptchaA').value) === gateCaptcha.answer; }
 function checkGateRegCaptcha() { return parseInt(document.getElementById('gateRegCaptchaA').value) === gateRegCaptcha.answer; }
 
-// ========== PASSWORD STRENGTH ==========
 function checkGateStrength() {
   const pw = document.getElementById('gateRegPass1').value;
   const fill = document.getElementById('strengthFill');
@@ -1112,7 +1329,6 @@ function checkGateStrength() {
   label.style.color = l.bg;
 }
 
-// ========== GATE VIEWS ==========
 function switchGateView(v) {
   ['login','register','forgot'].forEach(id => {
     document.getElementById('gate' + id.charAt(0).toUpperCase() + id.slice(1) + 'View').classList.remove('active');
@@ -1125,7 +1341,6 @@ function hideGateErrors() {
     const el = document.getElementById(id); if (el) el.classList.remove('show');
   });
 }
-// FIX: showGateError accepte 2 paramètres (id de la div erreur + message)
 function showGateError(divId, msg) {
   const el = document.getElementById(divId);
   if (!el) return;
@@ -1141,7 +1356,6 @@ function showGateSuccess(divId, msg) {
   if (span) span.textContent = msg; else el.textContent = '✅ ' + msg;
 }
 
-// ========== GATE LOGIN ==========
 async function doGateLogin() {
   hideGateErrors();
   if (isLockedOut()) { showLockout(); return; }
@@ -1170,7 +1384,6 @@ async function doGateLogin() {
   unlockApp();
 }
 
-// ========== GATE REGISTER ==========
 async function doGateRegister() {
   hideGateErrors();
   const nom    = document.getElementById('gateRegNom').value.trim();
@@ -1188,7 +1401,6 @@ async function doGateRegister() {
   showGateSuccess('gateRegSuccess', 'Inscription réussie ! Vérifiez votre e-mail pour confirmer votre compte.');
 }
 
-// ========== GATE FORGOT ==========
 async function doGateForgot() {
   const email = document.getElementById('gateForgotEmail').value.trim();
   if (!email) return;
@@ -1197,13 +1409,11 @@ async function doGateForgot() {
   showGateSuccess('gateForgotSuccess', 'Lien de réinitialisation envoyé à ' + email);
 }
 
-// ========== UNLOCK APP ==========
-// FIX: garde le flag _appInitialized pour ne pas rebuilder les tables 2 fois au refresh
 function unlockApp() {
   document.getElementById('securityGate').style.display = 'none';
   document.getElementById('appContent').style.display = '';
   startSessionTimer();
-  // Ne construire les tables qu'une seule fois
+  startInactivityTimer(); // ← démarrer le timer d'inactivité à la connexion
   if (!_appInitialized) {
     buildBilanTable();
     buildMaterielTable();
@@ -1229,10 +1439,11 @@ function updateUserLabel() {
 async function doLogout() {
   clearTimeout(sessionTimer);
   clearTimeout(sessionWarningTimer);
+  stopInactivityTimer();
   document.getElementById('sessionWarning').classList.remove('show');
   await sb.auth.signOut();
   currentUser = null;
-  _appInitialized = false; // FIX: reset le flag pour pouvoir réinitialiser si reconnexion
+  _appInitialized = false;
   ['cr_pending','cr_pending_medical'].forEach(k => localStorage.removeItem(k));
   document.getElementById('appContent').style.display = 'none';
   document.getElementById('securityGate').style.display = 'flex';
@@ -1240,7 +1451,7 @@ async function doLogout() {
   showToast('Déconnecté avec succès 🔒', 'info');
 }
 
-// ========== SECURE DELETE ==========
+// ====== SECURE DELETE ======
 let _deleteTarget = null;
 const DELETE_CONFIRM_PHRASES = ['SUPPRIMER', 'EFFACER', 'CONFIRMER'];
 
@@ -1278,16 +1489,13 @@ async function executeSecureDelete() {
     setStep(1,'active');
     const { error: e1 } = await sb.from('soignants_croixrouge').delete().eq('fiche_id', ficheId);
     if (e1) throw new Error('Erreur suppression soignants: ' + e1.message);
-    setStep(1,'done');
-    setStep(2,'active');
+    setStep(1,'done'); setStep(2,'active');
     const { error: e2 } = await sb.from('fiches_medicales_croixrouge').delete().eq('fiche_id', ficheId);
     if (e2) throw new Error('Erreur suppression fiche médicale: ' + e2.message);
-    setStep(2,'done');
-    setStep(3,'active');
+    setStep(2,'done'); setStep(3,'active');
     const { error: e3 } = await sb.from('fiches_croixrouge').delete().eq('id', ficheId).eq('user_id', currentUser.id);
     if (e3) throw new Error('Erreur suppression fiche: ' + e3.message);
-    setStep(3,'done');
-    setStep(4,'active');
+    setStep(3,'done'); setStep(4,'active');
     const { data: check } = await sb.from('fiches_croixrouge').select('id').eq('id', ficheId).maybeSingle();
     if (check) throw new Error('La fiche existe encore — contactez l\'administrateur.');
     setStep(4,'done');
@@ -1305,7 +1513,47 @@ async function executeSecureDelete() {
   }
 }
 
-// ========== APP STATE ==========
+// ====== SECURE MOVE (vers fiches sécurisées) ======
+let _moveTarget = null;
+const MOVE_CONFIRM_PHRASES = ['SÉCURISER', 'ARCHIVER', 'VERROUILLER'];
+
+function openSecureMove(ficheId, patientName) {
+  _moveTarget = ficheId;
+  const phrase = MOVE_CONFIRM_PHRASES[Math.floor(Math.random() * MOVE_CONFIRM_PHRASES.length)];
+  document.getElementById('secureMovePhrase').textContent = phrase;
+  document.getElementById('secureMovePhrase').dataset.phrase = phrase;
+  document.getElementById('secureMoveInput').value = '';
+  document.getElementById('btnConfirmMove').disabled = true;
+  document.getElementById('secureMoveDesc').innerHTML = `Vous allez déplacer la fiche de <strong>${sanitize(patientName)}</strong> dans la section sécurisée.`;
+  document.getElementById('secureMoveOverlay').classList.add('show');
+}
+function closeSecureMove() {
+  _moveTarget = null;
+  document.getElementById('secureMoveOverlay').classList.remove('show');
+}
+function checkMoveConfirm() {
+  const val = document.getElementById('secureMoveInput').value;
+  const phrase = document.getElementById('secureMovePhrase').dataset.phrase;
+  document.getElementById('btnConfirmMove').disabled = val !== phrase;
+}
+async function executeSecureMove() {
+  if (!_moveTarget || !currentUser) return;
+  document.getElementById('btnConfirmMove').disabled = true;
+  const { error } = await sb.from('fiches_croixrouge')
+    .update({ est_securisee: true })
+    .eq('id', _moveTarget)
+    .eq('user_id', currentUser.id);
+  if (error) {
+    showToast('❌ Erreur : ' + error.message, 'error');
+    document.getElementById('btnConfirmMove').disabled = false;
+    return;
+  }
+  closeSecureMove();
+  showToast('🔒 Fiche déplacée dans les fiches sécurisées.', 'success');
+  loadFiches();
+}
+
+// ====== APP STATE ======
 let currentFicheId = null;
 let medicalSaved = false;
 const LESION_COLORS = { 'Fracture':'#e74c3c','Entorse':'#e67e22','Contusion':'#9b59b6','Brûlure':'#e8b800','Piqûre':'#1abc9c','Autre':'#3498db' };
@@ -1315,7 +1563,6 @@ const LESION_ID_MAP = { 'Fracture':'Fracture','Entorse':'Entorse','Contusion':'C
 let activeLesion = 'Fracture', bodyData = {}, _syncingFromTable = false, _syncingFromSchema = false;
 let activeLesionMed = 'Fracture', bodyDataMed = {}, ynValues = {}, evolutionColCount = 0;
 
-// ========== UI HELPERS ==========
 function updateSavedIndicator() {
   const el = document.getElementById('savedIndicator');
   const idEl = document.getElementById('savedFicheId');
@@ -1375,7 +1622,7 @@ function getEvolutionData() {
   return result;
 }
 
-// ========== BODY SCHEMA MAIN ==========
+// ====== BODY SCHEMA MAIN ======
 function setActiveLesion(lesion) {
   activeLesion=lesion;
   document.querySelectorAll('#lesionChips .lesion-chip').forEach(c=>c.classList.remove('selected'));
@@ -1448,7 +1695,7 @@ function onBilanCheckboxChange(checkbox,zone,lesionKey){
   updateBodySvg();updateActiveZonesList();_syncingFromTable=false;
 }
 
-// ========== BODY SCHEMA MEDICAL ==========
+// ====== BODY SCHEMA MEDICAL ======
 function setActiveLesionMed(lesion){
   activeLesionMed=lesion;
   document.querySelectorAll('#medLesionChips .lesion-chip').forEach(c=>c.classList.remove('selected'));
@@ -1491,7 +1738,6 @@ function removeBodyZoneMed(zone,lesion){
 }
 function syncBodyToMedical(){ bodyDataMed=JSON.parse(JSON.stringify(bodyData));updateBodySvgMed();updateMedActiveZonesList(); }
 
-// ========== URGENCE PILLS ==========
 function updateUrgencePills(){
   const pills={U1:'pill_U1',U2:'pill_U2',U3:'pill_U3',implique:'pill_implique'};
   const val=getRadio('urgence');
@@ -1501,16 +1747,14 @@ function updateUrgencePills(){
   });
 }
 
-// ========== MATERIAL ==========
-// FIX: liste unique, pas de doublon
 const MATERIEL_ITEMS=['Attelle Zimmer','Attelle MI','Attelle MS','Bandage Triangulaire','Bandage crêpe 5cm','Bandage crêpe 7cm','Bandage crêpe 10cm','Bassin réuniforme','Coldpack','Collier Cervical','Compresse 5x5','Compresse 10x10','Compresse','Couverture Alu','Crème antihistaminique','Crème anti-inflammatoire','Crème antiseptique','Flapulle antiseptique','Flapulle LP','Gant d\'examen (paire)','Pansement individuel','Pansement à découper','Paracétamol 500mg','Patch DEA','Pocket Mask','Sparadrap par cm'];
 let matValues={};
-let _materielBuilt = false; // FIX: flag anti-doublon
+let _materielBuilt = false;
 function buildMaterielTable(){
-  if(_materielBuilt) return; // FIX: ne pas reconstruire si déjà fait
+  if(_materielBuilt) return;
   _materielBuilt = true;
   const body=document.getElementById('matBody');
-  body.innerHTML = ''; // FIX: vider avant de remplir
+  body.innerHTML = '';
   MATERIEL_ITEMS.forEach(item=>{
     const id='mat_'+item.replace(/[^a-z0-9]/gi,'_');
     matValues[id]=0;
@@ -1533,15 +1777,14 @@ function getMateriel(){
   return data;
 }
 
-// ========== BILAN TABLE ==========
 const BILAN_ZONES=['Tête','Cervical','Colonne','MSD','MSG','Thorax','Abdo','Bassin','MID','MIG'];
 const BILAN_LESIONS=['Fracture','Entorse','Contusion','Brûlure','Piqûre','Autre'];
-let _bilanBuilt = false; // FIX: flag anti-doublon
+let _bilanBuilt = false;
 function buildBilanTable(){
-  if(_bilanBuilt) return; // FIX: ne pas reconstruire si déjà fait
+  if(_bilanBuilt) return;
   _bilanBuilt = true;
   const body=document.getElementById('bilanBody');
-  body.innerHTML = ''; // FIX: vider avant de remplir
+  body.innerHTML = '';
   BILAN_LESIONS.forEach(les=>{
     const lesKey=(LESION_ID_MAP[les]||les).replace(/[^a-zA-Z]/g,'');
     let row='<tr><td>'+les+'</td>';
@@ -1560,7 +1803,6 @@ function getBilanTableau(){
   return data;
 }
 
-// ========== SOIGNANTS ==========
 let soignantCount=0;
 function addSoignant(){
   const id=soignantCount++;
@@ -1601,21 +1843,25 @@ function getSoignants(){
   }));
 }
 
-// ========== HELPERS ==========
 function getRadio(name){ const el=document.querySelector('input[name="'+name+'"]:checked');return el?el.value:''; }
 function getChecked(id){ return document.getElementById(id)?.checked||false; }
 function toggleInAmbulance(){ document.getElementById('inAmbulanceGroup').style.display=document.getElementById('inAmbulance').checked?'flex':'none'; }
 function toggleOutAmbulance(){ document.getElementById('outAmbulanceGroup').style.display=document.getElementById('outAmbulanceCheck').checked?'flex':'none'; }
 function toggleSection(el){ el.classList.toggle('collapsed');el.nextElementSibling.classList.toggle('hidden'); }
+
 function switchTab(tab){
   document.getElementById('formTab').style.display=tab==='form'?'':'none';
   document.getElementById('medicalTab').style.display='none';
   document.getElementById('listTab').style.display=tab==='list'?'':'none';
+  document.getElementById('securedTab').style.display=tab==='secured'?'':'none';
   document.getElementById('tabForm').className='tab'+(tab==='form'?' active':'');
   document.getElementById('tabList').className='tab'+(tab==='list'?' active':'');
+  document.getElementById('tabSecured').className='tab tab-secure'+(tab==='secured'?' active-secure':'');
   document.getElementById('ficheIndicator').classList.remove('show');
   if(tab==='list')loadFiches();
+  if(tab==='secured')loadSecuredFiches();
 }
+
 function showToast(msg,type='info'){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className='toast '+type+' show';
@@ -1643,7 +1889,6 @@ function updatePendingCount(){
   document.getElementById('pendingCount').textContent=(p.length+pm.length)+' fiche(s) en attente';
 }
 
-// ========== COLLECT MAIN FORM ==========
 function collectFormData(){
   const soins={};
   document.querySelectorAll('[data-soin]').forEach(cb=>{if(cb.checked)soins[cb.dataset.soin]=true;});
@@ -1689,7 +1934,6 @@ function collectFormData(){
   };
 }
 
-// ========== COLLECT MEDICAL FORM ==========
 function collectMedicalData(){
   const motifs=[],motifIds=['acc_circ','bagarre','brulure','chute','electro','alcool','alim','co','drogue','medic','noyade','plaie_pen'];
   const motifLabels=['Accidents de la circulation','Bagarre','Brûlure','Chute','Électrocution','Intox. alcool','Intox. alimentaire','Intox. CO','Intox. drogue','Intox. médicamenteuse','Noyade','Plaie pénétrante'];
@@ -1710,7 +1954,6 @@ function collectMedicalData(){
   };
 }
 
-// ========== SAVE MAIN FICHE ==========
 async function saveFiche(){
   if(!currentUser){showToast('Session invalide — reconnectez-vous','error');return;}
   if(currentFicheId){showToast('✅ Déjà sauvegardée. Réinitialisez pour une nouvelle fiche.','info');return;}
@@ -1743,7 +1986,8 @@ async function saveToSupabase(rawData){
     out_retour_normal:rawData.out_retour_normal,out_refus_soins:rawData.out_refus_soins,
     out_evacuation_vsl:rawData.out_evacuation_vsl,out_evacuation_ambulance:rawData.out_evacuation_ambulance,
     out_num_ambulance:rawData.out_num_ambulance,out_vecteur:rawData.out_vecteur,
-    out_autre_moyen:rawData.out_autre_moyen,heure_out:rawData.heure_out
+    out_autre_moyen:rawData.out_autre_moyen,heure_out:rawData.heure_out,
+    est_securisee: false
   };
   Object.keys(ficheRow).forEach(k=>{if(ficheRow[k]===undefined)delete ficheRow[k];});
   const{data:fiche,error}=await sb.from('fiches_croixrouge').insert(ficheRow).select('id').single();
@@ -1756,7 +2000,6 @@ async function saveToSupabase(rawData){
   return fiche.id;
 }
 
-// ========== SAVE MEDICAL FICHE ==========
 async function saveAndOpenMedical(){
   if(!currentUser){showToast('Session invalide — reconnectez-vous','error');return;}
   if(currentFicheId){switchToMedicalForm();return;}
@@ -1775,8 +2018,10 @@ function switchToMedicalForm(){
   document.getElementById('formTab').style.display='none';
   document.getElementById('medicalTab').style.display='';
   document.getElementById('listTab').style.display='none';
+  document.getElementById('securedTab').style.display='none';
   document.getElementById('tabForm').className='tab';
   document.getElementById('tabList').className='tab';
+  document.getElementById('tabSecured').className='tab tab-secure';
   document.getElementById('ficheIndicator').classList.add('show');
   syncBodyToMedical();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -1785,8 +2030,10 @@ function switchToMainForm(){
   document.getElementById('formTab').style.display='';
   document.getElementById('medicalTab').style.display='none';
   document.getElementById('listTab').style.display='none';
+  document.getElementById('securedTab').style.display='none';
   document.getElementById('tabForm').className='tab active';
   document.getElementById('tabList').className='tab';
+  document.getElementById('tabSecured').className='tab tab-secure';
   document.getElementById('ficheIndicator').classList.remove('show');
   updateSavedIndicator();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -1816,7 +2063,6 @@ async function saveMedicalFiche(){
   medicalSaved=true;showToast('✅ Fiche médicale sauvegardée !','success');switchToMainForm();
 }
 
-// ========== SYNC PENDING ==========
 async function syncPendingFiches(){
   if(!currentUser||!navigator.onLine)return;
   const pending=JSON.parse(localStorage.getItem('cr_pending')||'[]');
@@ -1836,12 +2082,13 @@ async function syncPendingFiches(){
   if(!remaining.length&&!remainingMed.length&&(pending.length+pendingMed.length>0))showToast((pending.length+pendingMed.length)+' fiche(s) synchronisée(s) !','success');
 }
 
-// ========== LOAD FICHES ==========
+// ====== LOAD FICHES (normales, non sécurisées) ======
 async function loadFiches(){
   if(!currentUser){document.getElementById('fichesList').innerHTML='<div class="msg-box msg-info">Connectez-vous pour voir vos fiches.</div>';return;}
   if(!navigator.onLine){document.getElementById('fichesList').innerHTML='<div class="msg-box msg-info">Hors ligne.</div>';return;}
   document.getElementById('fichesList').innerHTML='<p style="text-align:center;color:var(--text3);">Chargement...</p>';
-  const{data,error}=await sb.from('fiches_croixrouge').select('*,fiches_medicales_croixrouge(id)').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  // Ne charger que les fiches NON sécurisées
+  const{data,error}=await sb.from('fiches_croixrouge').select('*,fiches_medicales_croixrouge(id)').eq('user_id',currentUser.id).eq('est_securisee',false).order('created_at',{ascending:false});
   if(error){document.getElementById('fichesList').innerHTML='<div class="msg-box msg-info">Erreur: '+sanitize(error.message)+'</div>';return;}
   const URGENCE_COLORS={U1:'#e74c3c',U2:'#f39c12',U3:'#2ecc71',implique:'#5c6bc0'};
   const pending=JSON.parse(localStorage.getItem('cr_pending')||'[]');
@@ -1866,6 +2113,7 @@ async function loadFiches(){
       <div class="fiche-btns">
         <button class="btn-view" onclick='viewFiche(${JSON.stringify(JSON.stringify(f))})'>👁️ Voir</button>
         <button class="btn-view" style="background:${hasMedical?'#1a5276':'#5a7a8a'};" onclick="viewMedicalFiche('${f.id}')">🏥 Médicale</button>
+        <button class="btn-move-secure" onclick="openSecureMove('${f.id}','${patNom} ${patPrenom}')">🔒 Sécuriser</button>
         <button class="btn-delete-secure" onclick="openSecureDelete('${f.id}','${patNom} ${patPrenom}')">🗑️ Supprimer</button>
       </div>
     </div>`;
@@ -1873,7 +2121,60 @@ async function loadFiches(){
   document.getElementById('fichesList').innerHTML=html;
 }
 
-// ========== VIEW MODALS ==========
+// ====== LOAD SECURED FICHES ======
+async function loadSecuredFiches(){
+  if(!currentUser){document.getElementById('securedList').innerHTML='<div class="msg-box msg-info">Connectez-vous.</div>';return;}
+  if(!navigator.onLine){document.getElementById('securedList').innerHTML='<div class="msg-box msg-info">Hors ligne.</div>';return;}
+  document.getElementById('securedList').innerHTML='<p style="text-align:center;color:var(--text3);">Chargement...</p>';
+  const{data,error}=await sb.from('fiches_croixrouge').select('*,fiches_medicales_croixrouge(id)').eq('user_id',currentUser.id).eq('est_securisee',true).order('created_at',{ascending:false});
+  if(error){document.getElementById('securedList').innerHTML='<div class="msg-box msg-info">Erreur: '+sanitize(error.message)+'</div>';return;}
+
+  const URGENCE_COLORS={U1:'#e74c3c',U2:'#f39c12',U3:'#2ecc71',implique:'#5c6bc0'};
+  let html=`
+    <div class="secured-viewer-banner">
+      <div class="sv-icon">🔒</div>
+      <div>
+        <h2>Fiches Sécurisées — Lecture seule</h2>
+        <p>Ces fiches sont archivées et protégées. Aucune modification ni suppression n'est possible.</p>
+      </div>
+    </div>`;
+
+  if(!data.length){
+    html+=`<div class="secured-empty-state">
+      <div class="se-icon">🔒</div>
+      <h3>Aucune fiche sécurisée</h3>
+      <p>Déplacez une fiche depuis l'onglet « Mes Fiches » pour l'archiver ici.</p>
+    </div>`;
+    document.getElementById('securedList').innerHTML=html;
+    return;
+  }
+
+  html+=`<div style="margin-bottom:12px;font-size:.85em;color:var(--text2);">📁 ${data.length} fiche(s) archivée(s)</div>`;
+
+  data.forEach(f=>{
+    const urg=f.urgence,urgColor=urg?(URGENCE_COLORS[urg]||'#999'):'transparent';
+    const urgLabel=urg?`<span style="background:${urgColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:.72em;font-weight:700;">${sanitize(urg)}</span>`:'';
+    const hasMedical=f.fiches_medicales_croixrouge&&f.fiches_medicales_croixrouge.length>0;
+    const medBadge=hasMedical?'<span class="medical-badge">🏥 Méd.</span>':'';
+    const patNom=sanitize(f.patient_nom||'?'),patPrenom=sanitize(f.patient_prenom||'');
+    const createdAt=f.created_at?new Date(f.created_at).toLocaleDateString('fr-BE'):'—';
+    html+=`<div class="fiche-item fiche-secured">
+      <div class="fiche-info">
+        <strong>${patNom} ${patPrenom}</strong> — N°Pat: ${sanitize(f.numero_patient||'N/A')} — ${sanitize(f.in_date||'N/A')} ${urgLabel}${medBadge}
+        <span class="secure-badge">🔒 Sécurisée</span>
+        <div style="font-size:.75em;color:var(--text3);margin-top:3px;">Archivée le ${createdAt}</div>
+      </div>
+      <div class="fiche-btns">
+        <button class="btn-view" onclick='viewFiche(${JSON.stringify(JSON.stringify(f))})'>👁️ Consulter</button>
+        ${hasMedical?`<button class="btn-view" style="background:#1a5276;" onclick="viewMedicalFiche('${f.id}')">🏥 Médicale</button>`:''}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('securedList').innerHTML=html;
+}
+
+// ====== VIEW MODALS ======
 function closeFicheModal(event){
   if(event.target===document.getElementById('ficheModal')){
     document.getElementById('ficheModal').style.display='none';
@@ -1996,10 +2297,15 @@ function renderFicheModal(f){
     }else soignantsHtml='<span style="color:var(--text3);font-style:italic;">Aucun soignant</span>';
   }
   const hasMedical=f.fiches_medicales_croixrouge&&f.fiches_medicales_croixrouge.length>0;
+  const isSecured=f.est_securisee===true;
   const createdAt=f.created_at?new Date(f.created_at).toLocaleString('fr-BE'):(f._createdAt?new Date(f._createdAt).toLocaleString('fr-BE'):'—');
   _currentModalFicheId=f.id||null;_currentModalFicheData=f;
   const medBtn=document.getElementById('modalMedBtn');if(medBtn)medBtn.style.display=(hasMedical&&f.id)?'inline-block':'none';
   document.getElementById('modalBody').innerHTML=`
+    ${isSecured?`<div style="background:var(--secure-light);border:2px solid var(--secure);border-radius:var(--radius);padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:1.2em;">🔒</span>
+      <span style="color:var(--secure);font-weight:700;font-size:.88em;">Fiche sécurisée — Lecture seule. Aucune modification possible.</span>
+    </div>`:''}
     ${hasMedical?`<div style="background:var(--medical-light);border:1.5px solid var(--medical);border-radius:var(--radius);padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
       <span style="color:var(--medical);font-weight:700;font-size:.9em;">🏥 Une fiche médicale est liée à ce patient</span>
       <button class="btn-view" style="background:var(--medical);font-size:.8em;" onclick="viewMedicalFiche('${f.id}');document.getElementById('ficheModal').style.display='none';">Voir</button>
@@ -2055,7 +2361,6 @@ function renderFicheModal(f){
   document.getElementById('ficheModal').style.display='flex';
 }
 
-// ========== DELETE PENDING ==========
 function deletePending(index){
   if(!confirm('Supprimer cette fiche en attente ?'))return;
   const pending=JSON.parse(localStorage.getItem('cr_pending')||'[]');
@@ -2063,7 +2368,6 @@ function deletePending(index){
   updatePendingCount();loadFiches();showToast('Fiche supprimée','info');
 }
 
-// ========== RESET ==========
 function resetForm(){
   document.querySelectorAll('#formTab input[type="text"],#formTab input[type="tel"],#formTab input[type="date"],#formTab input[type="time"],#formTab textarea').forEach(el=>el.value='');
   document.querySelectorAll('#formTab input[type="checkbox"]').forEach(el=>el.checked=false);
@@ -2090,8 +2394,7 @@ function resetForm(){
   showToast('Formulaire réinitialisé','info');
 }
 
-// ========== INIT ==========
-// FIX: Gestion correcte de la session au refresh
+// ====== INIT ======
 window.addEventListener('load', async () => {
   genGateCaptcha();
   genGateRegCaptcha();
@@ -2103,7 +2406,6 @@ window.addEventListener('load', async () => {
   window.addEventListener('online', () => { updateOnlineStatus(); syncPendingFiches(); });
   window.addEventListener('offline', updateOnlineStatus);
 
-  // FIX: récupérer la session existante au démarrage (persist après refresh)
   const { data: { session } } = await sb.auth.getSession();
   if (session && session.user) {
     currentUser = session.user;
@@ -2111,7 +2413,6 @@ window.addEventListener('load', async () => {
     syncPendingFiches();
   }
 
-  // Écouter les changements d'état d'authentification
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session && !currentUser) {
       currentUser = session.user;
@@ -2124,7 +2425,6 @@ window.addEventListener('load', async () => {
       document.getElementById('securityGate').style.display = 'flex';
       genGateCaptcha();
     } else if (event === 'TOKEN_REFRESHED' && session) {
-      // FIX: mettre à jour l'utilisateur quand le token est rafraîchi
       currentUser = session.user;
     }
   });
